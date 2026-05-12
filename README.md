@@ -15,7 +15,7 @@ Wichtig: Wenn `Dialogue` und `Matched Text` offensichtlich nicht zusammenpassen,
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r runpod_excel_corrector/requirements.txt
+pip install -r requirements.txt
 ```
 
 ### 2A) Variante: Ollama auf der GPU (RunPod)
@@ -55,13 +55,13 @@ export LLM_MODEL=local-model
 ### 3) Ausführen
 
 ```bash
-python runpod_excel_corrector/correct_excel.py --input "/path/to/input.xlsx"
+python correct_excel.py --input "/path/to/input.xlsx"
 ```
 
 Optional:
 
 ```bash
-python runpod_excel_corrector/correct_excel.py \
+python correct_excel.py \
   --input "/path/to/input.xlsx" \
   --dialogue-col "Dialogue" \
   --matched-col "Matched Text" \
