@@ -16,8 +16,21 @@ if [[ -z "${INPUT_XLSX}" ]]; then
   exit 2
 fi
 
+# Immer im Repo-Verzeichnis arbeiten (auch bei: bash /pfad/runpod_ready.sh …)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
 ts() { date +"%Y-%m-%d %H:%M:%S"; }
 log() { echo "[$(ts)] $*"; }
+
+log "cwd=${SCRIPT_DIR}"
+if [[ ! -f "${INPUT_XLSX}" ]]; then
+  echo "ERROR: Input-Datei nicht gefunden: ${INPUT_XLSX}"
+  exit 2
+fi
+if [[ ! -f "requirements.txt" ]] || [[ ! -f "correct_excel.py" ]]; then
+  echo "ERROR: requirements.txt oder correct_excel.py fehlt in ${SCRIPT_DIR}"
+  exit 2
+fi
 
 if [[ -d ".venv" ]]; then
   log "Reusing existing venv: .venv"
@@ -62,7 +75,7 @@ log "OLLAMA_BASE_URL=${OLLAMA_BASE_URL}"
 log "LLM_MODEL=${LLM_MODEL}"
 
 log "Checking Ollama server..."
-if ! curl -fsS "${OLLAMA_BASE_URL}/api/tags" >/dev/null 2>&1; then
+if ! curl -fsS --max-time 15 --connect-timeout 5 "${OLLAMA_BASE_URL}/api/tags" >/dev/null; then
   log "ERROR: could not reach Ollama at ${OLLAMA_BASE_URL}"
   log "Start it in another terminal with: ollama serve"
   exit 3
