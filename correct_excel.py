@@ -4,6 +4,7 @@ import argparse
 import json
 import math
 import re
+import time
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -102,6 +103,7 @@ def main() -> int:
     p.add_argument("--corrections-col", default="Corrections", help="Neue Spalte: Liste der Korrekturen (JSON)")
     p.add_argument("--min-token-sim", type=float, default=0.12, help="Früher Skip, wenn Dialogue/Matched zu unähnlich")
     p.add_argument("--max-rows", type=int, default=0, help="Optional: max Zeilen (0=alle)")
+    p.add_argument("--log-every", type=int, default=25, help="Progress-Log alle N Zeilen (0=aus)")
     args = p.parse_args()
 
     in_path = Path(args.input)
@@ -115,14 +117,49 @@ def main() -> int:
     matched_col = find_column(df, args.matched_col)
 
     client = build_client_from_env()
+    provider = getattr(client, "__class__", type("x", (), {})).__name__
+    model = getattr(client, "model", "?")
+    base_url = getattr(client, "base_url", "?")
+    print(f"[START] input={in_path}")
+    print(f"[START] provider={provider} base_url={base_url} model={model}")
+    print(f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}'")
     # optional warmup (nur für ollama client sinnvoll, aber schadet nicht)
     if hasattr(client, "warmup"):
+        t0w = time.time()
         client.warmup()
+        print(f"[WARMUP] done in {time.time() - t0w:.1f}s")
 
     corrected_values: List[str] = []
     corrections_values: List[str] = []
 
     total = len(df) if args.max_rows <= 0 else min(len(df), args.max_rows)
+    t0 = time.time()
+    n_corrected = 0
+    n_skipped_unrelated = 0
+    n_skipped_lowconf = 0
+    n_skipped_postcheck = 0
+    n_failed = 0
+
+    def _progress(i_done: int) -> None:
+        if args.log_every <= 0:
+            return
+        if i_done <= 0:
+            return
+        if i_done % args.log_every != 0 and i_done != total:
+            return
+        elapsed = max(1e-6, time.time() - t0)
+        rps = i_done / elapsed
+        eta_s = (total - i_done) / rps if rps > 0 else 0.0
+        print(
+            f"[PROGRESS] {i_done}/{total} "
+            f"({(i_done/total*100):.1f}%) "
+            f"elapsed={elapsed:.1f}s "
+            f"rate={rps:.2f} rows/s "
+            f"eta={eta_s/60:.1f}m "
+            f"corrected={n_corrected} "
+            f"skips(unrelated={n_skipped_unrelated},lowconf={n_skipped_lowconf},post={n_skipped_postcheck}) "
+            f"errors={n_failed}"
+        )
 
     for i in range(total):
         dialogue = stringify(df.at[i, dialogue_col])
@@ -132,6 +169,8 @@ def main() -> int:
         if token_similarity(dialogue, matched) < args.min_token_sim:
             corrected_values.append(dialogue)
             corrections_values.append("[]")
+            n_skipped_unrelated += 1
+            _progress(i + 1)
             continue
 
         user_prompt = USER_PROMPT_TEMPLATE.format(dialogue=dialogue, matched_text=matched)
@@ -143,6 +182,8 @@ def main() -> int:
             # Fail-safe: nichts ändern
             corrected_values.append(dialogue)
             corrections_values.append("[]")
+            n_failed += 1
+            _progress(i + 1)
             continue
 
         leave_unchanged = bool(data.get("leave_unchanged", True))
@@ -153,21 +194,27 @@ def main() -> int:
         if leave_unchanged or confidence != "high":
             corrected_values.append(dialogue)
             corrections_values.append("[]")
+            n_skipped_lowconf += 1
+            _progress(i + 1)
             continue
 
         ok, reason = safe_to_apply(dialogue, corrected, matched)
         if not ok:
             corrected_values.append(dialogue)
             corrections_values.append("[]")
+            n_skipped_postcheck += 1
+            _progress(i + 1)
             continue
 
         # Nur dann anwenden
         corrected_values.append(corrected)
+        n_corrected += 1
         try:
             # Korrekturen als JSON-String speichern (Excel-freundlich)
             corrections_values.append(json.dumps(corrections, ensure_ascii=False))
         except Exception:
             corrections_values.append("[]")
+        _progress(i + 1)
 
     # Restliche Zeilen (falls max_rows) unverändert übernehmen
     for i in range(total, len(df)):
@@ -180,7 +227,13 @@ def main() -> int:
     df_out[args.corrections_col] = corrections_values
     df_out.to_excel(out_path, index=False)
 
-    print(f"OK: geschrieben -> {out_path}")
+    elapsed = time.time() - t0
+    print(f"[DONE] written={out_path}")
+    print(
+        f"[DONE] processed={total} corrected={n_corrected} "
+        f"skips(unrelated={n_skipped_unrelated},lowconf={n_skipped_lowconf},post={n_skipped_postcheck}) "
+        f"errors={n_failed} elapsed={elapsed:.1f}s"
+    )
     return 0
 
 
