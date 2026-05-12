@@ -3,7 +3,10 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
+import shutil
+import subprocess
 import time
 from difflib import SequenceMatcher
 from pathlib import Path
@@ -13,6 +16,74 @@ import pandas as pd
 
 from llm_clients import build_client_from_env, parse_json_response, LLMError
 from prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE, BATCH_USER_PROMPT_TEMPLATE
+
+_NV_SMI_CACHE_TS = 0.0
+_NV_SMI_CACHE_VAL = ""
+
+
+def _nvidia_smi_summary() -> str:
+    """Kurzinfo erste GPU (gecached, damit nvidia-smi nicht zu oft läuft)."""
+    global _NV_SMI_CACHE_TS, _NV_SMI_CACHE_VAL
+    now = time.time()
+    if _NV_SMI_CACHE_TS > 0.0 and now - _NV_SMI_CACHE_TS < 3.0:
+        return _NV_SMI_CACHE_VAL
+    _NV_SMI_CACHE_TS = now
+    exe = shutil.which("nvidia-smi")
+    if not exe:
+        _NV_SMI_CACHE_VAL = ""
+        return ""
+    try:
+        cp = subprocess.run(
+            [
+                exe,
+                "--query-gpu=utilization.gpu,memory.used,memory.total",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=1.2,
+        )
+        if cp.returncode != 0 or not (cp.stdout or "").strip():
+            _NV_SMI_CACHE_VAL = ""
+            return ""
+        line = (cp.stdout or "").strip().splitlines()[0]
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) >= 3:
+            util, used, total = parts[0], parts[1], parts[2]
+            _NV_SMI_CACHE_VAL = f"gpu={util}% vram={used}/{total}MiB"
+        else:
+            _NV_SMI_CACHE_VAL = ""
+    except (OSError, subprocess.TimeoutExpired, ValueError, IndexError):
+        _NV_SMI_CACHE_VAL = ""
+    return _NV_SMI_CACHE_VAL
+
+
+def format_resource_usage() -> str:
+    """CPU/RAM dieses Prozesses + optional erste NVIDIA-GPU."""
+    chunks: List[str] = []
+    try:
+        import psutil
+
+        chunks.append(f"cpu={psutil.cpu_percent(interval=None):.0f}%")
+        v = psutil.virtual_memory()
+        chunks.append(f"ram={v.percent:.0f}%")
+        rss = psutil.Process(os.getpid()).memory_info().rss / 1024**2
+        chunks.append(f"rss={rss:.0f}MiB")
+    except Exception:
+        chunks.append("cpu=na ram=na rss=na")
+    gpu = _nvidia_smi_summary()
+    if gpu:
+        chunks.append(gpu)
+    return " ".join(chunks)
+
+
+def _prime_cpu_percent_sample() -> None:
+    try:
+        import psutil
+
+        psutil.cpu_percent(interval=0.08)
+    except Exception:
+        pass
 
 
 def normalize_ws(s: str) -> str:
@@ -318,6 +389,12 @@ def main() -> int:
         action="store_true",
         help="Nach dem LLM kein safe_to_apply: Änderungen bei ausreichender Confidence direkt übernehmen (riskant: keine Absicherung gegen Synonyme/Einfügungen).",
     )
+    p.add_argument(
+        "--resource-log",
+        choices=("off", "progress", "all"),
+        default="progress",
+        help="Auslastung: off | progress (START/PROGRESS/DONE) | all (+ pro fertigem LLM-Batch).",
+    )
     args = p.parse_args()
 
     in_path = Path(args.input)
@@ -336,12 +413,19 @@ def main() -> int:
     base_url = getattr(client, "base_url", "?")
     print(f"[START] input={in_path}")
     print(f"[START] provider={provider} base_url={base_url} model={model}")
-    print(f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}' min_confidence={args.min_confidence} related_filter={args.related_filter} no_postcheck={args.no_postcheck}")
+    print(
+        f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}' "
+        f"min_confidence={args.min_confidence} related_filter={args.related_filter} "
+        f"no_postcheck={args.no_postcheck} resource_log={args.resource_log}"
+    )
     # optional warmup (nur für ollama client sinnvoll, aber schadet nicht)
     if hasattr(client, "warmup"):
         t0w = time.time()
         client.warmup()
         print(f"[WARMUP] done in {time.time() - t0w:.1f}s")
+    if args.resource_log != "off":
+        _prime_cpu_percent_sample()
+        print(f"[START] res={format_resource_usage()}")
 
     corrected_values: List[str] = []
     corrections_values: List[str] = []
@@ -375,6 +459,7 @@ def main() -> int:
             f"corrected={n_corrected} "
             f"skips(unrelated={n_skipped_unrelated},lowconf={n_skipped_lowconf},post={n_skipped_postcheck}) "
             f"errors={n_failed}"
+            + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
         )
 
     # group rows by matched_text to maximize name spelling reuse + batching
@@ -382,6 +467,8 @@ def main() -> int:
     for i in range(total):
         matched = stringify(df.at[i, matched_col]).strip()
         groups.setdefault(matched, []).append(i)
+
+    print(f"[START] llm_batches={len(groups)} (je ein LLM-Call pro identischem Matched Text, workers={int(args.workers)})")
 
     # prefill output arrays with originals
     corrected_values = [stringify(df.at[i, dialogue_col]) for i in range(len(df))]
@@ -412,6 +499,7 @@ def main() -> int:
         dialogue_list = "\n".join([f"{j+1}. {d}" for j, (_, d) in enumerate(kept)])
         user_prompt = BATCH_USER_PROMPT_TEMPLATE.format(matched_text=matched_text, dialogue_list=dialogue_list)
 
+        t_llm0 = time.perf_counter()
         try:
             chat_kwargs: Dict[str, Any] = {}
             # Ollama-specific options if supported
@@ -421,11 +509,17 @@ def main() -> int:
             data = parse_json_response(raw)
             items = data.get("items", [])
         except (LLMError, json.JSONDecodeError, ValueError):
+            dt_llm = time.perf_counter() - t_llm0
+            if args.resource_log == "all":
+                print(f"[BATCH] lines={len(kept)} llm_s={dt_llm:.2f}s FAILED | {format_resource_usage()}")
             n_failed += len(kept)
             for ridx, _d in kept:
                 decision_values[ridx] = "llm_error"
                 llm_item_values[ridx] = ""
             return
+        dt_llm = time.perf_counter() - t_llm0
+        if args.resource_log == "all":
+            print(f"[BATCH] lines={len(kept)} llm_s={dt_llm:.2f}s | {format_resource_usage()}")
 
         # index by i
         by_i: Dict[int, Dict[str, Any]] = {}
@@ -530,6 +624,7 @@ def main() -> int:
         f"[DONE] processed={total} corrected={n_corrected} "
         f"skips(unrelated={n_skipped_unrelated},lowconf={n_skipped_lowconf},post={n_skipped_postcheck}) "
         f"errors={n_failed} elapsed={elapsed:.1f}s"
+        + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
     )
     return 0
 
