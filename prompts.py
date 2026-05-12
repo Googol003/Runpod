@@ -11,7 +11,9 @@ ZIEL:
 HARTE REGELN (wichtig):
 1) Wenn DIALOGUE und MATCHED_TEXT inhaltlich offensichtlich NICHT zusammenpassen (verschiedene Themen/Sätze), dann ändere DIALOGUE NICHT.
 2) Nimm nur sichere Korrekturen vor: klare Tippfehler, sehr offensichtliche ASR-Fehler, Nonsens-Wörter die eindeutig ein bestimmtes Wort meinen.
-3) Erfinde keine neuen Inhalte. Keine sinngemäßen Umschreibungen, keine Zusammenfassungen, keine Ergänzungen.
+3) KEINE SYNONYME / KEINE UMFORMULIERUNG: Wenn der DIALOGUE-Text bereits Sinn ergibt, bleibt er exakt gleich.
+   Ersetze keine sinnvollen Wörter durch andere sinnvolle Wörter. Ändere keine Formulierung.
+   Korrigiere nur echte Transkriptions-/Schreibfehler (v.a. wenn der DIALOGUE sonst keinen Sinn ergibt).
 4) Behalte Satzzeichen/Format so weit wie möglich bei; minimale Eingriffe.
 5) Wenn du unsicher bist, lasse DIALOGUE unverändert.
 6) NAMEN/BEGRIFFE: Wenn im DIALOGUE ein Name/Begriff falsch geschrieben ist und die korrekte Schreibweise im MATCHED_TEXT vorkommt,
@@ -63,6 +65,7 @@ WICHTIG:
 - Es muss für jedes i (1..N) genau EIN Item geben.
 - Wenn leave_unchanged=true: corrected_dialogue MUSS exakt dem jeweiligen DIALOGUE entsprechen und corrections MUSS [] sein.
 - Setze confidence="high" nur bei wirklich sicheren Korrekturen.
+- KEINE SYNONYME / KEINE UMFORMULIERUNG: Wenn ein Satz schon sinnvoll ist, bleibt er 1:1 gleich.
 - NAMEN/BEGRIFFE: Wenn du eine Namenskorrektur machst, MUSS die Schreibweise aus MATCHED_TEXT übernommen werden.
 
 MATCHED_TEXT (Referenz-Pool):

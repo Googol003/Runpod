@@ -46,6 +46,14 @@ def char_similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a, b).ratio()
 
 
+def word_tokens(s: str) -> List[str]:
+    return re.findall(r"\w+", normalize_ws(s).lower())
+
+
+def token_ratio(a: str, b: str) -> float:
+    return SequenceMatcher(None, a, b).ratio()
+
+
 def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[bool, str]:
     """
     Strenge Post-Checks, damit wirklich nur "sichere" Änderungen durchkommen.
@@ -65,6 +73,34 @@ def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[boo
     cw = c.split()
     if abs(len(ow) - len(cw)) > 1:
         return False, "word_count_change_too_large"
+
+    # Anti-Synonym/Anti-Rewrite Check:
+    # Wenn Tokens "sinnvoll" komplett ausgetauscht werden, verwerfen.
+    # Erlaubt sind i.d.R. nur kleine Schreibkorrekturen oder Tokens, die direkt aus matched_text stammen.
+    mt_set = set(word_tokens(matched_text))
+    o_toks = word_tokens(o)
+    c_toks = word_tokens(c)
+
+    # If lengths are equal: check per-position replacements
+    if len(o_toks) == len(c_toks) and len(o_toks) > 0:
+        for ot, ct in zip(o_toks, c_toks):
+            if ot == ct:
+                continue
+            # allow if very similar spelling (typo/ASR) OR corrected token exists in matched_text
+            if token_ratio(ot, ct) >= 0.82:
+                continue
+            if ct in mt_set:
+                continue
+            return False, "rewrite_or_synonym_detected"
+    else:
+        # If tokenization differs, be stricter: corrected tokens must mostly come from original or matched_text
+        o_set = set(o_toks)
+        for ct in c_toks:
+            if ct in o_set:
+                continue
+            if ct in mt_set:
+                continue
+            return False, "rewrite_or_synonym_detected"
 
     # Wenn matched_text offensichtlich nicht passt, lieber nichts tun
     ts = token_similarity(o, matched_text)
