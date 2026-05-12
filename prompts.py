@@ -1,25 +1,48 @@
-SYSTEM_PROMPT = """Du korrigierst eine Zeile **DIALOGUE** anhand der Referenz **MATCHED_TEXT** (gleiche Excel-Zeile).
+SYSTEM_PROMPT = """Du korrigierst eine Zeile **DIALOGUE** anhand der Referenz **MATCHED_TEXT** (gleiche Excel-Zeile). Arbeite **präzise**: nur das, was unten erlaubt ist — **keine** freien Worttausche und **kein** Auffüllen.
 
-**Arbeitsweise:** Geh den DIALOGUE **absichtlich gründlich** durch: Wort für Wort gegen die Referenz prüfen, wo ein Bezug erkennbar ist. Übersehe **keine** offensichtlichen Tippfehler, falsche Namensschreibweise oder sinnloses Pseudo-Wort, wenn MATCHED_TEXT an der passenden Stelle ein klares Zielwort nahelegt. `leave_unchanged` nur, wenn wirklich nichts **sicher** zu korrigieren ist oder die Regeln unten es verbieten.
+---
 
-**Erlaubt:** Offensichtliche Schreib- und Tippfehler, klar falsche Grammatik, Eigennamen/Entitäten an die Schreibweise in MATCHED_TEXT anpassen, wenn dieselbe Sache/Person gemeint ist.
+## 1) Eigennamen und Entitäten (höchste Priorität)
 
-**Strikt verboten / in Ruhe lassen (immer `leave_unchanged=true`, kein Satzbau aus der Referenz):**
+- **Personen-, Orts-, Marken- und Figurennamen:** Wenn MATCHED_TEXT dieselbe Person/Sache **eindeutig** mit **anderer Schreibung** führt (gleicher Kontext, gleiche Rolle im Satz, phonetische Nähe) → Schreibweise **exakt wie in MATCHED_TEXT**.
+- **Sehr genau suchen:** auch in kurzen Zeilen, auch wenn sonst wenig Wortüberlappung — Namen nicht übersehen.
+- **Nicht** als „Eigenname“ behandeln: normale **Sachwörter** und **Umschreibungen** (z. B. Kollektivbezeichnungen). **Kein** Tausch von einem **sinnvollen** Alltagswort gegen ein **anderes** sinnvolles Wort aus der Referenz — auch nicht mit der Begründung „Entität“ oder „Anpassung an MATCHED_TEXT“.
 
-- **Kein Kontext-Auffüllen:** Wörter, Halbsätze oder der ganze Anfang/Rest aus MATCHED_TEXT, die im **DIALOGUE nicht vorkamen**, **niemals** einfügen oder voranstellen — auch nicht, um die Referenz „vollständig“ nachzubauen.  
-  *Beispiel:* DIALOGUE `Bitte.` — MATCHED_TEXT `Gib mir irgendwas Hartes, Olu. Bitte.` → Zeile bleibt `Bitte.` (höchstens minimale Schreibkorrektur an dem einen Wort), **nicht** zu `Gib mir irgendwas Hartes, Olu. Bitte.` erweitern.
+---
 
-- **Andere, aber gültige Formulierung:** Zwei unterschiedliche, jeweils **sinnvolle** deutsche Fassungen desselben Inhalts **nicht** an MATCHED_TEXT angleichen.  
-  *Beispiel:* DIALOGUE `Wer Einwände gegen diese Verbindung hat, möge jetzt sprechen oder für immer schweigen.` — MATCHED_TEXT `Wer etwas gegen diese Verbindung vorzubringen hat, möge jetzt sprechen oder für immer schweigen.` → **keine** Korrektur (Synonym-/Satzumbau verboten).
+## 2) Erlaubt (nur diese Kategorie)
 
-- **Verschiedene Begriffe / andere Wortwahl:** Ein **gültiges** Wort im DIALOGUE **nicht** gegen ein **anderes** gültiges Wort aus MATCHED_TEXT tauschen, nur weil die Referenz anders lautet.  
-  *Beispiel:* DIALOGUE `… in einer Umstrukturierungsphase.` — MATCHED_TEXT `… in einer Wiederaufbauphase.` → **Umstrukturierungsphase** bleibt; **nicht** zu Wiederaufbauphase ändern.
+- **Offensichtliche** Tipp-, Schreib- und Hörfehler (inkl. klarer ASR-Müll / Pseudo-Wort), wenn **dasselbe Wort** gemeint ist und MATCHED_TEXT das **eindeutig** nahelegt.
+- **Klar falsche Grammatik**, wenn eindeutig und ohne Wortwahl zu ändern.
 
-(Kurz: Nur echte Schreib-/Hör-/Tippfehler und Namen angleichen — **keine** inhaltliche oder stilistische Umschreibung Richtung Referenz.)
+---
 
-Wenn du unsicher bist, ob eine Änderung nur „Schreibung“ ist oder schon verbotener Umschreibung gleicht → `leave_unchanged=true`.
+## 3) Strikt verboten — Kontext, Auffüllen, Worttausch
 
-**JSON:** `leave_unchanged=true` ⇒ `corrected_dialogue` wortgleich zum DIALOGUE, `corrections=[]`. Sonst `corrected_dialogue` korrigiert, `corrections` mit sinnvollen `from`/`to`/`reason`. Keine No-Ops.
+**Kein Kontext-Auffüllen:** Kein Wort, kein Satzteil und kein Präfix/Suffix aus MATCHED_TEXT, das im **DIALOGUE nicht vorkommt**, darf eingefügt oder angehängt werden — **auch kein „einzelnes Random-Wort“** aus der Referenz.
+
+**Kein Worttausch / keine Umformulierung:** Jedes Wort im DIALOGUE, das **bereits ein normales, sinnvolles deutsches Wort** ist (kein offensichtlicher Tippfehler, kein Name), bleibt — **niemals** durch ein **anderes** gültiges Wort aus MATCHED_TEXT ersetzen, nur weil die Referenz anders lautet.
+
+**Explizit verbotenes Muster (NIEMALS so begründen):**
+- `Mannschaft` → `Team` mit reason wie „Eigenname/Entität an MATCHED_TEXT“ — **falsch**. Das sind **zwei verschiedene normale Begriffe** / Umschreibungen, **kein** Schreibfehler eines Namens. **Keine** Korrektur.
+
+Weitere Beispiele (alle **keine** Korrektur / `leave_unchanged=true`):
+- DIALOGUE `Bitte.` — MATCHED_TEXT `Gib mir irgendwas Hartes, Olu. Bitte.` → **nicht** auffüllen.
+- DIALOGUE `Wer Einwände gegen diese Verbindung hat, …` — MATCHED_TEXT `Wer etwas gegen diese Verbindung vorzubringen hat, …` → **kein** Satzumbau.
+- DIALOGUE `… Umstrukturierungsphase.` — MATCHED_TEXT `… Wiederaufbauphase.` → **kein** Begriffstausch.
+
+---
+
+## 4) Pflicht-Selbsttest **vor jeder** geplanten Ersetzung (`from` → `to`)
+
+Stell dir für **`from`** die Frage: „Ist das ein **offensichtlicher Schreib-/Hör-/Tippfehler** oder ein **Eigenname**, den MATCHED_TEXT **dieselbe Entität** schreibt?“  
+- **Nein** (es ist einfach ein **anderes**, aber gültiges Wort / eine andere Formulierung) → **diese Ersetzung weglassen**; wenn danach nichts Erlaubtes übrig bleibt → ganze Zeile `leave_unchanged=true`.
+
+Wenn du bei **irgendeiner** geplanten Änderung zweifelst → `leave_unchanged=true` für die Zeile.
+
+---
+
+**JSON:** `leave_unchanged=true` ⇒ `corrected_dialogue` wortgleich zum DIALOGUE, `corrections=[]`. Sonst `corrected_dialogue` korrigiert, `corrections` nur mit Einträgen, die den Selbsttest und alle Verbote passieren. Keine No-Ops.
 
 Antworte nur mit gültigem JSON, ohne Markdown-Fences, ohne Text außerhalb des JSON.
 """
@@ -36,7 +59,7 @@ Antworte mit genau diesem JSON-Schema (kein anderer Text):
   ]
 }}
 
-Pflicht: `leave_unchanged=true` ⇒ `corrected_dialogue` = DIALOGUE wortgleich, `corrections=[]`. Keine No-Ops. Kein Auffüllen aus MATCHED_TEXT; kein Synonym- oder Begriffstausch; kein Satzumbau Richtung Referenz (siehe Systemanweisung).
+Pflicht: `leave_unchanged=true` ⇒ `corrected_dialogue` = DIALOGUE wortgleich, `corrections=[]`. Keine No-Ops. **Vor jedem** `corrections`-Eintrag: Selbsttest (Systemanweisung Abschnitt 4) — `from` muss Tippfehler/Hörfehler oder **echter** Eigenname sein; **kein** sinnvolles Wort gegen anderes sinnvolles Wort (z. B. **niemals** Mannschaft→Team). Kein Auffüllen aus MATCHED_TEXT.
 
 DIALOGUE:
 {dialogue}
@@ -48,9 +71,9 @@ MATCHED_TEXT:
 
 BATCH_USER_PROMPT_TEMPLATE = """Wende die **Systemanweisung** auf **alle** nummerierten DIALOGUE-Zeilen an.
 
-**Zuordnung:** Ein gemeinsamer **MATCHED_TEXT** gilt für **alle** nummerierten Zeilen (Excel: gleicher Inhalt in „Matched Text“, Reihenfolge wie in der Datei). Jede Zeile **einzeln** bewerten — dieselben Verbote gelten für jede Zeile (kein Auffüllen, kein Synonym-/Begriffstausch, kein Satzumbau aus der Referenz).
+**Vorgehen pro Zeile:** Zuerst **Eigennamen** in MATCHED_TEXT identifizieren und in der DIALOGUE-Zeile dieselbe Entität suchen → Schreibweise angleichen. Dann nur **offensichtliche** Schreib-/Hörfehler. **Vor jeder** Ersetzung Selbsttest (Abschnitt 4 der Systemanweisung). **Niemals** Kontext auffüllen; **niemals** Mannschaft↔Team o. Ä.; bei Zweifel `leave_unchanged=true`.
 
-**Vorgehen pro Zeile:** Nur offensichtliche Schreib-/Tippfehler, Grammatik, Namen — **niemals** fehlenden Text aus MATCHED_TEXT einfügen; **niemals** andere gültige Wörter oder Formulierungen nur wegen MATCHED_TEXT ändern (siehe Systemanweisung, Beispiele „Bitte.“, Einwände/vorzubringen, Umstrukturierungsphase/Wiederaufbauphase).
+**Zuordnung:** Ein gemeinsamer **MATCHED_TEXT** gilt für **alle** nummerierten Zeilen (Excel: gleicher Inhalt in „Matched Text“, Reihenfolge wie in der Datei). Jede Zeile **einzeln** bewerten.
 
 Antworte **nur** mit gültigem JSON in genau diesem Schema:
 {{
@@ -68,7 +91,7 @@ Pflicht:
 - Exakt **N** Einträge in `items`, für `i=1..N` (Reihenfolge wie die DIALOGUE-Liste).
 - `leave_unchanged=true` ⇒ `corrected_dialogue` identisch zur jeweiligen DIALOGUE-Zeile, `corrections=[]`.
 - Keine Korrekturen mit `from==to`.
-- Kein Einfügen von Text aus MATCHED_TEXT, der in dieser DIALOGUE-Zeile fehlt; kein Synonym-/Begriffs-/Satzumbau nur wegen MATCHED_TEXT (vgl. Systemanweisung: kurze vs. lange Referenz, paraphrase, Umstrukturierungsphase vs. Wiederaufbauphase).
+- Kein Einfügen von Text aus MATCHED_TEXT, der in dieser DIALOGUE-Zeile fehlt; kein Synonym-/Begriffs-/Satzumbau; **kein** Tausch sinnvoller Alltagswörter (z. B. Mannschaft/Team). Jede Korrektur muss den Selbsttest (Abschnitt 4) bestehen; sonst weglassen bzw. Zeile `leave_unchanged=true`.
 
 MATCHED_TEXT (Referenz):
 {matched_text}
