@@ -133,9 +133,17 @@ def pair_allows_reference_spelling(ot: str, ct: str, mt_set: set, mt_tokens: Lis
     return False
 
 
-def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[bool, str]:
+def safe_to_apply(
+    original: str,
+    corrected: str,
+    matched_text: str,
+    *,
+    strict_ref_overlap: bool = False,
+) -> Tuple[bool, str]:
     """
     Strenge Post-Checks, damit wirklich nur "sichere" Änderungen durchkommen.
+    strict_ref_overlap: nur mit --related-filter; sonst keine Ablehnung wegen
+    geringer Überlappung Dialogue/Matched (vermeidet falsche „unrelated“-Postchecks).
     """
     o = normalize_ws(original)
     c = normalize_ws(corrected)
@@ -191,10 +199,11 @@ def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[boo
             if not allowed:
                 return False, "rewrite_or_synonym_detected"
 
-    # Referenz-Bezug: Jaccard auf Original oft 0 bei Namen; korrigierter Text zählt mit
-    if max(token_similarity(o, matched_text), token_similarity(c, matched_text)) < 0.12:
-        if char_similarity(c, matched_text) < 0.14 and char_similarity(o, matched_text) < 0.14:
-            return False, "dialogue_matched_text_unrelated"
+    # Referenz-Bezug (nur im „strict“-Modus): optional zusätzlich zu dialogue_matched_related
+    if strict_ref_overlap:
+        if max(token_similarity(o, matched_text), token_similarity(c, matched_text)) < 0.12:
+            if char_similarity(c, matched_text) < 0.14 and char_similarity(o, matched_text) < 0.14:
+                return False, "reference_overlap_low"
 
     return True, "ok"
 
@@ -407,7 +416,12 @@ def main() -> int:
                 decision_values[ridx] = "leave_unchanged" if leave_unchanged else f"lowconf:{confidence}"
                 continue
 
-            ok, _reason = safe_to_apply(original_dialogue, corrected, matched_text)
+            ok, _reason = safe_to_apply(
+                original_dialogue,
+                corrected,
+                matched_text,
+                strict_ref_overlap=args.related_filter,
+            )
             if not ok:
                 n_skipped_postcheck += 1
                 corrected_values[ridx] = original_dialogue

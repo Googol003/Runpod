@@ -77,5 +77,5 @@ python correct_excel.py \
   --log-every 25
 ```
 
-Ohne `--related-filter` werden **alle** Zeilen an den LLM geschickt (Standard). Mit `--related-filter` werden offenbar nicht passende Dialogue-Zeilen vorher als `unrelated` markiert und übersprungen; `--min-token-sim` wirkt nur in Kombination damit.
+Ohne `--related-filter` werden **alle** Zeilen an den LLM geschickt (Standard), und es gibt **keine** Post-Prüfung wegen geringer Wort-Überlappung zwischen Dialogue und Matched Text (kein `postcheck:…unrelated`). Mit `--related-filter` werden offenbar nicht passende Zeilen vor dem LLM übersprungen (`Decision`: `unrelated`); zusätzlich kann dann eine strenge Referenz-Überlappungsprüfung greifen (`postcheck:reference_overlap_low`). `--min-token-sim` wirkt nur in Kombination mit `--related-filter`.
 
