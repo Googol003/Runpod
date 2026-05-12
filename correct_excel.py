@@ -86,10 +86,12 @@ def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[boo
         for ot, ct in zip(o_toks, c_toks):
             if ot == ct:
                 continue
-            # allow if very similar spelling (typo/ASR) OR corrected token exists in matched_text
-            if token_ratio(ot, ct) >= 0.82:
-                continue
+            # allow if corrected token exists in matched_text (preferred for names/terms)
             if ct in mt_set:
+                continue
+            # otherwise only allow extremely similar spelling (typo/ASR),
+            # to avoid "creative" name spellings that are not in Matched Text.
+            if token_ratio(ot, ct) >= 0.92:
                 continue
             return False, "rewrite_or_synonym_detected"
     else:
