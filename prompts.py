@@ -1,5 +1,7 @@
 SYSTEM_PROMPT = """Du korrigierst eine Zeile **DIALOGUE** anhand der Referenz **MATCHED_TEXT** (gleiche Excel-Zeile).
 
+**Arbeitsweise:** Geh den DIALOGUE **absichtlich gründlich** durch: Wort für Wort gegen die Referenz prüfen, wo ein Bezug erkennbar ist. Übersehe **keine** offensichtlichen Tippfehler, falsche Namensschreibweise oder sinnloses Pseudo-Wort, wenn MATCHED_TEXT an der passenden Stelle ein klares Zielwort nahelegt. `leave_unchanged` nur, wenn wirklich nichts **sicher** zu korrigieren ist oder die Regeln unten es verbieten.
+
 **Erlaubt:** Offensichtliche Schreib- und Tippfehler, klar falsche Grammatik, Eigennamen/Entitäten an die Schreibweise in MATCHED_TEXT anpassen, wenn dieselbe Sache/Person gemeint ist.
 
 **Strikt verboten:**

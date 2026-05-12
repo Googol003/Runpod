@@ -56,8 +56,10 @@ export LLM_MODEL=local-model
 ### 3) Ausführen
 
 ```bash
-python correct_excel.py --input "/path/to/input.xlsx"
+python correct_excel.py --input "/path/to/input.xlsx" --row-mode single
 ```
+
+`--row-mode single`: **eine Excel-Zeile = ein LLM-Request** (kein Gruppen-Batch). Oft gründlicher, aber viel langsamer und mehr API-Last. Standard: `--row-mode batch` (alle Zeilen mit gleichem „Matched Text“ in einem Call).
 
 Optional:
 
@@ -75,6 +77,6 @@ python correct_excel.py \
   --resource-log progress
 ```
 
-Alle Zeilen mit gleichem **Matched Text** werden gebündelt an den LLM geschickt; die Ausgabe wird übernommen, solange das Modell nicht `leave_unchanged` setzt (kein technischer Post-Check, kein Related-Filter im Skript). Optional: `--resource-log all` für pro-Batch-Ressourcenzeilen.
+Alle Zeilen mit gleichem **Matched Text** werden bei **`--row-mode batch`** (Standard) gebündelt an den LLM geschickt; die Ausgabe wird übernommen, solange das Modell nicht `leave_unchanged` setzt (kein technischer Post-Check, kein Related-Filter im Skript). Bei **`--row-mode single`** ist jede Zeile ein eigener Request. Optional: `--resource-log all` für Zeit-/Ressourcenzeilen pro Batch bzw. pro Zeile (single).
 
-**Fortschritt (`[PROGRESS]` / `[DONE]`):** `applied` = Zeilen mit geändertem Text. `unchanged` = Modell hat `leave_unchanged` gesetzt. `errors` = LLM-Fehler oder fehlende Batch-Zeilen.
+**Fortschritt (`[PROGRESS]` / `[DONE]`):** `applied` = Zeilen mit geändertem Text. `unchanged` = Modell hat `leave_unchanged` gesetzt. `errors` = LLM-Fehler, fehlende Batch-Zeile (`llm_missing_item`) oder falsches JSON-Format im Einzelmodus (`llm_bad_shape`).

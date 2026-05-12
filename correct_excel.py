@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Tuple
 
 import pandas as pd
 
-from llm_clients import build_client_from_env, parse_json_response, LLMError
+from llm_clients import build_client_from_env, parse_json_response, LLMError, OllamaClient
 from prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE, BATCH_USER_PROMPT_TEMPLATE
 
 _NV_SMI_CACHE_TS = 0.0
@@ -121,6 +121,21 @@ def stringify(val: Any) -> str:
     return str(val)
 
 
+def _coerce_single_row_dict(data: Dict[str, Any]) -> Dict[str, Any] | None:
+    """
+    Einzelantwort: entweder flaches Objekt mit leave_unchanged/corrected_dialogue
+    oder fälschlich {"items":[{...}]}. Mehrere items → nicht eindeutig → None.
+    """
+    items = data.get("items")
+    if isinstance(items, list):
+        if len(items) == 1 and isinstance(items[0], dict):
+            return items[0]
+        return None
+    if "leave_unchanged" in data or "corrected_dialogue" in data:
+        return data
+    return None
+
+
 def find_column(df: pd.DataFrame, wanted: str) -> str:
     def norm(x: str) -> str:
         return re.sub(r"\s+", " ", x.strip().lower().replace("_", " ").replace("-", " "))
@@ -143,7 +158,7 @@ def main() -> int:
     p.add_argument("--decision-col", default="Decision", help="Neue Spalte: warum eine Zeile (nicht) korrigiert wurde.")
     p.add_argument("--max-rows", type=int, default=0, help="Optional: max Zeilen (0=alle)")
     p.add_argument("--log-every", type=int, default=25, help="Progress-Log alle N Zeilen (0=aus)")
-    p.add_argument("--workers", type=int, default=1, help="Parallelisierung über Matched-Text-Gruppen (1=aus).")
+    p.add_argument("--workers", type=int, default=1, help="Parallelität: batch = pro Matched-Text-Gruppe; single = pro Zeile.")
     p.add_argument("--num-ctx", type=int, default=8192, help="Ollama: num_ctx (größer = mehr Kontext, nutzt VRAM).")
     p.add_argument("--num-predict", type=int, default=1024, help="Ollama: num_predict (max Ausgabe-Tokens).")
     p.add_argument("--llm-item-col", default="LLM Item", help="Neue Spalte: LLM-JSON pro Zeile (falls verarbeitet).")
@@ -152,6 +167,13 @@ def main() -> int:
         choices=("off", "progress", "all"),
         default="progress",
         help="Auslastung: off | progress (START/PROGRESS/DONE) | all (+ pro fertigem LLM-Batch).",
+    )
+    p.add_argument(
+        "--row-mode",
+        choices=("batch", "single"),
+        default="batch",
+        help="batch = alle Zeilen mit gleichem Matched Text in einem LLM-Call (schnell, kann Details übersehen). "
+        "single = eine Excel-Zeile pro LLM-Call (langsam, meist gründlicher; gut zum Testen).",
     )
     args = p.parse_args()
 
@@ -173,7 +195,7 @@ def main() -> int:
     print(f"[START] provider={provider} base_url={base_url} model={model}")
     print(
         f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}' "
-        f"resource_log={args.resource_log}"
+        f"row_mode={args.row_mode} resource_log={args.resource_log}"
     )
     # optional warmup (nur für ollama client sinnvoll, aber schadet nicht)
     if hasattr(client, "warmup"):
@@ -217,19 +239,53 @@ def main() -> int:
             + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
         )
 
-    # group rows by matched_text to maximize name spelling reuse + batching
-    groups: Dict[str, List[int]] = {}
-    for i in range(total):
-        matched = stringify(df.at[i, matched_col]).strip()
-        groups.setdefault(matched, []).append(i)
-
-    print(f"[START] llm_batches={len(groups)} (je ein LLM-Call pro identischem Matched Text, workers={int(args.workers)})")
-
     # prefill output arrays with originals
     corrected_values = [stringify(df.at[i, dialogue_col]) for i in range(len(df))]
     corrections_values = ["[]"] * len(df)
     decision_values = [""] * len(df)
     llm_item_values = [""] * len(df)
+
+    def _apply_parsed_item(ridx: int, original_dialogue: str, it: Dict[str, Any] | None) -> Tuple[int, int, int]:
+        """Wendet ein geparstes LLM-Item auf eine Zeile an. Rückgabe (applied, unchanged, failed)."""
+        if not it:
+            decision_values[ridx] = "llm_missing_item"
+            llm_item_values[ridx] = ""
+            return (0, 0, 1)
+        leave_unchanged = bool(it.get("leave_unchanged", True))
+        corrected = stringify(it.get("corrected_dialogue", original_dialogue))
+        corrections = normalize_corrections_list(it.get("corrections", []))
+        try:
+            llm_item_values[ridx] = json.dumps(it, ensure_ascii=False)
+        except Exception:
+            llm_item_values[ridx] = ""
+
+        if leave_unchanged:
+            corrected_values[ridx] = original_dialogue
+            corrections_values[ridx] = "[]"
+            decision_values[ridx] = "leave_unchanged"
+            return (0, 1, 0)
+
+        applied_here = 0
+        if normalize_ws(corrected) != normalize_ws(original_dialogue):
+            applied_here = 1
+
+        corrected_values[ridx] = corrected
+        try:
+            if normalize_ws(corrected) == normalize_ws(original_dialogue):
+                corrections_values[ridx] = "[]"
+                decision_values[ridx] = "no_change"
+            else:
+                corrections_values[ridx] = json.dumps(corrections, ensure_ascii=False)
+                decision_values[ridx] = "applied"
+        except Exception:
+            corrections_values[ridx] = "[]"
+            decision_values[ridx] = "applied"
+        return (applied_here, 0, 0)
+
+    def _chat_kwargs() -> Dict[str, Any]:
+        if isinstance(client, OllamaClient):
+            return {"options": {"num_ctx": int(args.num_ctx), "num_predict": int(args.num_predict)}}
+        return {}
 
     def process_batch(row_indices: List[int], matched_text: str) -> Tuple[int, int, int]:
         """Returns (n_applied, n_leave_unchanged, n_failed) for this batch only."""
@@ -251,11 +307,7 @@ def main() -> int:
 
         t_llm0 = time.perf_counter()
         try:
-            chat_kwargs: Dict[str, Any] = {}
-            # Ollama-specific options if supported
-            if hasattr(client, "base_url"):
-                chat_kwargs["options"] = {"num_ctx": int(args.num_ctx), "num_predict": int(args.num_predict)}
-            raw = client.chat(SYSTEM_PROMPT, user_prompt, temperature=0.05, **chat_kwargs)
+            raw = client.chat(SYSTEM_PROMPT, user_prompt, temperature=0.05, **_chat_kwargs())
             data = parse_json_response(raw)
             items = data.get("items", [])
         except (LLMError, json.JSONDecodeError, ValueError):
@@ -282,74 +334,107 @@ def main() -> int:
 
         for j, (ridx, original_dialogue) in enumerate(kept, start=1):
             it = by_i.get(j)
-            if not it:
-                batch_failed += 1
-                decision_values[ridx] = "llm_missing_item"
-                llm_item_values[ridx] = ""
-                continue
-
-            leave_unchanged = bool(it.get("leave_unchanged", True))
-            corrected = stringify(it.get("corrected_dialogue", original_dialogue))
-            corrections = normalize_corrections_list(it.get("corrections", []))
-            try:
-                llm_item_values[ridx] = json.dumps(it, ensure_ascii=False)
-            except Exception:
-                llm_item_values[ridx] = ""
-
-            if leave_unchanged:
-                batch_unchanged += 1
-                corrected_values[ridx] = original_dialogue
-                corrections_values[ridx] = "[]"
-                decision_values[ridx] = "leave_unchanged"
-                continue
-
-            if normalize_ws(corrected) != normalize_ws(original_dialogue):
-                batch_applied += 1
-
-            corrected_values[ridx] = corrected
-            try:
-                # If corrected dialogue is unchanged, don't store "no-op corrections"
-                if normalize_ws(corrected) == normalize_ws(original_dialogue):
-                    corrections_values[ridx] = "[]"
-                    decision_values[ridx] = "no_change"
-                else:
-                    corrections_values[ridx] = json.dumps(corrections, ensure_ascii=False)
-                    decision_values[ridx] = "applied"
-            except Exception:
-                corrections_values[ridx] = "[]"
-                decision_values[ridx] = "applied"
+            a, u, f = _apply_parsed_item(ridx, original_dialogue, it)
+            batch_applied += a
+            batch_unchanged += u
+            batch_failed += f
 
         return (batch_applied, batch_unchanged, batch_failed)
 
-    # process groups (optionally parallel)
+    def process_one_row(ridx: int) -> Tuple[int, int, int]:
+        """Ein LLM-Call pro Excel-Zeile (row_mode=single)."""
+        matched_text = stringify(df.at[ridx, matched_col]).strip()
+        original_dialogue = stringify(df.at[ridx, dialogue_col])
+        user_prompt = USER_PROMPT_TEMPLATE.format(dialogue=original_dialogue, matched_text=matched_text)
+        t_llm0 = time.perf_counter()
+        try:
+            raw = client.chat(SYSTEM_PROMPT, user_prompt, temperature=0.05, **_chat_kwargs())
+            data = parse_json_response(raw)
+        except (LLMError, json.JSONDecodeError, ValueError):
+            dt_llm = time.perf_counter() - t_llm0
+            if args.resource_log == "all":
+                print(f"[ROW] ridx={ridx} llm_s={dt_llm:.2f}s FAILED | {format_resource_usage()}")
+            decision_values[ridx] = "llm_error"
+            llm_item_values[ridx] = ""
+            return (0, 0, 1)
+        dt_llm = time.perf_counter() - t_llm0
+        if args.resource_log == "all":
+            print(f"[ROW] ridx={ridx} llm_s={dt_llm:.2f}s | {format_resource_usage()}")
+
+        it = _coerce_single_row_dict(data) if isinstance(data, dict) else None
+        if it is None:
+            try:
+                llm_item_values[ridx] = (
+                    json.dumps(data, ensure_ascii=False)[:8000] if isinstance(data, dict) else ""
+                )
+            except Exception:
+                llm_item_values[ridx] = ""
+            decision_values[ridx] = "llm_bad_shape"
+            corrected_values[ridx] = original_dialogue
+            corrections_values[ridx] = "[]"
+            return (0, 0, 1)
+        return _apply_parsed_item(ridx, original_dialogue, it)
+
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
-    group_items = list(groups.items())
-
-    def run_group(matched_text: str, idxs: List[int]) -> Tuple[Tuple[int, int, int], int]:
-        counts = process_batch(idxs, matched_text)
-        return counts, len(idxs)
-
-    if int(args.workers) <= 1:
-        done_rows = 0
-        for matched_text, idxs in group_items:
-            (a, u, f), n = run_group(matched_text, idxs)
-            n_applied += a
-            n_leave_unchanged += u
-            n_failed += f
-            done_rows += n
-            _progress(min(done_rows, total))
+    if args.row_mode == "single":
+        print(f"[START] row_mode=single llm_calls={total} (eine Zeile pro Request, workers={int(args.workers)})")
+        if int(args.workers) <= 1:
+            for ridx in range(total):
+                a, u, f = process_one_row(ridx)
+                n_applied += a
+                n_leave_unchanged += u
+                n_failed += f
+                _progress(ridx + 1)
+        else:
+            with ThreadPoolExecutor(max_workers=int(args.workers)) as ex:
+                futures = {ex.submit(process_one_row, ridx): ridx for ridx in range(total)}
+                done_rows = 0
+                for fut in as_completed(futures):
+                    a, u, f = fut.result()
+                    n_applied += a
+                    n_leave_unchanged += u
+                    n_failed += f
+                    done_rows += 1
+                    _progress(done_rows)
     else:
-        done_rows = 0
-        with ThreadPoolExecutor(max_workers=int(args.workers)) as ex:
-            futures = [ex.submit(run_group, mt, idxs) for mt, idxs in group_items]
-            for fut in as_completed(futures):
-                (a, u, f), n = fut.result()
+        # group rows by matched_text to maximize name spelling reuse + batching
+        groups: Dict[str, List[int]] = {}
+        for i in range(total):
+            matched = stringify(df.at[i, matched_col]).strip()
+            groups.setdefault(matched, []).append(i)
+
+        print(
+            f"[START] row_mode=batch llm_batches={len(groups)} "
+            f"(ein Call pro identischem Matched Text, workers={int(args.workers)})"
+        )
+
+        group_items = list(groups.items())
+
+        def run_group(matched_text: str, idxs: List[int]) -> Tuple[Tuple[int, int, int], int]:
+            counts = process_batch(idxs, matched_text)
+            return counts, len(idxs)
+
+        if int(args.workers) <= 1:
+            done_rows = 0
+            for matched_text, idxs in group_items:
+                (a, u, f), n = run_group(matched_text, idxs)
                 n_applied += a
                 n_leave_unchanged += u
                 n_failed += f
                 done_rows += n
                 _progress(min(done_rows, total))
+        else:
+            done_rows = 0
+            with ThreadPoolExecutor(max_workers=int(args.workers)) as ex:
+                futures = [ex.submit(run_group, mt, idxs) for mt, idxs in group_items]
+                for fut in as_completed(futures):
+                    (a, u, f), n = fut.result()
+                    n_applied += a
+                    n_leave_unchanged += u
+                    n_failed += f
+                    done_rows += n
+                    _progress(min(done_rows, total))
 
     # Restliche Zeilen (falls max_rows) unverändert übernehmen ist bereits abgedeckt (prefill)
 
