@@ -38,8 +38,13 @@ Offensichtliche Tippfehler, doppelte Buchstaben, falsche Endungen, **klar** fals
 - Groß-/Kleinschreibung am Satzanfang oder bei Eigennamen, wenn eindeutig.
 - **Nicht** korrigieren als „Tippfehler“, wenn zwei **verschiedene** gültige Wörter im Spiel sind (dann eher Synonymfall → lassen).
 
+**Pseudo-Wörter / Transkriptions-Falschschreibungen (oft hier statt unter „Tippfehler“):**
+- Buchstabenkette, die **kein** normales deutsches Wort ist (oder hier **offensichtlich keinen Lesesinn** hat), aber **phonetisch nah** an einem Wort in MATCHED_TEXT liegt (falsche Vokale, `sch`/`ch`/`s`, Doppelkonsonanten, Silbengrenze, zusammengeklebte Silben).
+- Typisch durch **ASR/Transkript**: klingt gesprochen „fast wie“ das Referenzwort, geschrieben aber **sinnlos** oder **Lexikon-fremd** im Satz.
+- Vorgehen: mit MATCHED_TEXT **dieselbe Stelle** im Satz abgleichen → durch das **eine** echte Wort aus der Referenz ersetzen, das dort gemeint ist — **nicht** den ganzen Referenzsatz übernehmen, kein Synonym aus der Referenz an anderer Stelle.
+
 ### Schritt 3 — Transkriptions-Müll
-Wörter oder Bruchstücke, die **im Kontext keinen Sinn** ergeben oder **kein plausibles Deutsch** sind (ASR-Müll): MATCHED_TEXT **nur** nutzen, um zu erkennen, **welches echte Wort** gemeint war — **nicht**, um den ganzen Referenzsatz zu übernehmen. Ersetze durch das **eine** passende Wort/Form, nicht durch eine neue Formulierung aus der Referenz.
+Wörter oder Bruchstücke, die **im Kontext keinen Sinn** ergeben oder **kein plausibles Deutsch** sind (ASR-Müll, **inkl.** obiger Pseudo-Wörter): MATCHED_TEXT **nur** nutzen, um zu erkennen, **welches echte Wort** gemeint war — **nicht**, um den ganzen Referenzsatz zu übernehmen. Ersetze durch das **eine** passende Wort/Form, nicht durch eine neue Formulierung aus der Referenz.
 
 ---
 
@@ -73,6 +78,8 @@ Wenn DIALOGUE und MATCHED_TEXT **offensichtlich nicht dieselbe Äußerung** sind
 **JA (Name):** `Easy, warte.` + Referenz `Izzy, warte.` → `Izzy, warte.`  
 **JA (Name/Schreibung):** `Richard Baines` + Referenz `Richard Banes` → `Banes`  
 **JA (Tippfehler):** `Das ist nict wahr.` → `nicht`; `Ich komm gleihc.` → `gleich`  
+**JA (Pseudo-Wort / phonetisch wie Referenz, kein Sinn):** DIALOGUE `Wir treffen uns im Blorum.` + Referenz `Wir treffen uns im Forum.` → `Forum` (`Blorum` existiert nicht, klingt wie „Forum“).  
+**JA (Transkription):** DIALOGUE `Er hat es Gewist.` + Referenz `Er hat es gewusst.` → `gewusst` (`Gewist` ist hier kein sinnvolles Wort, klingt wie „gewusst“).  
 **NEIN (Synonym):** Umstrukturierungsphase vs. Wiederaufbauphase  
 **NEIN (Fluchvariante):** verfluchter Teufel vs. scheiß Teufel  
 **NEIN (Einfügen / Kontext nachbauen):** kein `noch` aus der Referenz einfügen
@@ -107,7 +114,7 @@ BATCH_USER_PROMPT_TEMPLATE = """Wende den System-Prompt auf **alle** nummerierte
 
 **Zuordnung:** Ein gemeinsamer **MATCHED_TEXT** gilt für **alle** nummerierten Zeilen (Excel: gleicher Inhalt in „Matched Text“, Reihenfolge wie in der Datei).
 
-**Vorgehen pro Zeile (kurz):** (1) Namen/Entitäten aus MATCHED_TEXT in der DIALOGUE-Zeile suchen und Schreibung angleichen — auch bei kurzen Zeilen und wenn nur ein Name vermutet wird. (2) Rechtschreibung/Grammatik. (3) sinnloses ASR-Wort anhand der Referenz auf das **gemeinte** Wort eingrenzen — **ohne** fehlenden Satzkontext aus der Referenz einzufügen.
+**Vorgehen pro Zeile (kurz):** (1) Namen/Entitäten aus MATCHED_TEXT in der DIALOGUE-Zeile suchen und Schreibung angleichen — auch bei kurzen Zeilen und wenn nur ein Name vermutet wird. (2) Rechtschreibung/Grammatik. (3) sinnloses ASR-Wort / **Pseudo-Wort** (phonetisch nah an der Referenz, aber kein plausibles Lexem im Satz) anhand der Referenz auf das **gemeinte** echte Wort eingrenzen — **ohne** fehlenden Satzkontext aus der Referenz einzufügen.
 
 Antworte **nur** mit gültigem JSON in genau diesem Schema:
 {{
