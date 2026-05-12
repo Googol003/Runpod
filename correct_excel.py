@@ -77,6 +77,24 @@ def dialogue_matched_related(dialogue: str, matched: str, min_jaccard: float) ->
 
 CONF_RANK = {"low": 1, "medium": 2, "high": 3}
 
+# Erstbuchstaben-Paare (häufig ASR); nur in pair_allows mit Referenz-Bestmatch + Ratio-Band genutzt
+_ASR_CONFUSABLE_FIRST_CHARS = frozenset(
+    {
+        frozenset("ei"),
+        frozenset("sz"),
+        frozenset("ck"),
+        frozenset("vw"),
+        frozenset("dt"),
+        frozenset("pb"),
+        frozenset("mn"),
+        frozenset("bf"),
+        frozenset("ae"),
+        frozenset("ai"),
+        frozenset("ou"),
+        frozenset("uo"),
+    }
+)
+
 
 def confidence_accepted(model_conf: str, min_conf: str) -> bool:
     m = (model_conf or "low").lower().strip()
@@ -126,7 +144,26 @@ def pair_allows_reference_spelling(ot: str, ct: str, mt_set: set, mt_tokens: Lis
         return False
     if not _ref_supports_token(ct, mt_set, mt_tokens):
         return False
-    if token_ratio(ot, ct) >= 0.48:
+    tr = token_ratio(ot, ct)
+    # Kurze ASR-Namensvariante (z. B. easy→izzy): Ziel exakt in Referenz, Ratio im mittleren Band,
+    # unter Referenz-Tokens **gleicher Länge** mit plausibler Erstbuchstaben-Verwechslung das beste Match.
+    if (
+        len(ot) == len(ct)
+        and 3 <= len(ot) <= 8
+        and ct in mt_set
+        and mt_tokens
+        and 0.23 <= tr < 0.48
+    ):
+        cands = [
+            t
+            for t in mt_tokens
+            if len(t) == len(ot) and frozenset((ot[0], t[0])) in _ASR_CONFUSABLE_FIRST_CHARS
+        ]
+        if cands and ct in cands:
+            best = max(token_ratio(ot, t) for t in cands)
+            if tr + 1e-9 >= best:
+                return True
+    if tr >= 0.48:
         return True
     if min(len(ot), len(ct)) >= 4 and (ot in ct or ct in ot):
         return True
