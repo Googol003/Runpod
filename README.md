@@ -72,6 +72,7 @@ python correct_excel.py \
   --num-predict 1024 \
   --decision-col "Decision" \
   --llm-item-col "LLM Item" \
+  --min-confidence medium \
   --log-every 25
 ```
 

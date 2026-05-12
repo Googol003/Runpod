@@ -46,12 +46,41 @@ def char_similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a, b).ratio()
 
 
+CONF_RANK = {"low": 1, "medium": 2, "high": 3}
+
+
+def confidence_accepted(model_conf: str, min_conf: str) -> bool:
+    m = (model_conf or "low").lower().strip()
+    lo = (min_conf or "medium").lower().strip()
+    return CONF_RANK.get(m, 0) >= CONF_RANK.get(lo, 2)
+
+
 def word_tokens(s: str) -> List[str]:
     return re.findall(r"\w+", normalize_ws(s).lower())
 
 
 def token_ratio(a: str, b: str) -> float:
     return SequenceMatcher(None, a, b).ratio()
+
+
+def _ref_supports_token(ct: str, mt_set: set, mt_tokens: List[str]) -> bool:
+    """
+    True wenn ct als Schreibvariante zu einem Token im Referenztext passt
+    (exakt, Teilstring bei längeren Tokens, oder hohe Zeichen-Ähnlichkeit).
+    """
+    if not ct:
+        return False
+    if ct in mt_set:
+        return True
+    for rt in mt_tokens:
+        if not rt:
+            continue
+        if len(ct) >= 4 and (ct in rt or rt in ct):
+            if min(len(ct), len(rt)) >= 4:
+                return True
+        if token_ratio(ct, rt) >= 0.88:
+            return True
+    return False
 
 
 def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[bool, str]:
@@ -77,7 +106,8 @@ def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[boo
     # Anti-Synonym/Anti-Rewrite Check:
     # Wenn Tokens "sinnvoll" komplett ausgetauscht werden, verwerfen.
     # Erlaubt sind i.d.R. nur kleine Schreibkorrekturen oder Tokens, die direkt aus matched_text stammen.
-    mt_set = set(word_tokens(matched_text))
+    mt_tokens = word_tokens(matched_text)
+    mt_set = set(mt_tokens)
     o_toks = word_tokens(o)
     c_toks = word_tokens(c)
 
@@ -86,12 +116,10 @@ def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[boo
         for ot, ct in zip(o_toks, c_toks):
             if ot == ct:
                 continue
-            # allow if corrected token exists in matched_text (preferred for names/terms)
-            if ct in mt_set:
+            if _ref_supports_token(ct, mt_set, mt_tokens):
                 continue
-            # otherwise only allow extremely similar spelling (typo/ASR),
-            # to avoid "creative" name spellings that are not in Matched Text.
-            if token_ratio(ot, ct) >= 0.92:
+            # Tippfehler / ASR: nah am Originalwort
+            if token_ratio(ot, ct) >= 0.86:
                 continue
             return False, "rewrite_or_synonym_detected"
     else:
@@ -101,6 +129,8 @@ def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[boo
             if ct in o_set:
                 continue
             if ct in mt_set:
+                continue
+            if _ref_supports_token(ct, mt_set, mt_tokens):
                 continue
             return False, "rewrite_or_synonym_detected"
 
@@ -169,7 +199,8 @@ def main() -> int:
     p.add_argument("--workers", type=int, default=1, help="Parallelisierung über Matched-Text-Gruppen (1=aus).")
     p.add_argument("--num-ctx", type=int, default=8192, help="Ollama: num_ctx (größer = mehr Kontext, nutzt VRAM).")
     p.add_argument("--num-predict", type=int, default=1024, help="Ollama: num_predict (max Ausgabe-Tokens).")
-    p.add_argument("--decision-col", default="Decision", help="Neue Spalte: warum eine Zeile (nicht) korrigiert wurde.")
+    p.add_argument("--min-confidence", default="medium", choices=["low", "medium", "high"],
+                   help="Ab welcher LLM-Confidence Änderungen übernommen werden (default: medium = high+medium).")
     p.add_argument("--llm-item-col", default="LLM Item", help="Neue Spalte: LLM-JSON pro Zeile (falls verarbeitet).")
     args = p.parse_args()
 
@@ -189,7 +220,7 @@ def main() -> int:
     base_url = getattr(client, "base_url", "?")
     print(f"[START] input={in_path}")
     print(f"[START] provider={provider} base_url={base_url} model={model}")
-    print(f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}'")
+    print(f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}' min_confidence={args.min_confidence}")
     # optional warmup (nur für ollama client sinnvoll, aber schadet nicht)
     if hasattr(client, "warmup"):
         t0w = time.time()
@@ -306,7 +337,7 @@ def main() -> int:
             except Exception:
                 llm_item_values[ridx] = ""
 
-            if leave_unchanged or confidence != "high":
+            if leave_unchanged or not confidence_accepted(confidence, args.min_confidence):
                 n_skipped_lowconf += 1
                 corrected_values[ridx] = original_dialogue
                 corrections_values[ridx] = "[]"

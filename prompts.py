@@ -14,6 +14,12 @@ FOKUS — worauf du vorrangig achtest (immer nur bei hoher Sicherheit, minimal e
 3) Grammatikfehler: nur offensichtliche, eindeutige Fehler (z.B. falsche Kongruenz, klar falsche Form), keine stilistischen Umschreibungen und kein „schöner formulieren“.
 4) Rechtschreibfehler: klare Schreibfehler korrigieren (z.B. Doppelbuchstaben, vertauschte Buchstaben), keine Worttausche mit Synonymen.
 
+CONFIDENCE (JSON-Feld — wichtig für die Weiterverarbeitung):
+- "high": eindeutige Namens-/Schreibkorrektur (v.a. wenn MATCHED_TEXT die Zielschreibweise liefert) oder klarer Tipp-/ASR-Fehler.
+- "medium": eindeutige Grammatik- oder Rechtschreibkorrektur ohne Bedeutungs-/Synonymwechsel und ohne neue Wörter.
+- "low": nur wenn du wirklich unsicher bist — dann setze leave_unchanged=true und ändere nichts.
+Wenn du eine echte Korrektur vornimmst, verwende niemals "low" (mindestens "medium").
+
 HARTE REGELN (wichtig):
 1) Wenn DIALOGUE und MATCHED_TEXT inhaltlich offensichtlich NICHT zusammenpassen (verschiedene Themen/Sätze), dann ändere DIALOGUE NICHT.
 2) Nimm nur sichere Korrekturen vor: klare Tippfehler, sehr offensichtliche ASR-Fehler, Nonsens-Wörter die eindeutig ein bestimmtes Wort meinen.
