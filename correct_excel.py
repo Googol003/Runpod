@@ -169,6 +169,8 @@ def main() -> int:
     p.add_argument("--workers", type=int, default=1, help="Parallelisierung über Matched-Text-Gruppen (1=aus).")
     p.add_argument("--num-ctx", type=int, default=8192, help="Ollama: num_ctx (größer = mehr Kontext, nutzt VRAM).")
     p.add_argument("--num-predict", type=int, default=1024, help="Ollama: num_predict (max Ausgabe-Tokens).")
+    p.add_argument("--decision-col", default="Decision", help="Neue Spalte: warum eine Zeile (nicht) korrigiert wurde.")
+    p.add_argument("--llm-item-col", default="LLM Item", help="Neue Spalte: LLM-JSON pro Zeile (falls verarbeitet).")
     args = p.parse_args()
 
     in_path = Path(args.input)
@@ -196,6 +198,8 @@ def main() -> int:
 
     corrected_values: List[str] = []
     corrections_values: List[str] = []
+    decision_values: List[str] = []
+    llm_item_values: List[str] = []
 
     total = len(df) if args.max_rows <= 0 else min(len(df), args.max_rows)
     t0 = time.time()
@@ -235,6 +239,8 @@ def main() -> int:
     # prefill output arrays with originals
     corrected_values = [stringify(df.at[i, dialogue_col]) for i in range(len(df))]
     corrections_values = ["[]"] * len(df)
+    decision_values = [""] * len(df)
+    llm_item_values = [""] * len(df)
 
     def process_batch(row_indices: List[int], matched_text: str) -> None:
         nonlocal n_corrected, n_skipped_unrelated, n_skipped_lowconf, n_skipped_postcheck, n_failed
@@ -247,6 +253,8 @@ def main() -> int:
                 n_skipped_unrelated += 1
                 corrected_values[ridx] = dialogue
                 corrections_values[ridx] = "[]"
+                decision_values[ridx] = "unrelated"
+                llm_item_values[ridx] = ""
             else:
                 kept.append((ridx, dialogue))
 
@@ -267,6 +275,9 @@ def main() -> int:
             items = data.get("items", [])
         except (LLMError, json.JSONDecodeError, ValueError):
             n_failed += len(kept)
+            for ridx, _d in kept:
+                decision_values[ridx] = "llm_error"
+                llm_item_values[ridx] = ""
             return
 
         # index by i
@@ -282,17 +293,24 @@ def main() -> int:
             it = by_i.get(j)
             if not it:
                 n_failed += 1
+                decision_values[ridx] = "llm_missing_item"
+                llm_item_values[ridx] = ""
                 continue
 
             leave_unchanged = bool(it.get("leave_unchanged", True))
             confidence = str(it.get("confidence", "low")).lower().strip()
             corrected = stringify(it.get("corrected_dialogue", original_dialogue))
             corrections = normalize_corrections_list(it.get("corrections", []))
+            try:
+                llm_item_values[ridx] = json.dumps(it, ensure_ascii=False)
+            except Exception:
+                llm_item_values[ridx] = ""
 
             if leave_unchanged or confidence != "high":
                 n_skipped_lowconf += 1
                 corrected_values[ridx] = original_dialogue
                 corrections_values[ridx] = "[]"
+                decision_values[ridx] = "leave_unchanged" if leave_unchanged else f"lowconf:{confidence}"
                 continue
 
             ok, _reason = safe_to_apply(original_dialogue, corrected, matched_text)
@@ -300,6 +318,7 @@ def main() -> int:
                 n_skipped_postcheck += 1
                 corrected_values[ridx] = original_dialogue
                 corrections_values[ridx] = "[]"
+                decision_values[ridx] = f"postcheck:{_reason}"
                 continue
 
             if normalize_ws(corrected) != normalize_ws(original_dialogue):
@@ -310,10 +329,13 @@ def main() -> int:
                 # If corrected dialogue is unchanged, don't store "no-op corrections"
                 if normalize_ws(corrected) == normalize_ws(original_dialogue):
                     corrections_values[ridx] = "[]"
+                    decision_values[ridx] = "no_change"
                 else:
                     corrections_values[ridx] = json.dumps(corrections, ensure_ascii=False)
+                    decision_values[ridx] = "applied"
             except Exception:
                 corrections_values[ridx] = "[]"
+                decision_values[ridx] = "applied"
 
     # process groups (optionally parallel)
     from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -343,6 +365,8 @@ def main() -> int:
     df_out = df.copy()
     df_out[args.corrected_col] = corrected_values
     df_out[args.corrections_col] = corrections_values
+    df_out[args.decision_col] = decision_values
+    df_out[args.llm_item_col] = llm_item_values
     df_out.to_excel(out_path, index=False)
 
     elapsed = time.time() - t0

@@ -70,6 +70,8 @@ python correct_excel.py \
   --workers 1 \
   --num-ctx 8192 \
   --num-predict 1024 \
+  --decision-col "Decision" \
+  --llm-item-col "LLM Item" \
   --log-every 25
 ```
 
