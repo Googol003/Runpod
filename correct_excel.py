@@ -193,6 +193,7 @@ def main() -> int:
     p.add_argument("--matched-col", default="Matched Text", help="Spaltenname für Matched Text")
     p.add_argument("--corrected-col", default="Corrected Dialogue", help="Neue Spalte: korrigierter Dialogue")
     p.add_argument("--corrections-col", default="Corrections", help="Neue Spalte: Liste der Korrekturen (JSON)")
+    p.add_argument("--decision-col", default="Decision", help="Neue Spalte: warum eine Zeile (nicht) korrigiert wurde.")
     p.add_argument("--min-token-sim", type=float, default=0.12, help="Früher Skip, wenn Dialogue/Matched zu unähnlich")
     p.add_argument("--max-rows", type=int, default=0, help="Optional: max Zeilen (0=alle)")
     p.add_argument("--log-every", type=int, default=25, help="Progress-Log alle N Zeilen (0=aus)")
