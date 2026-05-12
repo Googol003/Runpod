@@ -71,13 +71,10 @@ python correct_excel.py \
   --num-predict 1024 \
   --decision-col "Decision" \
   --llm-item-col "LLM Item" \
-  --min-confidence medium \
   --log-every 25 \
   --resource-log progress
 ```
 
-Alle Zeilen mit gleichem **Matched Text** werden gebündelt an den LLM geschickt; die Ausgabe wird bei passender **Confidence** direkt übernommen (kein technischer Post-Check, kein Related-Filter im Skript). Optional: `--resource-log all` für pro-Batch-Ressourcenzeilen.
+Alle Zeilen mit gleichem **Matched Text** werden gebündelt an den LLM geschickt; die Ausgabe wird übernommen, solange das Modell nicht `leave_unchanged` setzt (kein technischer Post-Check, kein Related-Filter im Skript). Optional: `--resource-log all` für pro-Batch-Ressourcenzeilen.
 
-**Fortschritt (`[PROGRESS]` / `[DONE]`):** `applied` = Zeilen, in denen der Text wirklich geändert und übernommen wurde. `unchanged` = Modell hat `leave_unchanged` gesetzt. `conf_skip` = Modell wollte ändern, aber die gemeldete **confidence** lag unter `--min-confidence` (Original bleibt). `errors` = LLM-Fehler oder fehlende Batch-Zeilen.
-
-**Confidence-Gate „deaktivieren“:** `--min-confidence low` — dann werden auch Antworten mit Modell-`confidence: low` übernommen (Vorsicht: mehr Risiko). Standard `medium` nimmt nur `medium` und `high` an.
+**Fortschritt (`[PROGRESS]` / `[DONE]`):** `applied` = Zeilen mit geändertem Text. `unchanged` = Modell hat `leave_unchanged` gesetzt. `errors` = LLM-Fehler oder fehlende Batch-Zeilen.

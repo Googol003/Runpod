@@ -89,15 +89,6 @@ def normalize_ws(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip())
 
 
-CONF_RANK = {"low": 1, "medium": 2, "high": 3}
-
-
-def confidence_accepted(model_conf: str, min_conf: str) -> bool:
-    m = (model_conf or "low").lower().strip()
-    lo = (min_conf or "medium").lower().strip()
-    return CONF_RANK.get(m, 0) >= CONF_RANK.get(lo, 2)
-
-
 def normalize_corrections_list(corrections: Any) -> List[Dict[str, str]]:
     """
     Entfernt No-op Einträge (from==to) und normalisiert das Format.
@@ -155,10 +146,6 @@ def main() -> int:
     p.add_argument("--workers", type=int, default=1, help="Parallelisierung über Matched-Text-Gruppen (1=aus).")
     p.add_argument("--num-ctx", type=int, default=8192, help="Ollama: num_ctx (größer = mehr Kontext, nutzt VRAM).")
     p.add_argument("--num-predict", type=int, default=1024, help="Ollama: num_predict (max Ausgabe-Tokens).")
-    p.add_argument("--min-confidence", default="medium", choices=["low", "medium", "high"],
-                   help="Mindest-confidence des Modells, damit eine Änderung übernommen wird: "
-                   "low=alle (Gate aus), medium=medium+high, high=nur high. "
-                   "Hat keinen Effekt bei leave_unchanged=true (Zeile bleibt ohnehin original).")
     p.add_argument("--llm-item-col", default="LLM Item", help="Neue Spalte: LLM-JSON pro Zeile (falls verarbeitet).")
     p.add_argument(
         "--resource-log",
@@ -186,7 +173,7 @@ def main() -> int:
     print(f"[START] provider={provider} base_url={base_url} model={model}")
     print(
         f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}' "
-        f"min_confidence={args.min_confidence} resource_log={args.resource_log}"
+        f"resource_log={args.resource_log}"
     )
     # optional warmup (nur für ollama client sinnvoll, aber schadet nicht)
     if hasattr(client, "warmup"):
@@ -204,9 +191,8 @@ def main() -> int:
 
     total = len(df) if args.max_rows <= 0 else min(len(df), args.max_rows)
     t0 = time.time()
-    n_applied = 0  # Zeilen, in denen der Text nach Confidence-Gate wirklich geändert wurde
+    n_applied = 0  # Zeilen mit geändertem Text (übernommen)
     n_leave_unchanged = 0  # Modell: leave_unchanged=true
-    n_conf_reject = 0  # Modell wollte ändern, confidence unter --min-confidence
     n_failed = 0
 
     def _progress(i_done: int) -> None:
@@ -227,7 +213,6 @@ def main() -> int:
             f"eta={eta_s/60:.1f}m "
             f"applied={n_applied} "
             f"unchanged={n_leave_unchanged} "
-            f"conf_skip={n_conf_reject} "
             f"errors={n_failed}"
             + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
         )
@@ -246,11 +231,10 @@ def main() -> int:
     decision_values = [""] * len(df)
     llm_item_values = [""] * len(df)
 
-    def process_batch(row_indices: List[int], matched_text: str) -> Tuple[int, int, int, int]:
-        """Returns (n_applied, n_leave_unchanged, n_conf_reject, n_failed) for this batch only."""
+    def process_batch(row_indices: List[int], matched_text: str) -> Tuple[int, int, int]:
+        """Returns (n_applied, n_leave_unchanged, n_failed) for this batch only."""
         batch_applied = 0
         batch_unchanged = 0
-        batch_conf = 0
         batch_failed = 0
 
         kept: List[Tuple[int, str]] = []
@@ -259,7 +243,7 @@ def main() -> int:
             kept.append((ridx, dialogue))
 
         if not kept:
-            return (0, 0, 0, 0)
+            return (0, 0, 0)
 
         # IMPORTANT: Always send ALL dialogues for this matched_text together in ONE request.
         dialogue_list = "\n".join([f"{j+1}. {d}" for j, (_, d) in enumerate(kept)])
@@ -282,7 +266,7 @@ def main() -> int:
             for ridx, _d in kept:
                 decision_values[ridx] = "llm_error"
                 llm_item_values[ridx] = ""
-            return (0, 0, 0, batch_failed)
+            return (0, 0, batch_failed)
         dt_llm = time.perf_counter() - t_llm0
         if args.resource_log == "all":
             print(f"[BATCH] lines={len(kept)} llm_s={dt_llm:.2f}s | {format_resource_usage()}")
@@ -305,7 +289,6 @@ def main() -> int:
                 continue
 
             leave_unchanged = bool(it.get("leave_unchanged", True))
-            confidence = str(it.get("confidence", "low")).lower().strip()
             corrected = stringify(it.get("corrected_dialogue", original_dialogue))
             corrections = normalize_corrections_list(it.get("corrections", []))
             try:
@@ -318,12 +301,6 @@ def main() -> int:
                 corrected_values[ridx] = original_dialogue
                 corrections_values[ridx] = "[]"
                 decision_values[ridx] = "leave_unchanged"
-                continue
-            if not confidence_accepted(confidence, args.min_confidence):
-                batch_conf += 1
-                corrected_values[ridx] = original_dialogue
-                corrections_values[ridx] = "[]"
-                decision_values[ridx] = f"lowconf:{confidence}"
                 continue
 
             if normalize_ws(corrected) != normalize_ws(original_dialogue):
@@ -342,24 +319,23 @@ def main() -> int:
                 corrections_values[ridx] = "[]"
                 decision_values[ridx] = "applied"
 
-        return (batch_applied, batch_unchanged, batch_conf, batch_failed)
+        return (batch_applied, batch_unchanged, batch_failed)
 
     # process groups (optionally parallel)
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     group_items = list(groups.items())
 
-    def run_group(matched_text: str, idxs: List[int]) -> Tuple[Tuple[int, int, int, int], int]:
+    def run_group(matched_text: str, idxs: List[int]) -> Tuple[Tuple[int, int, int], int]:
         counts = process_batch(idxs, matched_text)
         return counts, len(idxs)
 
     if int(args.workers) <= 1:
         done_rows = 0
         for matched_text, idxs in group_items:
-            (a, u, c, f), n = run_group(matched_text, idxs)
+            (a, u, f), n = run_group(matched_text, idxs)
             n_applied += a
             n_leave_unchanged += u
-            n_conf_reject += c
             n_failed += f
             done_rows += n
             _progress(min(done_rows, total))
@@ -368,10 +344,9 @@ def main() -> int:
         with ThreadPoolExecutor(max_workers=int(args.workers)) as ex:
             futures = [ex.submit(run_group, mt, idxs) for mt, idxs in group_items]
             for fut in as_completed(futures):
-                (a, u, c, f), n = fut.result()
+                (a, u, f), n = fut.result()
                 n_applied += a
                 n_leave_unchanged += u
-                n_conf_reject += c
                 n_failed += f
                 done_rows += n
                 _progress(min(done_rows, total))
@@ -389,8 +364,7 @@ def main() -> int:
     print(f"[DONE] written={out_path}")
     print(
         f"[DONE] processed={total} applied={n_applied} "
-        f"unchanged={n_leave_unchanged} conf_skip={n_conf_reject} "
-        f"errors={n_failed} elapsed={elapsed:.1f}s"
+        f"unchanged={n_leave_unchanged} errors={n_failed} elapsed={elapsed:.1f}s"
         + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
     )
     return 0

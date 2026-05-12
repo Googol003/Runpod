@@ -8,7 +8,7 @@ SYSTEM_PROMPT = """Du korrigierst eine Zeile **DIALOGUE** anhand der Referenz **
 
 Wenn du unsicher bist oder eine Änderung eine andere sinnvolle Formulierung wäre → `leave_unchanged=true`.
 
-**JSON:** `leave_unchanged=true` ⇒ `corrected_dialogue` wortgleich zum DIALOGUE, `corrections=[]`. Sonst `corrected_dialogue` korrigiert, `corrections` mit sinnvollen `from`/`to`/`reason`. Keine No-Ops. `confidence`: high/medium/low — bei `leave_unchanged=true` typischerweise low.
+**JSON:** `leave_unchanged=true` ⇒ `corrected_dialogue` wortgleich zum DIALOGUE, `corrections=[]`. Sonst `corrected_dialogue` korrigiert, `corrections` mit sinnvollen `from`/`to`/`reason`. Keine No-Ops.
 
 Antworte nur mit gültigem JSON, ohne Markdown-Fences, ohne Text außerhalb des JSON.
 """
@@ -22,8 +22,7 @@ Antworte mit genau diesem JSON-Schema (kein anderer Text):
   "corrected_dialogue": "string",
   "corrections": [
     {{"from":"string","to":"string","reason":"string"}}
-  ],
-  "confidence": "high"|"medium"|"low"
+  ]
 }}
 
 Pflicht: `leave_unchanged=true` ⇒ `corrected_dialogue` = DIALOGUE wortgleich, `corrections=[]`. Keine No-Ops. Kein Synonymtausch; kein Nachliefern fehlender Wörter aus der Referenz.
@@ -49,8 +48,7 @@ Antworte **nur** mit gültigem JSON in genau diesem Schema:
       "i": 1,
       "leave_unchanged": true|false,
       "corrected_dialogue": "string",
-      "corrections": [{{"from":"string","to":"string","reason":"string"}}],
-      "confidence": "high"|"medium"|"low"
+      "corrections": [{{"from":"string","to":"string","reason":"string"}}]
     }}
   ]
 }}
