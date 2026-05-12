@@ -156,7 +156,9 @@ def main() -> int:
     p.add_argument("--num-ctx", type=int, default=8192, help="Ollama: num_ctx (größer = mehr Kontext, nutzt VRAM).")
     p.add_argument("--num-predict", type=int, default=1024, help="Ollama: num_predict (max Ausgabe-Tokens).")
     p.add_argument("--min-confidence", default="medium", choices=["low", "medium", "high"],
-                   help="Ab welcher LLM-Confidence Änderungen übernommen werden (default: medium = high+medium).")
+                   help="Mindest-confidence des Modells, damit eine Änderung übernommen wird: "
+                   "low=alle (Gate aus), medium=medium+high, high=nur high. "
+                   "Hat keinen Effekt bei leave_unchanged=true (Zeile bleibt ohnehin original).")
     p.add_argument("--llm-item-col", default="LLM Item", help="Neue Spalte: LLM-JSON pro Zeile (falls verarbeitet).")
     p.add_argument(
         "--resource-log",
@@ -202,8 +204,9 @@ def main() -> int:
 
     total = len(df) if args.max_rows <= 0 else min(len(df), args.max_rows)
     t0 = time.time()
-    n_corrected = 0
-    n_skipped_lowconf = 0
+    n_applied = 0  # Zeilen, in denen der Text nach Confidence-Gate wirklich geändert wurde
+    n_leave_unchanged = 0  # Modell: leave_unchanged=true
+    n_conf_reject = 0  # Modell wollte ändern, confidence unter --min-confidence
     n_failed = 0
 
     def _progress(i_done: int) -> None:
@@ -222,8 +225,9 @@ def main() -> int:
             f"elapsed={elapsed:.1f}s "
             f"rate={rps:.2f} rows/s "
             f"eta={eta_s/60:.1f}m "
-            f"corrected={n_corrected} "
-            f"skips(lowconf={n_skipped_lowconf}) "
+            f"applied={n_applied} "
+            f"unchanged={n_leave_unchanged} "
+            f"conf_skip={n_conf_reject} "
             f"errors={n_failed}"
             + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
         )
@@ -242,8 +246,12 @@ def main() -> int:
     decision_values = [""] * len(df)
     llm_item_values = [""] * len(df)
 
-    def process_batch(row_indices: List[int], matched_text: str) -> None:
-        nonlocal n_corrected, n_skipped_lowconf, n_failed
+    def process_batch(row_indices: List[int], matched_text: str) -> Tuple[int, int, int, int]:
+        """Returns (n_applied, n_leave_unchanged, n_conf_reject, n_failed) for this batch only."""
+        batch_applied = 0
+        batch_unchanged = 0
+        batch_conf = 0
+        batch_failed = 0
 
         kept: List[Tuple[int, str]] = []
         for ridx in row_indices:
@@ -251,7 +259,7 @@ def main() -> int:
             kept.append((ridx, dialogue))
 
         if not kept:
-            return
+            return (0, 0, 0, 0)
 
         # IMPORTANT: Always send ALL dialogues for this matched_text together in ONE request.
         dialogue_list = "\n".join([f"{j+1}. {d}" for j, (_, d) in enumerate(kept)])
@@ -270,11 +278,11 @@ def main() -> int:
             dt_llm = time.perf_counter() - t_llm0
             if args.resource_log == "all":
                 print(f"[BATCH] lines={len(kept)} llm_s={dt_llm:.2f}s FAILED | {format_resource_usage()}")
-            n_failed += len(kept)
+            batch_failed += len(kept)
             for ridx, _d in kept:
                 decision_values[ridx] = "llm_error"
                 llm_item_values[ridx] = ""
-            return
+            return (0, 0, 0, batch_failed)
         dt_llm = time.perf_counter() - t_llm0
         if args.resource_log == "all":
             print(f"[BATCH] lines={len(kept)} llm_s={dt_llm:.2f}s | {format_resource_usage()}")
@@ -291,7 +299,7 @@ def main() -> int:
         for j, (ridx, original_dialogue) in enumerate(kept, start=1):
             it = by_i.get(j)
             if not it:
-                n_failed += 1
+                batch_failed += 1
                 decision_values[ridx] = "llm_missing_item"
                 llm_item_values[ridx] = ""
                 continue
@@ -305,15 +313,21 @@ def main() -> int:
             except Exception:
                 llm_item_values[ridx] = ""
 
-            if leave_unchanged or not confidence_accepted(confidence, args.min_confidence):
-                n_skipped_lowconf += 1
+            if leave_unchanged:
+                batch_unchanged += 1
                 corrected_values[ridx] = original_dialogue
                 corrections_values[ridx] = "[]"
-                decision_values[ridx] = "leave_unchanged" if leave_unchanged else f"lowconf:{confidence}"
+                decision_values[ridx] = "leave_unchanged"
+                continue
+            if not confidence_accepted(confidence, args.min_confidence):
+                batch_conf += 1
+                corrected_values[ridx] = original_dialogue
+                corrections_values[ridx] = "[]"
+                decision_values[ridx] = f"lowconf:{confidence}"
                 continue
 
             if normalize_ws(corrected) != normalize_ws(original_dialogue):
-                n_corrected += 1
+                batch_applied += 1
 
             corrected_values[ridx] = corrected
             try:
@@ -328,27 +342,38 @@ def main() -> int:
                 corrections_values[ridx] = "[]"
                 decision_values[ridx] = "applied"
 
+        return (batch_applied, batch_unchanged, batch_conf, batch_failed)
+
     # process groups (optionally parallel)
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     group_items = list(groups.items())
 
-    def run_group(matched_text: str, idxs: List[int]) -> int:
-        # send the whole group in one go (see requirement)
-        process_batch(idxs, matched_text)
-        return len(idxs)
+    def run_group(matched_text: str, idxs: List[int]) -> Tuple[Tuple[int, int, int, int], int]:
+        counts = process_batch(idxs, matched_text)
+        return counts, len(idxs)
 
     if int(args.workers) <= 1:
         done_rows = 0
         for matched_text, idxs in group_items:
-            done_rows += run_group(matched_text, idxs)
+            (a, u, c, f), n = run_group(matched_text, idxs)
+            n_applied += a
+            n_leave_unchanged += u
+            n_conf_reject += c
+            n_failed += f
+            done_rows += n
             _progress(min(done_rows, total))
     else:
         done_rows = 0
         with ThreadPoolExecutor(max_workers=int(args.workers)) as ex:
             futures = [ex.submit(run_group, mt, idxs) for mt, idxs in group_items]
             for fut in as_completed(futures):
-                done_rows += int(fut.result() or 0)
+                (a, u, c, f), n = fut.result()
+                n_applied += a
+                n_leave_unchanged += u
+                n_conf_reject += c
+                n_failed += f
+                done_rows += n
                 _progress(min(done_rows, total))
 
     # Restliche Zeilen (falls max_rows) unverändert übernehmen ist bereits abgedeckt (prefill)
@@ -363,8 +388,8 @@ def main() -> int:
     elapsed = time.time() - t0
     print(f"[DONE] written={out_path}")
     print(
-        f"[DONE] processed={total} corrected={n_corrected} "
-        f"skips(lowconf={n_skipped_lowconf}) "
+        f"[DONE] processed={total} applied={n_applied} "
+        f"unchanged={n_leave_unchanged} conf_skip={n_conf_reject} "
         f"errors={n_failed} elapsed={elapsed:.1f}s"
         + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
     )

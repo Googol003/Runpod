@@ -78,3 +78,6 @@ python correct_excel.py \
 
 Alle Zeilen mit gleichem **Matched Text** werden gebündelt an den LLM geschickt; die Ausgabe wird bei passender **Confidence** direkt übernommen (kein technischer Post-Check, kein Related-Filter im Skript). Optional: `--resource-log all` für pro-Batch-Ressourcenzeilen.
 
+**Fortschritt (`[PROGRESS]` / `[DONE]`):** `applied` = Zeilen, in denen der Text wirklich geändert und übernommen wurde. `unchanged` = Modell hat `leave_unchanged` gesetzt. `conf_skip` = Modell wollte ändern, aber die gemeldete **confidence** lag unter `--min-confidence` (Original bleibt). `errors` = LLM-Fehler oder fehlende Batch-Zeilen.
+
+**Confidence-Gate „deaktivieren“:** `--min-confidence low` — dann werden auch Antworten mit Modell-`confidence: low` übernommen (Vorsicht: mehr Risiko). Standard `medium` nimmt nur `medium` und `high` an.
