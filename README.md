@@ -66,18 +66,15 @@ python correct_excel.py \
   --input "/path/to/input.xlsx" \
   --dialogue-col "Dialogue" \
   --matched-col "Matched Text" \
-  --related-filter \
-  --min-token-sim 0.12 \
   --workers 1 \
   --num-ctx 8192 \
   --num-predict 1024 \
   --decision-col "Decision" \
   --llm-item-col "LLM Item" \
   --min-confidence medium \
-  --log-every 25
+  --log-every 25 \
+  --resource-log progress
 ```
 
-Ohne `--related-filter` werden **alle** Zeilen an den LLM geschickt (Standard). Mit `--related-filter` werden offenbar nicht passende Zeilen vorher übersprungen (`Decision`: `unrelated`); `--min-token-sim` wirkt nur damit. Zusätzlich kann mit `--related-filter` eine Referenz-Überlappungsprüfung greifen, **wenn** `--postcheck` aktiv ist.
-
-**Post-Check (`safe_to_apply`):** Standard **aus** — LLM-Ausgabe wird bei passender Confidence direkt übernommen. Mit **`--postcheck`** werden heuristische Sperren (u. a. gegen Synonyme, Worteinfügungen) wieder angewendet; `Decision` kann dann `postcheck:…` sein.
+Alle Zeilen mit gleichem **Matched Text** werden gebündelt an den LLM geschickt; die Ausgabe wird bei passender **Confidence** direkt übernommen (kein technischer Post-Check, kein Related-Filter im Skript). Optional: `--resource-log all` für pro-Batch-Ressourcenzeilen.
 

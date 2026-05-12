@@ -8,7 +8,6 @@ import re
 import shutil
 import subprocess
 import time
-from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -90,232 +89,13 @@ def normalize_ws(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip())
 
 
-def token_similarity(a: str, b: str) -> float:
-    """
-    Sehr einfache, schnelle Heuristik: Jaccard auf Wort-Tokens.
-    """
-    a = normalize_ws(a).lower()
-    b = normalize_ws(b).lower()
-    if not a or not b:
-        return 0.0
-    a_tokens = set(re.findall(r"\w+", a))
-    b_tokens = set(re.findall(r"\w+", b))
-    if not a_tokens or not b_tokens:
-        return 0.0
-    inter = len(a_tokens & b_tokens)
-    union = len(a_tokens | b_tokens)
-    return inter / union if union else 0.0
-
-
-def char_similarity(a: str, b: str) -> float:
-    a = normalize_ws(a)
-    b = normalize_ws(b)
-    if not a and not b:
-        return 1.0
-    if not a or not b:
-        return 0.0
-    return SequenceMatcher(None, a, b).ratio()
-
-
-def max_pairwise_token_ratio(a: str, b: str) -> float:
-    """Beste Wort-zu-Wort-Ähnlichkeit (hilft bei Namen: Sid vs Stede)."""
-    da = word_tokens(a)
-    mb = word_tokens(b)
-    if not da or not mb:
-        return 0.0
-    best = 0.0
-    for t in da:
-        for m in mb:
-            best = max(best, token_ratio(t, m))
-    return best
-
-
-def dialogue_matched_related(dialogue: str, matched: str, min_jaccard: float) -> bool:
-    """
-    True, wenn DIALOGUE und MATCHED_TEXT plausibel dieselbe Szene sind.
-    Jaccard allein scheitert oft bei Namen (keine gemeinsamen Wortformen).
-    """
-    if not normalize_ws(dialogue) or not normalize_ws(matched):
-        return False
-    if token_similarity(dialogue, matched) >= min_jaccard:
-        return True
-    if char_similarity(dialogue, matched) >= 0.22:
-        return True
-    if max_pairwise_token_ratio(dialogue, matched) >= 0.34:
-        return True
-    return False
-
-
 CONF_RANK = {"low": 1, "medium": 2, "high": 3}
-
-# Erstbuchstaben-Paare (häufig ASR); nur in pair_allows mit Referenz-Bestmatch + Ratio-Band genutzt
-_ASR_CONFUSABLE_FIRST_CHARS = frozenset(
-    {
-        frozenset("ei"),
-        frozenset("sz"),
-        frozenset("ck"),
-        frozenset("vw"),
-        frozenset("dt"),
-        frozenset("pb"),
-        frozenset("mn"),
-        frozenset("bf"),
-        frozenset("ae"),
-        frozenset("ai"),
-        frozenset("ou"),
-        frozenset("uo"),
-    }
-)
 
 
 def confidence_accepted(model_conf: str, min_conf: str) -> bool:
     m = (model_conf or "low").lower().strip()
     lo = (min_conf or "medium").lower().strip()
     return CONF_RANK.get(m, 0) >= CONF_RANK.get(lo, 2)
-
-
-def word_tokens(s: str) -> List[str]:
-    return re.findall(r"\w+", normalize_ws(s).lower())
-
-
-def token_ratio(a: str, b: str) -> float:
-    return SequenceMatcher(None, a, b).ratio()
-
-
-def _ref_supports_token(ct: str, mt_set: set, mt_tokens: List[str]) -> bool:
-    """
-    True wenn ct als Schreibvariante zu einem Token im Referenztext passt
-    (exakt, Teilstring bei längeren Tokens, oder hohe Zeichen-Ähnlichkeit).
-    """
-    if not ct:
-        return False
-    if ct in mt_set:
-        return True
-    for rt in mt_tokens:
-        if not rt:
-            continue
-        if len(ct) >= 4 and (ct in rt or rt in ct):
-            if min(len(ct), len(rt)) >= 4:
-                return True
-        if token_ratio(ct, rt) >= 0.88:
-            return True
-    return False
-
-
-def pair_allows_reference_spelling(ot: str, ct: str, mt_set: set, mt_tokens: List[str]) -> bool:
-    """
-    ct aus Referenz nutzen, aber nicht als Synonym-Tausch:
-    nur wenn phonetisch/Schreibnah zum Originalwort ot.
-    """
-    if ot == ct:
-        return True
-    if token_ratio(ot, ct) >= 0.86:
-        return True
-    # Zwei unterschiedliche längere Wörter mit niedriger Form-Ähnlichkeit = kein Tippfehler, oft Synonym/Alternativbegriff
-    if min(len(ot), len(ct)) >= 10 and token_ratio(ot, ct) < 0.56:
-        return False
-    if not _ref_supports_token(ct, mt_set, mt_tokens):
-        return False
-    tr = token_ratio(ot, ct)
-    # Kurze ASR-Namensvariante (z. B. easy→izzy): Ziel exakt in Referenz, Ratio im mittleren Band,
-    # unter Referenz-Tokens **gleicher Länge** mit plausibler Erstbuchstaben-Verwechslung das beste Match.
-    if (
-        len(ot) == len(ct)
-        and 3 <= len(ot) <= 8
-        and ct in mt_set
-        and mt_tokens
-        and 0.23 <= tr < 0.48
-    ):
-        cands = [
-            t
-            for t in mt_tokens
-            if len(t) == len(ot) and frozenset((ot[0], t[0])) in _ASR_CONFUSABLE_FIRST_CHARS
-        ]
-        if cands and ct in cands:
-            best = max(token_ratio(ot, t) for t in cands)
-            if tr + 1e-9 >= best:
-                return True
-    if tr >= 0.48:
-        return True
-    if min(len(ot), len(ct)) >= 4 and (ot in ct or ct in ot):
-        return True
-    return False
-
-
-def safe_to_apply(
-    original: str,
-    corrected: str,
-    matched_text: str,
-    *,
-    strict_ref_overlap: bool = False,
-) -> Tuple[bool, str]:
-    """
-    Strenge Post-Checks, damit wirklich nur "sichere" Änderungen durchkommen.
-    strict_ref_overlap: nur mit --related-filter; sonst keine Ablehnung wegen
-    geringer Überlappung Dialogue/Matched (vermeidet falsche „unrelated“-Postchecks).
-    """
-    o = normalize_ws(original)
-    c = normalize_ws(corrected)
-
-    if c == o:
-        return True, "no_change"
-
-    o_toks = word_tokens(o)
-    c_toks = word_tokens(c)
-
-    # Keine neuen Wörter (z. B. "noch" aus MATCHED_TEXT einfügen) — nur Ersetzung/Umstellung gleicher Länge oder ein Token weniger
-    if len(c_toks) > len(o_toks):
-        return False, "no_inserted_words"
-    if len(o_toks) - len(c_toks) > 1:
-        return False, "word_count_change_too_large"
-
-    mt_tokens = word_tokens(matched_text)
-    mt_set = set(mt_tokens)
-
-    # Gesamtähnlichkeit (Namenszeilen dürfen niedriger sein)
-    if char_similarity(o, c) < 0.85:
-        if len(o_toks) == len(c_toks) and len(o_toks) > 0:
-            diffs = [(ot, ct) for ot, ct in zip(o_toks, c_toks) if ot != ct]
-            if diffs and all(
-                pair_allows_reference_spelling(ot, ct, mt_set, mt_tokens) or token_ratio(ot, ct) >= 0.86
-                for ot, ct in diffs
-            ):
-                if char_similarity(o, c) < 0.20:
-                    return False, "too_different_from_original"
-            else:
-                return False, "too_different_from_original"
-        else:
-            return False, "too_different_from_original"
-
-    # Anti-Synonym / Anti-Rewrite (gleiche Tokenzahl: Positionsweise)
-    if len(o_toks) == len(c_toks) and len(o_toks) > 0:
-        for ot, ct in zip(o_toks, c_toks):
-            if ot == ct:
-                continue
-            if pair_allows_reference_spelling(ot, ct, mt_set, mt_tokens):
-                continue
-            if token_ratio(ot, ct) >= 0.86:
-                continue
-            return False, "rewrite_or_synonym_detected"
-    else:
-        o_set = set(o_toks)
-        for ct in c_toks:
-            if ct in o_set:
-                continue
-            allowed = False
-            for ot in o_toks:
-                if pair_allows_reference_spelling(ot, ct, mt_set, mt_tokens) or token_ratio(ot, ct) >= 0.86:
-                    allowed = True
-                    break
-            if not allowed:
-                return False, "rewrite_or_synonym_detected"
-
-    # Referenz-Bezug (nur im „strict“-Modus): optional zusätzlich zu dialogue_matched_related
-    if strict_ref_overlap:
-        if max(token_similarity(o, matched_text), token_similarity(c, matched_text)) < 0.12:
-            if char_similarity(c, matched_text) < 0.14 and char_similarity(o, matched_text) < 0.14:
-                return False, "reference_overlap_low"
-
-    return True, "ok"
 
 
 def normalize_corrections_list(corrections: Any) -> List[Dict[str, str]]:
@@ -370,12 +150,6 @@ def main() -> int:
     p.add_argument("--corrected-col", default="Corrected Dialogue", help="Neue Spalte: korrigierter Dialogue")
     p.add_argument("--corrections-col", default="Corrections", help="Neue Spalte: Liste der Korrekturen (JSON)")
     p.add_argument("--decision-col", default="Decision", help="Neue Spalte: warum eine Zeile (nicht) korrigiert wurde.")
-    p.add_argument("--min-token-sim", type=float, default=0.12, help="Nur mit --related-filter: Schwellwert für Jaccard-Teil der Relatedness-Prüfung.")
-    p.add_argument(
-        "--related-filter",
-        action="store_true",
-        help="Vor dem LLM: Zeilen ausfiltern, die offenbar nicht zu MATCHED_TEXT passen (unrelated). Standard: aus.",
-    )
     p.add_argument("--max-rows", type=int, default=0, help="Optional: max Zeilen (0=alle)")
     p.add_argument("--log-every", type=int, default=25, help="Progress-Log alle N Zeilen (0=aus)")
     p.add_argument("--workers", type=int, default=1, help="Parallelisierung über Matched-Text-Gruppen (1=aus).")
@@ -384,11 +158,6 @@ def main() -> int:
     p.add_argument("--min-confidence", default="medium", choices=["low", "medium", "high"],
                    help="Ab welcher LLM-Confidence Änderungen übernommen werden (default: medium = high+medium).")
     p.add_argument("--llm-item-col", default="LLM Item", help="Neue Spalte: LLM-JSON pro Zeile (falls verarbeitet).")
-    p.add_argument(
-        "--postcheck",
-        action="store_true",
-        help="Nach dem LLM safe_to_apply ausführen (heuristische Absicherung). Standard: aus — Änderungen werden bei passender Confidence direkt übernommen.",
-    )
     p.add_argument(
         "--resource-log",
         choices=("off", "progress", "all"),
@@ -415,8 +184,7 @@ def main() -> int:
     print(f"[START] provider={provider} base_url={base_url} model={model}")
     print(
         f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}' "
-        f"min_confidence={args.min_confidence} related_filter={args.related_filter} "
-        f"postcheck={args.postcheck} resource_log={args.resource_log}"
+        f"min_confidence={args.min_confidence} resource_log={args.resource_log}"
     )
     # optional warmup (nur für ollama client sinnvoll, aber schadet nicht)
     if hasattr(client, "warmup"):
@@ -435,9 +203,7 @@ def main() -> int:
     total = len(df) if args.max_rows <= 0 else min(len(df), args.max_rows)
     t0 = time.time()
     n_corrected = 0
-    n_skipped_unrelated = 0
     n_skipped_lowconf = 0
-    n_skipped_postcheck = 0
     n_failed = 0
 
     def _progress(i_done: int) -> None:
@@ -457,7 +223,7 @@ def main() -> int:
             f"rate={rps:.2f} rows/s "
             f"eta={eta_s/60:.1f}m "
             f"corrected={n_corrected} "
-            f"skips(unrelated={n_skipped_unrelated},lowconf={n_skipped_lowconf},post={n_skipped_postcheck}) "
+            f"skips(lowconf={n_skipped_lowconf}) "
             f"errors={n_failed}"
             + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
         )
@@ -477,20 +243,12 @@ def main() -> int:
     llm_item_values = [""] * len(df)
 
     def process_batch(row_indices: List[int], matched_text: str) -> None:
-        nonlocal n_corrected, n_skipped_unrelated, n_skipped_lowconf, n_skipped_postcheck, n_failed
+        nonlocal n_corrected, n_skipped_lowconf, n_failed
 
-        # Build list and apply early skip per row (unrelated)
         kept: List[Tuple[int, str]] = []
         for ridx in row_indices:
             dialogue = stringify(df.at[ridx, dialogue_col])
-            if args.related_filter and not dialogue_matched_related(dialogue, matched_text, args.min_token_sim):
-                n_skipped_unrelated += 1
-                corrected_values[ridx] = dialogue
-                corrections_values[ridx] = "[]"
-                decision_values[ridx] = "unrelated"
-                llm_item_values[ridx] = ""
-            else:
-                kept.append((ridx, dialogue))
+            kept.append((ridx, dialogue))
 
         if not kept:
             return
@@ -554,22 +312,6 @@ def main() -> int:
                 decision_values[ridx] = "leave_unchanged" if leave_unchanged else f"lowconf:{confidence}"
                 continue
 
-            if args.postcheck:
-                ok, _reason = safe_to_apply(
-                    original_dialogue,
-                    corrected,
-                    matched_text,
-                    strict_ref_overlap=args.related_filter,
-                )
-            else:
-                ok, _reason = True, "skipped"
-            if not ok:
-                n_skipped_postcheck += 1
-                corrected_values[ridx] = original_dialogue
-                corrections_values[ridx] = "[]"
-                decision_values[ridx] = f"postcheck:{_reason}"
-                continue
-
             if normalize_ws(corrected) != normalize_ws(original_dialogue):
                 n_corrected += 1
 
@@ -622,7 +364,7 @@ def main() -> int:
     print(f"[DONE] written={out_path}")
     print(
         f"[DONE] processed={total} corrected={n_corrected} "
-        f"skips(unrelated={n_skipped_unrelated},lowconf={n_skipped_lowconf},post={n_skipped_postcheck}) "
+        f"skips(lowconf={n_skipped_lowconf}) "
         f"errors={n_failed} elapsed={elapsed:.1f}s"
         + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
     )
