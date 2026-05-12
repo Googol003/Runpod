@@ -30,6 +30,7 @@ Passe **DIALOGUE** minimal an, sodass er weiterhin **derselbe gesprochene Inhalt
 
 ## Namen & Referenz (Kernregel)
 Wenn ein Name im DIALOGUE falsch/variant geschrieben ist und in **MATCHED_TEXT** die **kanonische Schreibweise** derselben Entität erkennbar ist → **genau diese Schreibweise** verwenden. Wenn der Vorname/ die Person **inhaltlich anders** ist → **nicht** „umbiegen“.
+**Auch bei sehr kurzen Zeilen** (z.B. nur ein Ausruf/Name): oft **keine gemeinsamen Wortformen** mit MATCHED_TEXT — trotzdem Namen korrigieren, wenn Schreibung in der Referenz steht und es **derselbe** Name/Sprecher ist (phonetisch oder Rolle im Dialog).
 
 ---
 

@@ -46,6 +46,35 @@ def char_similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a, b).ratio()
 
 
+def max_pairwise_token_ratio(a: str, b: str) -> float:
+    """Beste Wort-zu-Wort-Ähnlichkeit (hilft bei Namen: Sid vs Stede)."""
+    da = word_tokens(a)
+    mb = word_tokens(b)
+    if not da or not mb:
+        return 0.0
+    best = 0.0
+    for t in da:
+        for m in mb:
+            best = max(best, token_ratio(t, m))
+    return best
+
+
+def dialogue_matched_related(dialogue: str, matched: str, min_jaccard: float) -> bool:
+    """
+    True, wenn DIALOGUE und MATCHED_TEXT plausibel dieselbe Szene sind.
+    Jaccard allein scheitert oft bei Namen (keine gemeinsamen Wortformen).
+    """
+    if not normalize_ws(dialogue) or not normalize_ws(matched):
+        return False
+    if token_similarity(dialogue, matched) >= min_jaccard:
+        return True
+    if char_similarity(dialogue, matched) >= 0.22:
+        return True
+    if max_pairwise_token_ratio(dialogue, matched) >= 0.34:
+        return True
+    return False
+
+
 CONF_RANK = {"low": 1, "medium": 2, "high": 3}
 
 
@@ -83,6 +112,24 @@ def _ref_supports_token(ct: str, mt_set: set, mt_tokens: List[str]) -> bool:
     return False
 
 
+def pair_allows_reference_spelling(ot: str, ct: str, mt_set: set, mt_tokens: List[str]) -> bool:
+    """
+    ct aus Referenz nutzen, aber nicht als Synonym-Tausch:
+    nur wenn phonetisch/Schreibnah zum Originalwort ot.
+    """
+    if ot == ct:
+        return True
+    if token_ratio(ot, ct) >= 0.86:
+        return True
+    if not _ref_supports_token(ct, mt_set, mt_tokens):
+        return False
+    if token_ratio(ot, ct) >= 0.48:
+        return True
+    if min(len(ot), len(ct)) >= 4 and (ot in ct or ct in ot):
+        return True
+    return False
+
+
 def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[bool, str]:
     """
     Strenge Post-Checks, damit wirklich nur "sichere" Änderungen durchkommen.
@@ -93,51 +140,58 @@ def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[boo
     if c == o:
         return True, "no_change"
 
-    # Nicht zu stark umschreiben
-    if char_similarity(o, c) < 0.85:
-        return False, "too_different_from_original"
-
-    # Wortanzahl darf sich maximal um 1 ändern (z.B. "haste" -> "hast du")
     ow = o.split()
     cw = c.split()
     if abs(len(ow) - len(cw)) > 1:
         return False, "word_count_change_too_large"
 
-    # Anti-Synonym/Anti-Rewrite Check:
-    # Wenn Tokens "sinnvoll" komplett ausgetauscht werden, verwerfen.
-    # Erlaubt sind i.d.R. nur kleine Schreibkorrekturen oder Tokens, die direkt aus matched_text stammen.
     mt_tokens = word_tokens(matched_text)
     mt_set = set(mt_tokens)
     o_toks = word_tokens(o)
     c_toks = word_tokens(c)
 
-    # If lengths are equal: check per-position replacements
+    # Gesamtähnlichkeit (Namenszeilen dürfen niedriger sein)
+    if char_similarity(o, c) < 0.85:
+        if len(o_toks) == len(c_toks) and len(o_toks) > 0:
+            diffs = [(ot, ct) for ot, ct in zip(o_toks, c_toks) if ot != ct]
+            if diffs and all(
+                pair_allows_reference_spelling(ot, ct, mt_set, mt_tokens) or token_ratio(ot, ct) >= 0.86
+                for ot, ct in diffs
+            ):
+                if char_similarity(o, c) < 0.20:
+                    return False, "too_different_from_original"
+            else:
+                return False, "too_different_from_original"
+        else:
+            return False, "too_different_from_original"
+
+    # Anti-Synonym / Anti-Rewrite (gleiche Tokenzahl: Positionsweise)
     if len(o_toks) == len(c_toks) and len(o_toks) > 0:
         for ot, ct in zip(o_toks, c_toks):
             if ot == ct:
                 continue
-            if _ref_supports_token(ct, mt_set, mt_tokens):
+            if pair_allows_reference_spelling(ot, ct, mt_set, mt_tokens):
                 continue
-            # Tippfehler / ASR: nah am Originalwort
             if token_ratio(ot, ct) >= 0.86:
                 continue
             return False, "rewrite_or_synonym_detected"
     else:
-        # If tokenization differs, be stricter: corrected tokens must mostly come from original or matched_text
         o_set = set(o_toks)
         for ct in c_toks:
             if ct in o_set:
                 continue
-            if ct in mt_set:
-                continue
-            if _ref_supports_token(ct, mt_set, mt_tokens):
-                continue
-            return False, "rewrite_or_synonym_detected"
+            allowed = False
+            for ot in o_toks:
+                if pair_allows_reference_spelling(ot, ct, mt_set, mt_tokens) or token_ratio(ot, ct) >= 0.86:
+                    allowed = True
+                    break
+            if not allowed:
+                return False, "rewrite_or_synonym_detected"
 
-    # Wenn matched_text offensichtlich nicht passt, lieber nichts tun
-    ts = token_similarity(o, matched_text)
-    if ts < 0.12:
-        return False, "dialogue_matched_text_unrelated"
+    # Referenz-Bezug: Jaccard auf Original oft 0 bei Namen; korrigierter Text zählt mit
+    if max(token_similarity(o, matched_text), token_similarity(c, matched_text)) < 0.12:
+        if char_similarity(c, matched_text) < 0.14 and char_similarity(o, matched_text) < 0.14:
+            return False, "dialogue_matched_text_unrelated"
 
     return True, "ok"
 
@@ -281,7 +335,7 @@ def main() -> int:
         kept: List[Tuple[int, str]] = []
         for ridx in row_indices:
             dialogue = stringify(df.at[ridx, dialogue_col])
-            if token_similarity(dialogue, matched_text) < args.min_token_sim:
+            if not dialogue_matched_related(dialogue, matched_text, args.min_token_sim):
                 n_skipped_unrelated += 1
                 corrected_values[ridx] = dialogue
                 corrections_values[ridx] = "[]"
