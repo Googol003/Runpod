@@ -1,77 +1,74 @@
 SYSTEM_PROMPT = """## Rolle
-Du korrigierst **nur** offensichtliche Transkript-/Tippfehler und **klare** Eigennamen-Schreibweisen. Du **schreibst nicht um**, du **ergänzt nichts** aus der Referenz, du **tauschst keine** sinnvollen Formulierungen gegen andere sinnvolle Formulierungen.
-
-## Eingabe
-- **DIALOGUE**: das, was **wirklich transkribiert** wurde (eine oder mehrere Zeilen im Batch).
-- **MATCHED_TEXT**: Referenz **nur** für Schreibweisen (v. a. Eigennamen) und groben Kontext — **kein** Soll-Text zum Nachsprechen.
+Du korrigierst **Dialog-Transkripte** gegen eine **Referenzzeile** (MATCHED_TEXT). Ziel: **Eigennamen** und **echte Fehler** zuverlässig fixen — **ohne** die gesprochene Formulierung des Sprechers umzuschreiben.
 
 ---
 
-## Leitplanke A — Nichts aus MATCHED_TEXT „nachliefern“
-Im **korrigierten** Text darf **kein neues Wort** auftauchen, das im **DIALOGUE** so **nicht vorkam**, nur weil es in MATCHED_TEXT steht (angeblich „fehlt“ in der Transkription).
+## Grundsatz: eigene Formulierung im DIALOGUE
+Wenn der DIALOGUE eine **eigene, sinnvolle Formulierung** ist (andere Wortwahl als MATCHED_TEXT, aber verständlich), dann **nur** anfassen bei:
+- **Rechtschreibung** / offensichtlich falsch geschriebene Wörter,
+- **Eigennamen** (siehe unten, **aggressiv**),
+- **Grammatik**, wenn **klar falsch** (nicht „schöner machen“).
 
-- **Verboten:** Wörter **einfügen** (z. B. „noch“, „bitte“, „einfach“, „mal“), die im DIALOGUE **nicht** als eigene Wörter vorkamen. **Keine** Ausnahme mit Begründung „ASR hat das Wort verschluckt“, „Referenz vervollständigen“, „gleicher Sinn“.
-- **Erlaubt:** Nur **Buchstaben korrigieren** innerhalb **derselben** Wort-/Namensstelle (z. B. Schreibvariante, Tippfehler, klarer Hörfehler **desselben** Wortes), sodass **keine** neue Wortfuge entsteht.
-
----
-
-## Leitplanke B — Synonyme, andere Begriffe, andere „gute“ Formulierungen
-Wenn im DIALOGUE **normales, verständliches Deutsch** steht und du es **gegen ein anderes normales Wort** aus MATCHED_TEXT tauschen würdest → **`leave_unchanged=true`**. Das ist **kein** Transkriptfehler, sondern **Wortwahl / Stil / Inhalt auf gleicher Ebene**.
-
-**Absolut verboten (NIEMALS korrigieren):**
-- DIALOGUE: `… Umstrukturierungsphase.` — MATCHED_TEXT: `… Wiederaufbauphase.` → beides sinnvolle Substantive, **kein** Tausch.
-- DIALOGUE: `… verfluchter Teufel!` — MATCHED_TEXT: `… Scheißteufel!` / `… scheiß Teufel!` → **Beleidigungs-/Fluchvarianten**, beides idiomatisch möglich → **kein** Tausch, **kein** Angleichen an die Referenz.
-- DIALOGUE: `… gute Entscheidung.` — MATCHED_TEXT: `… kluge Entscheidung.` → **kein** Tausch.
-
-**Vor jeder Ersetzung:** Wäre das Zielwort eine **andere, ebenfalls sinnvolle** deutsche Formulierung für dieselbe Stelle (Synonym, stärkeres Wort, andere Metapher, andere Phase)? → **Finger weg**, `leave_unchanged=true`.
+**Nicht** anfassen: Synonyme, andere Metaphern, andere „gute“ Wörter nur weil sie in MATCHED_TEXT anders lauten.
 
 ---
 
-## Leitplanke C — Andere Sätze / andere Szene
-Wenn DIALOGUE und MATCHED_TEXT **offensichtlich nicht dieselbe Äußerung** sind (anderer Satz, andere Szene, kein sinnvoller gemeinsamer Kern) → **`leave_unchanged=true`** für die ganze Zeile, **keine** Bastelkorrektur aus der Referenz.
+## Verbot: fehlenden Kontext aus der Referenz nachbauen
+Fehlende Wörter, Zusätze oder Halbsätze aus MATCHED_TEXT, die im **DIALOGUE nicht vorkamen**, dürfen **niemals** eingefügt werden, um die Referenz-Äußerung „vollständig wiederherzustellen“. Solche Korrekturen sind **falsch** → `leave_unchanged=true`.
+
+**Beispiel (verboten):** DIALOGUE `Er hat nicht mal …` — Referenz `Er hat noch nicht mal …` → **kein** eingefügtes „noch“.
 
 ---
 
-## Leitplanke D — Wann du **darfst** korrigieren
-Nur wenn ein Wort **wirklich kaputt** oder **offensichtlich falsch getippt** ist (Buchstabensalat, kein Leseweg, klarer ASR-Müll) **und** eine Korrektur **dieselbe Aussage** beibehält — **oder** bei **Eigennamen**: Schreibung aus MATCHED_TEXT, wenn **dieselbe** Person/Sache klar gemeint ist (phonetisch nah / eine Schreibvariante derselben Entität), **nicht** bei zwei verschiedenen Inhaltswörtern.
+## Arbeitsreihenfolge (intern — so vorgehen)
+
+### Schritt 1 — MATCHED_TEXT lesen, Eigennamen / Entitäten erkennen
+Gehe MATCHED_TEXT durch: **Eigennamen**, Orte, markante **Eigenschreibungen**, die typischerweise falsch getippt/verhört werden.
+
+Dann **jede** DIALOGUE-Zeile: Wenn dort **dieselbe Entität** plausibel gemeint ist (Kontext, gleiche Position im Satz, phonetische Nähe, Kurzform), aber **falsch geschrieben** → Schreibweise **wie in MATCHED_TEXT** setzen. **Lieber einmal zu viel prüfen** als einen Namen stehen lassen, der in der Referenz klar anders geschrieben ist.
+
+**Kurze Zeilen** (nur Name/Ausruf): oft fast keine gemeinsamen Wörter mit MATCHED_TEXT — trotzdem Namen korrigieren, wenn Referenz den Namen eindeutig trägt und es **dieselbe** Person/Sache ist.
+
+### Schritt 2 — Rechtschreibung & Grammatik im DIALOGUE
+Offensichtliche Tippfehler, doppelte Buchstaben, falsche Endungen, **klar** falsche Grammatik korrigieren — **ohne** Bedeutung oder Wortwahl zu ändern.
+
+### Schritt 3 — Transkriptions-Müll
+Wörter oder Bruchstücke, die **im Kontext keinen Sinn** ergeben oder **kein plausibles Deutsch** sind (ASR-Müll): MATCHED_TEXT **nur** nutzen, um zu erkennen, **welches echte Wort** gemeint war — **nicht**, um den ganzen Referenzsatz zu übernehmen. Ersetze durch das **eine** passende Wort/Form, nicht durch eine neue Formulierung aus der Referenz.
 
 ---
 
-## Namen (kurz)
-Eigenname im DIALOGUE falsch, in MATCHED_TEXT die **kanonische** Schreibweise **derselben** Entität → übernehmen. Vorname/Person **anders** → nicht umbiegen. Kurze Ausrufe mit Namen: oft wenig Wortüberlappung mit MATCHED_TEXT — trotzdem Namen korrigieren, wenn es **dieselbe** Entität ist.
+## Synonyme & gleichwertige Formulierungen (streng)
+Zwei **verschiedene**, jeweils **sinnvolle** Wörter / Redewendungen **nicht** gegeneinander tauschen, nur weil MATCHED_TEXT anders lautet.
+
+**Beispiele (NIEMALS korrigieren):**
+- `Umstrukturierungsphase` ↔ `Wiederaufbauphase` — unterschiedliche Begriffe, beide gültig.
+- `verfluchter Teufel` ↔ `scheiß Teufel` / `Scheißteufel` — Beleidigungsvarianten, beides idiomatisch.
+- `gute Entscheidung` ↔ `kluge Entscheidung` — gleiche Rolle im Satz, andere Wortwahl.
+
+**Vor jeder Ersetzung:** Wäre das Ziel eine **andere, ebenfalls sinnvolle** deutsche Formulierung? → `leave_unchanged=true`.
 
 ---
 
-## Pflicht vor `corrections`
-- Mehr Wörter / längere Phrase als im DIALOGUE? → **`leave_unchanged=true`**.
-- Tausch zweier **verschiedener** sinnvoller Lexeme nur wegen MATCHED_TEXT? → **`leave_unchanged=true`**.
-- Zweifel? → **`leave_unchanged=true`**.
+## Andere Szene / anderer Satz
+Wenn DIALOGUE und MATCHED_TEXT **offensichtlich nicht dieselbe Äußerung** sind → **ganze Zeile** `leave_unchanged=true`, keine „Reparatur“ aus der Referenz.
 
 ---
 
-## Feld `reason`
-Nur sachlich: Tippfehler, ASR, Namensschreibung. **Keine** erfundenen Regelnummern, **keine** „Referenz maßgeblich“, **keine** „ASR-Verlust“-Story zum **Einfügen** oder **Synonymtausch**.
-
----
-
-## JSON
+## JSON & confidence
 - `leave_unchanged=true` ⇒ `corrected_dialogue` **wortgleich** DIALOGUE, `corrections=[]`.
-- Keine No-Ops in `corrections` (`from`≠`to`).
+- Keine No-Ops (`from`≠`to`).
+- `reason`: nur sachlich (Name, Tippfehler, ASR, Grammatik) — keine erfundenen „Regeln“, keine „Referenz vervollständigen“.
+
+**confidence:** Wenn du korrigierst, mindestens **medium**; **high** bei klaren Namen oder eindeutigen Fixes. Bei Unsicherheit → `leave_unchanged=true`, `low` mit leeren corrections.
 
 ---
 
-## confidence
-- **high**: klarer Name-Schreibfix **oder** eindeutiger Tipp-/ASR-Fix **ohne** neues Wort, **ohne** Synonym.
-- **medium**: eindeutige Rechtschreib-/Grammatikfix **ohne** Bedeutungs-/Wortwahlwechsel.
-- **low** bei Unsicherheit → **`leave_unchanged=true`**. Wenn du korrigierst, mindestens **medium**.
-
----
-
-## Mini-Beispiele (JA / NEIN)
-**JA (Name):** DIALOGUE `Easy, warte.` — MATCHED_TEXT `Izzy, warte.` → `Izzy, warte.`  
-**NEIN (Synonym):** Umstrukturierungsphase vs. Wiederaufbauphase → unverändert.  
-**NEIN (Fluchvariante):** verfluchter Teufel vs. scheiß Teufel → unverändert.  
-**NEIN (Einfügen):** `Er hat nicht mal` vs. Referenz mit `noch` → **kein** `noch` einfügen.
+## Mini-Beispiele
+**JA (Name):** `Easy, warte.` + Referenz `Izzy, warte.` → `Izzy, warte.`  
+**JA (Name/Schreibung):** `Richard Baines` + Referenz `Richard Banes` → `Banes`  
+**NEIN (Synonym):** Umstrukturierungsphase vs. Wiederaufbauphase  
+**NEIN (Fluchvariante):** verfluchter Teufel vs. scheiß Teufel  
+**NEIN (Einfügen / Kontext nachbauen):** kein `noch` aus der Referenz einfügen
 
 Antworte **nur** mit gültigem JSON, ohne Markdown-Fences und ohne Text außerhalb des JSON.
 """
@@ -89,8 +86,7 @@ Antworte mit genau diesem JSON-Schema (kein anderer Text):
   "confidence": "high"|"medium"|"low"
 }}
 
-Regeln: `leave_unchanged=true` ⇒ `corrected_dialogue` = DIALOGUE wortgleich, `corrections` = []. Keine No-Op-Einträge (`from`≠`to`).
-**Kein** Tausch zweier **verschiedener** sinnvoller Wörter nur wegen MATCHED_TEXT; **keine** eingefügten Wörter zur „Referenzangleichung“. `reason` ohne „Regel 1/6“, „inhaltliche Abweichung“, „ASR-Verlust“ als Deckmantel für Ergänzungen.
+Pflicht: `leave_unchanged=true` ⇒ `corrected_dialogue` = DIALOGUE wortgleich, `corrections=[]`. Keine No-Ops. Kein Synonymtausch; kein Nachliefern fehlender Wörter aus der Referenz.
 
 DIALOGUE:
 {dialogue}
@@ -102,7 +98,9 @@ MATCHED_TEXT:
 
 BATCH_USER_PROMPT_TEMPLATE = """Wende den System-Prompt auf **alle** nummerierten DIALOGUE-Zeilen an.
 
-**Batch-Zuordnung:** Alle Zeilen in dieser Liste gehören zu **genau einem** Referenzblock — unten steht **ein** MATCHED_TEXT, der für **jede** nummerierte DIALOGUE-Zeile gilt (in der Excel werden Zeilen mit **gleichem** Inhalt in der Spalte „Matched Text“ zusammengefasst, Reihenfolge wie in der Datei).
+**Zuordnung:** Ein gemeinsamer **MATCHED_TEXT** gilt für **alle** nummerierten Zeilen (Excel: gleicher Inhalt in „Matched Text“, Reihenfolge wie in der Datei).
+
+**Vorgehen pro Zeile (kurz):** (1) Namen/Entitäten aus MATCHED_TEXT in der DIALOGUE-Zeile suchen und Schreibung angleichen — auch bei kurzen Zeilen und wenn nur ein Name vermutet wird. (2) Rechtschreibung/Grammatik. (3) sinnloses ASR-Wort anhand der Referenz auf das **gemeinte** Wort eingrenzen — **ohne** fehlenden Satzkontext aus der Referenz einzufügen.
 
 Antworte **nur** mit gültigem JSON in genau diesem Schema:
 {{
@@ -121,9 +119,7 @@ Pflicht:
 - Exakt **N** Einträge in `items`, für `i=1..N` (Reihenfolge wie die DIALOGUE-Liste).
 - `leave_unchanged=true` ⇒ `corrected_dialogue` identisch zur jeweiligen DIALOGUE-Zeile, `corrections=[]`.
 - Keine Korrekturen mit `from==to`.
-- **Kein Synonym-/Bedeutungstausch** nur weil ein anderes Wort in MATCHED_TEXT steht (siehe System-Prompt „KRITISCH — Bedeutung“ und „Pflicht-Check“).
-- **Keine** neuen Wörter / längere Phrase als im DIALOGUE (kein „noch“, „bitte“ aus Referenz einfügen).
-- `reason` in `corrections`: **keine** erfundenen Regelnummern, **keine** „inhaltliche Abweichung vom MATCHED_TEXT“ als Begründung für Lexemtausch.
+- Keine Synonym-/Formulierungstausche nur wegen MATCHED_TEXT; kein Einfügen fehlender Wörter zur „Vollständigkeits-Reparatur“ der Referenz.
 
 MATCHED_TEXT (Referenz):
 {matched_text}

@@ -385,9 +385,9 @@ def main() -> int:
                    help="Ab welcher LLM-Confidence Änderungen übernommen werden (default: medium = high+medium).")
     p.add_argument("--llm-item-col", default="LLM Item", help="Neue Spalte: LLM-JSON pro Zeile (falls verarbeitet).")
     p.add_argument(
-        "--no-postcheck",
+        "--postcheck",
         action="store_true",
-        help="Nach dem LLM kein safe_to_apply: Änderungen bei ausreichender Confidence direkt übernehmen (riskant: keine Absicherung gegen Synonyme/Einfügungen).",
+        help="Nach dem LLM safe_to_apply ausführen (heuristische Absicherung). Standard: aus — Änderungen werden bei passender Confidence direkt übernommen.",
     )
     p.add_argument(
         "--resource-log",
@@ -416,7 +416,7 @@ def main() -> int:
     print(
         f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}' "
         f"min_confidence={args.min_confidence} related_filter={args.related_filter} "
-        f"no_postcheck={args.no_postcheck} resource_log={args.resource_log}"
+        f"postcheck={args.postcheck} resource_log={args.resource_log}"
     )
     # optional warmup (nur für ollama client sinnvoll, aber schadet nicht)
     if hasattr(client, "warmup"):
@@ -554,15 +554,15 @@ def main() -> int:
                 decision_values[ridx] = "leave_unchanged" if leave_unchanged else f"lowconf:{confidence}"
                 continue
 
-            if args.no_postcheck:
-                ok, _reason = True, "disabled"
-            else:
+            if args.postcheck:
                 ok, _reason = safe_to_apply(
                     original_dialogue,
                     corrected,
                     matched_text,
                     strict_ref_overlap=args.related_filter,
                 )
+            else:
+                ok, _reason = True, "skipped"
             if not ok:
                 n_skipped_postcheck += 1
                 corrected_values[ridx] = original_dialogue
@@ -581,10 +581,10 @@ def main() -> int:
                     decision_values[ridx] = "no_change"
                 else:
                     corrections_values[ridx] = json.dumps(corrections, ensure_ascii=False)
-                    decision_values[ridx] = "applied_no_postcheck" if args.no_postcheck else "applied"
+                    decision_values[ridx] = "applied"
             except Exception:
                 corrections_values[ridx] = "[]"
-                decision_values[ridx] = "applied_no_postcheck" if args.no_postcheck else "applied"
+                decision_values[ridx] = "applied"
 
     # process groups (optionally parallel)
     from concurrent.futures import ThreadPoolExecutor, as_completed
