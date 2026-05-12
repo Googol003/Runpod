@@ -110,6 +110,30 @@ def safe_to_apply(original: str, corrected: str, matched_text: str) -> Tuple[boo
     return True, "ok"
 
 
+def normalize_corrections_list(corrections: Any) -> List[Dict[str, str]]:
+    """
+    Entfernt No-op Einträge (from==to) und normalisiert das Format.
+    """
+    if not isinstance(corrections, list):
+        return []
+    out: List[Dict[str, str]] = []
+    for c in corrections:
+        if not isinstance(c, dict):
+            continue
+        frm = str(c.get("from", ""))
+        to = str(c.get("to", ""))
+        if normalize_ws(frm) == normalize_ws(to):
+            continue
+        out.append(
+            {
+                "from": frm,
+                "to": to,
+                "reason": str(c.get("reason", "")),
+            }
+        )
+    return out
+
+
 def stringify(val: Any) -> str:
     if val is None:
         return ""
@@ -261,7 +285,7 @@ def main() -> int:
             leave_unchanged = bool(it.get("leave_unchanged", True))
             confidence = str(it.get("confidence", "low")).lower().strip()
             corrected = stringify(it.get("corrected_dialogue", original_dialogue))
-            corrections = it.get("corrections", [])
+            corrections = normalize_corrections_list(it.get("corrections", []))
 
             if leave_unchanged or confidence != "high":
                 n_skipped_lowconf += 1
@@ -281,7 +305,11 @@ def main() -> int:
 
             corrected_values[ridx] = corrected
             try:
-                corrections_values[ridx] = json.dumps(corrections, ensure_ascii=False)
+                # If corrected dialogue is unchanged, don't store "no-op corrections"
+                if normalize_ws(corrected) == normalize_ws(original_dialogue):
+                    corrections_values[ridx] = "[]"
+                else:
+                    corrections_values[ridx] = json.dumps(corrections, ensure_ascii=False)
             except Exception:
                 corrections_values[ridx] = "[]"
 

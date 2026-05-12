@@ -67,6 +67,7 @@ WICHTIG:
 - Setze confidence="high" nur bei wirklich sicheren Korrekturen.
 - KEINE SYNONYME / KEINE UMFORMULIERUNG: Wenn ein Satz schon sinnvoll ist, bleibt er 1:1 gleich.
 - NAMEN/BEGRIFFE: Wenn du eine Namenskorrektur machst, MUSS die Schreibweise aus MATCHED_TEXT übernommen werden.
+- KEINE NO-OP KORREKTUREN: Füge niemals eine Korrektur mit from==to hinzu. Wenn nichts zu korrigieren ist, verwende leave_unchanged=true und corrections=[].
 
 MATCHED_TEXT (Referenz-Pool):
 {matched_text}
