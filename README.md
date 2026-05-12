@@ -9,6 +9,7 @@ und schreibt eine neue Excel mit:
 - `Corrections` (JSON-Liste der Änderungen)
 
 Wichtig: Wenn `Dialogue` und `Matched Text` offensichtlich nicht zusammenpassen, wird **nichts geändert**.
+Zusätzlich werden Eigennamen/Begriffe bevorzugt in der Schreibweise aus `Matched Text` korrigiert (nur bei hoher Sicherheit).
 
 ### 1) Installation (RunPod / Linux)
 
@@ -65,6 +66,9 @@ python correct_excel.py \
   --input "/path/to/input.xlsx" \
   --dialogue-col "Dialogue" \
   --matched-col "Matched Text" \
-  --min-token-sim 0.12
+  --min-token-sim 0.12 \
+  --batch-size 8 \
+  --workers 1 \
+  --log-every 25
 ```
 
