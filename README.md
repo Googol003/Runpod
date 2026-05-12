@@ -67,8 +67,9 @@ python correct_excel.py \
   --dialogue-col "Dialogue" \
   --matched-col "Matched Text" \
   --min-token-sim 0.12 \
-  --batch-size 8 \
   --workers 1 \
+  --num-ctx 8192 \
+  --num-predict 1024 \
   --log-every 25
 ```
 

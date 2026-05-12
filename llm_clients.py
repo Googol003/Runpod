@@ -25,7 +25,7 @@ class OllamaClient:
     num_gpu: int = -1
     keep_alive: str = "10m"
 
-    def chat(self, system: str, user: str, temperature: float = 0.05) -> str:
+    def chat(self, system: str, user: str, temperature: float = 0.05, options: Optional[Dict[str, Any]] = None) -> str:
         # Reuse HTTP connection for speed
         session = getattr(self, "_session", None)
         if session is None:
@@ -48,6 +48,9 @@ class OllamaClient:
                 "num_gpu": self.num_gpu,
             },
         }
+        if options:
+            # allow caller to override/extend ollama options (e.g. num_ctx, num_predict)
+            payload["options"].update(options)
         r = session.post(f"{self.base_url}/api/chat", json=payload, timeout=self.timeout_s)
         if r.status_code != 200:
             raise LLMError(f"Ollama HTTP {r.status_code}: {r.text[:400]}")

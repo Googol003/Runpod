@@ -104,8 +104,9 @@ def main() -> int:
     p.add_argument("--min-token-sim", type=float, default=0.12, help="Früher Skip, wenn Dialogue/Matched zu unähnlich")
     p.add_argument("--max-rows", type=int, default=0, help="Optional: max Zeilen (0=alle)")
     p.add_argument("--log-every", type=int, default=25, help="Progress-Log alle N Zeilen (0=aus)")
-    p.add_argument("--batch-size", type=int, default=8, help="Wie viele Zeilen pro LLM-Request (schneller).")
-    p.add_argument("--workers", type=int, default=1, help="Parallelisierung über Gruppen (1=aus).")
+    p.add_argument("--workers", type=int, default=1, help="Parallelisierung über Matched-Text-Gruppen (1=aus).")
+    p.add_argument("--num-ctx", type=int, default=8192, help="Ollama: num_ctx (größer = mehr Kontext, nutzt VRAM).")
+    p.add_argument("--num-predict", type=int, default=1024, help="Ollama: num_predict (max Ausgabe-Tokens).")
     args = p.parse_args()
 
     in_path = Path(args.input)
@@ -190,11 +191,16 @@ def main() -> int:
         if not kept:
             return
 
+        # IMPORTANT: Always send ALL dialogues for this matched_text together in ONE request.
         dialogue_list = "\n".join([f"{j+1}. {d}" for j, (_, d) in enumerate(kept)])
         user_prompt = BATCH_USER_PROMPT_TEMPLATE.format(matched_text=matched_text, dialogue_list=dialogue_list)
 
         try:
-            raw = client.chat(SYSTEM_PROMPT, user_prompt, temperature=0.05)
+            chat_kwargs: Dict[str, Any] = {}
+            # Ollama-specific options if supported
+            if hasattr(client, "base_url"):
+                chat_kwargs["options"] = {"num_ctx": int(args.num_ctx), "num_predict": int(args.num_predict)}
+            raw = client.chat(SYSTEM_PROMPT, user_prompt, temperature=0.05, **chat_kwargs)
             data = parse_json_response(raw)
             items = data.get("items", [])
         except (LLMError, json.JSONDecodeError, ValueError):
@@ -249,9 +255,8 @@ def main() -> int:
     group_items = list(groups.items())
 
     def run_group(matched_text: str, idxs: List[int]) -> int:
-        bs = max(1, int(args.batch_size))
-        for k in range(0, len(idxs), bs):
-            process_batch(idxs[k : k + bs], matched_text)
+        # send the whole group in one go (see requirement)
+        process_batch(idxs, matched_text)
         return len(idxs)
 
     if int(args.workers) <= 1:
