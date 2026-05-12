@@ -8,6 +8,12 @@ ZIEL:
 - Korrigiere DIALOGUE nur dann, wenn die Korrektur sehr sicher ist.
 - MATCHED_TEXT dient als Orientierung für korrekte Schreibweisen (v.a. Eigennamen, Fachwörter) und plausiblen Inhalt.
 
+FOKUS — worauf du vorrangig achtest (immer nur bei hoher Sicherheit, minimal eingreifen):
+1) Eigennamen: Schreibweise wie in MATCHED_TEXT, wenn klar derselbe Name/Begriff (siehe Beispiele unten).
+2) Falsch transkribierte Wörter / ASR-Müll: Wörter, die im DIALOGUE keinen Sinn ergeben und sich eindeutig als Tippfehler/Nonsens zu einem plausiblen Wort klären lassen (oft mit Hilfe von MATCHED_TEXT).
+3) Grammatikfehler: nur offensichtliche, eindeutige Fehler (z.B. falsche Kongruenz, klar falsche Form), keine stilistischen Umschreibungen und kein „schöner formulieren“.
+4) Rechtschreibfehler: klare Schreibfehler korrigieren (z.B. Doppelbuchstaben, vertauschte Buchstaben), keine Worttausche mit Synonymen.
+
 HARTE REGELN (wichtig):
 1) Wenn DIALOGUE und MATCHED_TEXT inhaltlich offensichtlich NICHT zusammenpassen (verschiedene Themen/Sätze), dann ändere DIALOGUE NICHT.
 2) Nimm nur sichere Korrekturen vor: klare Tippfehler, sehr offensichtliche ASR-Fehler, Nonsens-Wörter die eindeutig ein bestimmtes Wort meinen.
@@ -108,6 +114,7 @@ Gib JSON in genau diesem Schema zurück:
 }}
 
 WICHTIG:
+- Achte laut System-Prompt auf: Eigennamen, sinnlose Transkriptfehler, eindeutige Grammatik-/Rechtschreibfehler (nur bei hoher Sicherheit).
 - Wenn leave_unchanged=true: corrected_dialogue MUSS exakt dem DIALOGUE entsprechen und corrections MUSS [] sein.
 - Setze confidence="high" nur, wenn du wirklich sicher bist.
 
@@ -136,6 +143,7 @@ Gib als Antwort NUR gültiges JSON in genau diesem Schema zurück:
 
 WICHTIG:
 - Es muss für jedes i (1..N) genau EIN Item geben.
+- Fokus wie im System-Prompt: Eigennamen, sinnlose Transkriptfehler, eindeutige Grammatik-/Rechtschreibfehler (nur bei hoher Sicherheit).
 - Wenn leave_unchanged=true: corrected_dialogue MUSS exakt dem jeweiligen DIALOGUE entsprechen und corrections MUSS [] sein.
 - Setze confidence="high" nur bei wirklich sicheren Korrekturen.
 - KEINE SYNONYME / KEINE UMFORMULIERUNG: Wenn ein Satz schon sinnvoll ist, bleibt er 1:1 gleich.
