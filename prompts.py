@@ -27,7 +27,7 @@ Nur eindeutige Tippfehler bzw. **klar falsche** Grammatik — **kein** „schön
 ## Was du nicht tust (harte Grenzen)
 - **Keine Synonyme / keine inhaltlichen Worttausche**, wenn der DIALOGUE bereits sinnvoll ist.
 - **Keine Umformulierung** und kein Stil-Tuning.
-- **Keine Wörter aus MATCHED_TEXT einfügen**, die im DIALOGUE **nicht** vorkommen (z. B. fehlendes „noch“, „bitte“, Zusatzphrasen).
+- **Keine Wörter aus MATCHED_TEXT einfügen**, die im DIALOGUE **nicht** vorkommen (z. B. fehlendes „noch“, „bitte“, Zusatzphrasen). **Auch nicht** mit der Begründung „ASR-Verlust“, „Hörfehler“, „Referenz ergänzen“, „Übereinstimmung mit MATCHED_TEXT“ — **kein** nachträgliches Auffüllen.
 - **Kein Auffüllen** kürzerer Sätze zur Länge der Referenz.
 - Wenn DIALOGUE und MATCHED_TEXT **offensichtlich nicht dieselbe Szene** sind → **unverändert lassen**.
 - Bei **Zweifel** → **unverändert lassen**.
@@ -41,10 +41,13 @@ Nur eindeutige Tippfehler bzw. **klar falsche** Grammatik — **kein** „schön
 - **Zwei verschiedene Wörter, die beide im Wörterbuch Sinn ergeben** (z. B. zwei Substantive, zwei Adjektive, zwei Verben mit jeweils gültiger Bedeutung im Satz) → **niemals** gegeneinander tauschen, **nur** weil MATCHED_TEXT das andere Wort enthält. Das ist **kein** Transkriptionsfehler, sondern **Formulierungs-/inhaltliche Variante** → **`leave_unchanged=true`**.
 - **Namens-/Schreibregeln** gelten nur für **dieselbe lexikalische Einheit** (derselbe Eigenname / dieselbe Entität), nicht für **Begriffsalternativen** (Synonyme, andere Phase/Metapher, anderes Adjektiv mit gleicher Rolle im Satz).
 
-**Verbotenes Beispiel (NIEMALS so korrigieren):**  
+**Verbotenes Beispiel — Synonym / anderer Begriff (NIEMALS so korrigieren):**  
 DIALOGUE: `Man könnte sagen, wir befinden uns als Crew in einer Umstrukturierungsphase.`  
 MATCHED_TEXT: `Man könnte sagen, wir befinden uns als Crew in einer Wiederaufbauphase.`  
-→ **`leave_unchanged=true`**, `corrections=[]`. `Umstrukturierungsphase` und `Wiederaufbauphase` sind **zwei verschiedene**, jeweils sinnvolle Begriffe — **kein** ASR-Fix, **kein** Schreibfehler, **kein** Namensfall.
+→ **`leave_unchanged=true`**, `corrections=[]`.
+
+**Verbotenes Beispiel — Wort aus Referenz einfügen (NIEMALS in `corrections`):**  
+`from`: `Er hat nicht mal` → `to`: `Er hat noch nicht mal` mit Begründung „ASR-Verlust / Referenz / Übereinstimmung“ — **verboten.** DIALOGUE bleibt, **`leave_unchanged=true`**.
 
 ---
 
@@ -57,6 +60,7 @@ Wenn ein **Eigenname** im DIALOGUE falsch/variant geschrieben ist und in **MATCH
 
 ## Pflicht-Check vor **jeder** Ersetzung `from`→`to`
 - **Stop — verboten:** Steht `from` im DIALOGUE als **normales, lesbares Wort** und macht der Satz **Sinn**? **Und** ist `to` ein **anderes** normales Wort aus MATCHED_TEXT (nicht nur Buchstabensalat-Fix derselben Einheit)? → **`leave_unchanged=true`**, keine Korrektur.
+- **Stop — verboten:** Enthält `to` **mehr Wörter** als `from` / als die betroffene Stelle im DIALOGUE (z. B. zusätzliches „noch“, „bitte“)? → **`leave_unchanged=true`** — **keine** Referenz-Ergänzungen.
 - **Erlaubt:** Der Unterschied ist **nur** Schreibvariante / Tippfehler / klarer Hörfehler **derselben** Einheit (v. a. Eigennamen) → `reason` z. B. „Namenschreibung an Referenz“, „offensichtlicher Tippfehler“.
 - **Sonst:** Bei **jedem Zweifel** → **`leave_unchanged=true`**.
 
@@ -64,7 +68,7 @@ Wenn ein **Eigenname** im DIALOGUE falsch/variant geschrieben ist und in **MATCH
 
 ## Feld `reason` in `corrections`
 Erlaubt: kurze sachliche Beschreibung (ASR, Tippfehler, Namensschreibung, Grammatik).
-**Verboten:** Verweise auf „Regel 1/6“, „inhaltliche Abweichung“, „Kontext des Referenztextes“ als Rechtfertigung für **Worttausch** zwischen zwei sinnvollen Lexemen.
+**Verboten:** Verweise auf „Regel 1/6“, „inhaltliche Abweichung“, „Kontext des Referenztextes“, **„ASR-Verlust“ / „Referenz ergänzen“ / „Übereinstimmung mit MATCHED_TEXT“** als Rechtfertigung für **Worttausch** oder **eingefügte** Wörter.
 
 ---
 
@@ -77,8 +81,8 @@ Erlaubt: kurze sachliche Beschreibung (ASR, Tippfehler, Namensschreibung, Gramma
 ---
 
 ## confidence (für nachgelagerte Logik)
-- **high**: eindeutiger **Eigennamen**-Schreibfix aus MATCHED_TEXT (dieselbe Entität) **oder** eindeutiger Tipp-/ASR-Fix **ohne** Lexemwechsel zwischen zwei sinnvollen Wörtern.
-- **medium**: eindeutige Rechtschreib-/Grammatikkorrektur **ohne** Bedeutungswechsel, **ohne** neues Wort, **ohne** Synonym — **nie** für Tausch zweier normaler Inhaltswörter.
+- **high**: eindeutiger **Eigennamen**-Schreibfix aus MATCHED_TEXT (dieselbe Entität) **oder** eindeutiger Tipp-/ASR-Fix **ohne** Lexemwechsel zwischen zwei sinnvollen Wörtern, **ohne** zusätzliche Wörter.
+- **medium**: eindeutige Rechtschreib-/Grammatikkorrektur **ohne** Bedeutungswechsel, **ohne** neues Wort, **ohne** Synonym, **ohne** Worteinfügung — **nie** für Tausch zweier normaler Inhaltswörter.
 - **low**: unsicher → dann **`leave_unchanged=true`**, `corrections=[]`, DIALOGUE unverändert.
 
 Wenn du wirklich korrigierst, nutze **nicht** `low` (mindestens **medium**).
@@ -120,7 +124,7 @@ Antworte mit genau diesem JSON-Schema (kein anderer Text):
 }}
 
 Regeln: `leave_unchanged=true` ⇒ `corrected_dialogue` = DIALOGUE wortgleich, `corrections` = []. Keine No-Op-Einträge (`from`≠`to`).
-**Kein** Tausch zweier **verschiedener** sinnvoller Wörter nur wegen MATCHED_TEXT; `reason` ohne „Regel 1/6“ oder „inhaltliche Abweichung vom Referenztext“.
+**Kein** Tausch zweier **verschiedener** sinnvoller Wörter nur wegen MATCHED_TEXT; **keine** eingefügten Wörter zur „Referenzangleichung“. `reason` ohne „Regel 1/6“, „inhaltliche Abweichung“, „ASR-Verlust“ als Deckmantel für Ergänzungen.
 
 DIALOGUE:
 {dialogue}
@@ -150,6 +154,7 @@ Pflicht:
 - `leave_unchanged=true` ⇒ `corrected_dialogue` identisch zur jeweiligen DIALOGUE-Zeile, `corrections=[]`.
 - Keine Korrekturen mit `from==to`.
 - **Kein Synonym-/Bedeutungstausch** nur weil ein anderes Wort in MATCHED_TEXT steht (siehe System-Prompt „KRITISCH — Bedeutung“ und „Pflicht-Check“).
+- **Keine** neuen Wörter / längere Phrase als im DIALOGUE (kein „noch“, „bitte“ aus Referenz einfügen).
 - `reason` in `corrections`: **keine** erfundenen Regelnummern, **keine** „inhaltliche Abweichung vom MATCHED_TEXT“ als Begründung für Lexemtausch.
 
 MATCHED_TEXT (Referenz):

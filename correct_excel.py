@@ -151,15 +151,17 @@ def safe_to_apply(
     if c == o:
         return True, "no_change"
 
-    ow = o.split()
-    cw = c.split()
-    if abs(len(ow) - len(cw)) > 1:
+    o_toks = word_tokens(o)
+    c_toks = word_tokens(c)
+
+    # Keine neuen Wörter (z. B. "noch" aus MATCHED_TEXT einfügen) — nur Ersetzung/Umstellung gleicher Länge oder ein Token weniger
+    if len(c_toks) > len(o_toks):
+        return False, "no_inserted_words"
+    if len(o_toks) - len(c_toks) > 1:
         return False, "word_count_change_too_large"
 
     mt_tokens = word_tokens(matched_text)
     mt_set = set(mt_tokens)
-    o_toks = word_tokens(o)
-    c_toks = word_tokens(c)
 
     # Gesamtähnlichkeit (Namenszeilen dürfen niedriger sein)
     if char_similarity(o, c) < 0.85:
