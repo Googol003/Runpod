@@ -23,8 +23,14 @@ class OllamaClient:
     model: str = "qwen3.5:9b"
     timeout_s: int = 180
     num_gpu: int = -1
+    keep_alive: str = "10m"
 
     def chat(self, system: str, user: str, temperature: float = 0.05) -> str:
+        # Reuse HTTP connection for speed
+        session = getattr(self, "_session", None)
+        if session is None:
+            session = requests.Session()
+            setattr(self, "_session", session)
         payload = {
             "model": self.model,
             "messages": [
@@ -33,6 +39,7 @@ class OllamaClient:
             ],
             "stream": False,
             "think": False,
+            "keep_alive": self.keep_alive,
             "options": {
                 "temperature": temperature,
                 "top_p": 0.8,
@@ -41,7 +48,7 @@ class OllamaClient:
                 "num_gpu": self.num_gpu,
             },
         }
-        r = requests.post(f"{self.base_url}/api/chat", json=payload, timeout=self.timeout_s)
+        r = session.post(f"{self.base_url}/api/chat", json=payload, timeout=self.timeout_s)
         if r.status_code != 200:
             raise LLMError(f"Ollama HTTP {r.status_code}: {r.text[:400]}")
         data = r.json()

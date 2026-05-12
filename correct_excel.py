@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Tuple
 import pandas as pd
 
 from llm_clients import build_client_from_env, parse_json_response, LLMError
-from prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
+from prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE, BATCH_USER_PROMPT_TEMPLATE
 
 
 def normalize_ws(s: str) -> str:
@@ -104,6 +104,8 @@ def main() -> int:
     p.add_argument("--min-token-sim", type=float, default=0.12, help="Früher Skip, wenn Dialogue/Matched zu unähnlich")
     p.add_argument("--max-rows", type=int, default=0, help="Optional: max Zeilen (0=alle)")
     p.add_argument("--log-every", type=int, default=25, help="Progress-Log alle N Zeilen (0=aus)")
+    p.add_argument("--batch-size", type=int, default=8, help="Wie viele Zeilen pro LLM-Request (schneller).")
+    p.add_argument("--workers", type=int, default=1, help="Parallelisierung über Gruppen (1=aus).")
     args = p.parse_args()
 
     in_path = Path(args.input)
@@ -161,66 +163,111 @@ def main() -> int:
             f"errors={n_failed}"
         )
 
+    # group rows by matched_text to maximize name spelling reuse + batching
+    groups: Dict[str, List[int]] = {}
     for i in range(total):
-        dialogue = stringify(df.at[i, dialogue_col])
-        matched = stringify(df.at[i, matched_col])
+        matched = stringify(df.at[i, matched_col]).strip()
+        groups.setdefault(matched, []).append(i)
 
-        # Früher Skip, wenn offensichtlich unrelated
-        if token_similarity(dialogue, matched) < args.min_token_sim:
-            corrected_values.append(dialogue)
-            corrections_values.append("[]")
-            n_skipped_unrelated += 1
-            _progress(i + 1)
-            continue
+    # prefill output arrays with originals
+    corrected_values = [stringify(df.at[i, dialogue_col]) for i in range(len(df))]
+    corrections_values = ["[]"] * len(df)
 
-        user_prompt = USER_PROMPT_TEMPLATE.format(dialogue=dialogue, matched_text=matched)
+    def process_batch(row_indices: List[int], matched_text: str) -> None:
+        nonlocal n_corrected, n_skipped_unrelated, n_skipped_lowconf, n_skipped_postcheck, n_failed
+
+        # Build list and apply early skip per row (unrelated)
+        kept: List[Tuple[int, str]] = []
+        for ridx in row_indices:
+            dialogue = stringify(df.at[ridx, dialogue_col])
+            if token_similarity(dialogue, matched_text) < args.min_token_sim:
+                n_skipped_unrelated += 1
+                corrected_values[ridx] = dialogue
+                corrections_values[ridx] = "[]"
+            else:
+                kept.append((ridx, dialogue))
+
+        if not kept:
+            return
+
+        dialogue_list = "\n".join([f"{j+1}. {d}" for j, (_, d) in enumerate(kept)])
+        user_prompt = BATCH_USER_PROMPT_TEMPLATE.format(matched_text=matched_text, dialogue_list=dialogue_list)
 
         try:
             raw = client.chat(SYSTEM_PROMPT, user_prompt, temperature=0.05)
             data = parse_json_response(raw)
-        except (LLMError, json.JSONDecodeError, ValueError) as e:
-            # Fail-safe: nichts ändern
-            corrected_values.append(dialogue)
-            corrections_values.append("[]")
-            n_failed += 1
-            _progress(i + 1)
-            continue
+            items = data.get("items", [])
+        except (LLMError, json.JSONDecodeError, ValueError):
+            n_failed += len(kept)
+            return
 
-        leave_unchanged = bool(data.get("leave_unchanged", True))
-        confidence = str(data.get("confidence", "low")).lower().strip()
-        corrected = stringify(data.get("corrected_dialogue", dialogue))
-        corrections = data.get("corrections", [])
+        # index by i
+        by_i: Dict[int, Dict[str, Any]] = {}
+        for it in items if isinstance(items, list) else []:
+            try:
+                ii = int(it.get("i"))
+                by_i[ii] = it
+            except Exception:
+                continue
 
-        if leave_unchanged or confidence != "high":
-            corrected_values.append(dialogue)
-            corrections_values.append("[]")
-            n_skipped_lowconf += 1
-            _progress(i + 1)
-            continue
+        for j, (ridx, original_dialogue) in enumerate(kept, start=1):
+            it = by_i.get(j)
+            if not it:
+                n_failed += 1
+                continue
 
-        ok, reason = safe_to_apply(dialogue, corrected, matched)
-        if not ok:
-            corrected_values.append(dialogue)
-            corrections_values.append("[]")
-            n_skipped_postcheck += 1
-            _progress(i + 1)
-            continue
+            leave_unchanged = bool(it.get("leave_unchanged", True))
+            confidence = str(it.get("confidence", "low")).lower().strip()
+            corrected = stringify(it.get("corrected_dialogue", original_dialogue))
+            corrections = it.get("corrections", [])
 
-        # Nur dann anwenden
-        corrected_values.append(corrected)
-        n_corrected += 1
-        try:
-            # Korrekturen als JSON-String speichern (Excel-freundlich)
-            corrections_values.append(json.dumps(corrections, ensure_ascii=False))
-        except Exception:
-            corrections_values.append("[]")
-        _progress(i + 1)
+            if leave_unchanged or confidence != "high":
+                n_skipped_lowconf += 1
+                corrected_values[ridx] = original_dialogue
+                corrections_values[ridx] = "[]"
+                continue
 
-    # Restliche Zeilen (falls max_rows) unverändert übernehmen
-    for i in range(total, len(df)):
-        dialogue = stringify(df.at[i, dialogue_col])
-        corrected_values.append(dialogue)
-        corrections_values.append("[]")
+            ok, _reason = safe_to_apply(original_dialogue, corrected, matched_text)
+            if not ok:
+                n_skipped_postcheck += 1
+                corrected_values[ridx] = original_dialogue
+                corrections_values[ridx] = "[]"
+                continue
+
+            if normalize_ws(corrected) != normalize_ws(original_dialogue):
+                n_corrected += 1
+
+            corrected_values[ridx] = corrected
+            try:
+                corrections_values[ridx] = json.dumps(corrections, ensure_ascii=False)
+            except Exception:
+                corrections_values[ridx] = "[]"
+
+    # process groups (optionally parallel)
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    group_items = list(groups.items())
+
+    def run_group(matched_text: str, idxs: List[int]) -> int:
+        bs = max(1, int(args.batch_size))
+        for k in range(0, len(idxs), bs):
+            process_batch(idxs[k : k + bs], matched_text)
+        return len(idxs)
+
+    if int(args.workers) <= 1:
+        done_rows = 0
+        for matched_text, idxs in group_items:
+            done_rows += run_group(matched_text, idxs)
+            _progress(min(done_rows, total))
+    else:
+        done_rows = 0
+        with ThreadPoolExecutor(max_workers=int(args.workers)) as ex:
+            futures = [ex.submit(run_group, mt, idxs) for mt, idxs in group_items]
+            for fut in as_completed(futures):
+                done_rows += int(fut.result() or 0)
+                _progress(min(done_rows, total))
+
+    # Restliche Zeilen (falls max_rows) unverändert übernehmen ist bereits abgedeckt (prefill)
 
     df_out = df.copy()
     df_out[args.corrected_col] = corrected_values
