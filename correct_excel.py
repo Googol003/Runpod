@@ -121,6 +121,9 @@ def pair_allows_reference_spelling(ot: str, ct: str, mt_set: set, mt_tokens: Lis
         return True
     if token_ratio(ot, ct) >= 0.86:
         return True
+    # Zwei unterschiedliche längere Wörter mit niedriger Form-Ähnlichkeit = kein Tippfehler, oft Synonym/Alternativbegriff
+    if min(len(ot), len(ct)) >= 10 and token_ratio(ot, ct) < 0.56:
+        return False
     if not _ref_supports_token(ct, mt_set, mt_tokens):
         return False
     if token_ratio(ot, ct) >= 0.48:
@@ -248,7 +251,12 @@ def main() -> int:
     p.add_argument("--corrected-col", default="Corrected Dialogue", help="Neue Spalte: korrigierter Dialogue")
     p.add_argument("--corrections-col", default="Corrections", help="Neue Spalte: Liste der Korrekturen (JSON)")
     p.add_argument("--decision-col", default="Decision", help="Neue Spalte: warum eine Zeile (nicht) korrigiert wurde.")
-    p.add_argument("--min-token-sim", type=float, default=0.12, help="Früher Skip, wenn Dialogue/Matched zu unähnlich")
+    p.add_argument("--min-token-sim", type=float, default=0.12, help="Nur mit --related-filter: Schwellwert für Jaccard-Teil der Relatedness-Prüfung.")
+    p.add_argument(
+        "--related-filter",
+        action="store_true",
+        help="Vor dem LLM: Zeilen ausfiltern, die offenbar nicht zu MATCHED_TEXT passen (unrelated). Standard: aus.",
+    )
     p.add_argument("--max-rows", type=int, default=0, help="Optional: max Zeilen (0=alle)")
     p.add_argument("--log-every", type=int, default=25, help="Progress-Log alle N Zeilen (0=aus)")
     p.add_argument("--workers", type=int, default=1, help="Parallelisierung über Matched-Text-Gruppen (1=aus).")
@@ -275,7 +283,7 @@ def main() -> int:
     base_url = getattr(client, "base_url", "?")
     print(f"[START] input={in_path}")
     print(f"[START] provider={provider} base_url={base_url} model={model}")
-    print(f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}' min_confidence={args.min_confidence}")
+    print(f"[START] rows={len(df)} dialogue_col='{dialogue_col}' matched_col='{matched_col}' min_confidence={args.min_confidence} related_filter={args.related_filter}")
     # optional warmup (nur für ollama client sinnvoll, aber schadet nicht)
     if hasattr(client, "warmup"):
         t0w = time.time()
@@ -335,7 +343,7 @@ def main() -> int:
         kept: List[Tuple[int, str]] = []
         for ridx in row_indices:
             dialogue = stringify(df.at[ridx, dialogue_col])
-            if not dialogue_matched_related(dialogue, matched_text, args.min_token_sim):
+            if args.related_filter and not dialogue_matched_related(dialogue, matched_text, args.min_token_sim):
                 n_skipped_unrelated += 1
                 corrected_values[ridx] = dialogue
                 corrections_values[ridx] = "[]"

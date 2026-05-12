@@ -66,6 +66,7 @@ python correct_excel.py \
   --input "/path/to/input.xlsx" \
   --dialogue-col "Dialogue" \
   --matched-col "Matched Text" \
+  --related-filter \
   --min-token-sim 0.12 \
   --workers 1 \
   --num-ctx 8192 \
@@ -75,4 +76,6 @@ python correct_excel.py \
   --min-confidence medium \
   --log-every 25
 ```
+
+Ohne `--related-filter` werden **alle** Zeilen an den LLM geschickt (Standard). Mit `--related-filter` werden offenbar nicht passende Dialogue-Zeilen vorher als `unrelated` markiert und übersprungen; `--min-token-sim` wirkt nur in Kombination damit.
 

@@ -28,8 +28,22 @@ Passe **DIALOGUE** minimal an, sodass er weiterhin **derselbe gesprochene Inhalt
 
 ---
 
+## KRITISCH — Bedeutung / Begriff bleibt (häufigster Modellfehler)
+**MATCHED_TEXT ist keine „richtige Fassung“ des Satzes**, in die du den DIALOGUE umbauen darfst.
+
+- Wenn im DIALOGUE ein Wort **sinnvoll und grammatisch** steht, darf es **nicht** durch ein **anderes sinnvolles Wort** aus MATCHED_TEXT ersetzt werden — **auch nicht** mit der Begründung „passt besser zur Referenz“ oder „Regel Namen“.
+- **Namens-/Schreibregeln** gelten nur für **dieselbe lexikalische Einheit** (derselbe Name / derselbe Eigenname / dieselbe Entität), nicht für **Begriffsalternativen** (Synonyme, andere Phase/Metapher, anderes Adjektiv mit gleicher Rolle im Satz).
+
+**Verbotenes Beispiel (NIEMALS so korrigieren):**  
+DIALOGUE: `Man könnte sagen, wir befinden uns als Crew in einer Umstrukturierungsphase.`  
+MATCHED_TEXT: `Man könnte sagen, wir befinden uns als Crew in einer Wiederaufbauphase.`  
+→ **unverändert lassen.** `Umstrukturierungsphase` und `Wiederaufbauphase` sind **zwei verschiedene**, jeweils sinnvolle Begriffe — **kein** Transkriptionsfehler, **kein** Schreibfehler, **kein** Namensfall.
+
+---
+
 ## Namen & Referenz (Kernregel)
 Wenn ein Name im DIALOGUE falsch/variant geschrieben ist und in **MATCHED_TEXT** die **kanonische Schreibweise** derselben Entität erkennbar ist → **genau diese Schreibweise** verwenden. Wenn der Vorname/ die Person **inhaltlich anders** ist → **nicht** „umbiegen“.
+**Nicht** unter „Namen korrigieren“ fallen: normale **Inhaltswörter** oder **Synonyme**, die in MATCHED_TEXT anders lauten — dort **immer** DIALOGUE lassen.
 **Auch bei sehr kurzen Zeilen** (z.B. nur ein Ausruf/Name): oft **keine gemeinsamen Wortformen** mit MATCHED_TEXT — trotzdem Namen korrigieren, wenn Schreibung in der Referenz steht und es **derselbe** Name/Sprecher ist (phonetisch oder Rolle im Dialog).
 
 ---
@@ -114,6 +128,7 @@ Pflicht:
 - Exakt **N** Einträge in `items`, für `i=1..N` (Reihenfolge wie die DIALOGUE-Liste).
 - `leave_unchanged=true` ⇒ `corrected_dialogue` identisch zur jeweiligen DIALOGUE-Zeile, `corrections=[]`.
 - Keine Korrekturen mit `from==to`.
+- **Kein Synonym-/Bedeutungstausch** nur weil ein anderes Wort in MATCHED_TEXT steht (siehe System-Prompt „KRITISCH — Bedeutung“).
 
 MATCHED_TEXT (Referenz):
 {matched_text}
