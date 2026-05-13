@@ -19,6 +19,12 @@ Wenn ein Wort im DIALOGUE **kein plausibles deutsches Wort** ist oder im Satz ke
 - **Nie Kontext auffüllen:** Keine Wörter/Satzteile aus MATCHED_TEXT hinzufügen, die im DIALOGUE nicht vorkamen.
 - **Keine verbotenen Umstellungen:** Keine Anrede-Umstellung (Du/Sie), kein Kürzen auf die Referenz. Synonyme/alternative Wortwahl ist **erlaubt**, muss aber klar als solche klassifiziert werden (siehe Reason-Typen).
 
+## Wichtige Arbeitsregel: nur einzelne Wörter
+- Jede Korrektur darf **nur ein einzelnes Wort** ersetzen (keine Phrasen, keine Mehrwort-Ersetzungen).
+- Stell dir vor jeder Änderung die Frage: Ist `from` ein **falsch geschriebenes Wort / ASR-Fehler / erfundenes Wort / falsch geschriebener Eigenname**?  
+  Oder ist es ein **alternatives sinnvolles Wort** (Synonym/andere Formulierung)?
+- Diese Einordnung muss im Feld `kind` stehen.
+
 ## Entscheidung
 - Wenn mindestens ein echter Fehler aus (1)-(3) sicher vorliegt → korrigiere ihn/sie.
 - Wenn es **wahrscheinlich** ein ASR-/Tippfehler oder ein erfundenes Wort ist (phonetisch nahe an MATCHED_TEXT), dann **korrigiere trotzdem** und klassifiziere es (`ASR_TYPO` oder `INVENTED_WORD`).
@@ -60,7 +66,7 @@ Antworte mit genau diesem JSON-Schema (kein anderer Text):
   "leave_reason": ""|"OK_NO_CHANGES"|"DISALLOWED_ADDITION"|"ALTERNATIVE_WORDING"|"DISALLOWED_GRAMMAR_ALIGNMENT"|"UNCERTAIN",
   "corrected_dialogue": "string",
   "corrections": [
-    {{"from":"string","to":"string","reason":"string"}}
+    {{"from":"string","to":"string","reason":"string","kind":"MISSPELLING"|"ALTERNATIVE_WORD"}}
   ]
 }}
 
@@ -91,7 +97,7 @@ Antworte **nur** mit gültigem JSON in genau diesem Schema:
       "leave_unchanged": true|false,
       "leave_reason": ""|"OK_NO_CHANGES"|"DISALLOWED_ADDITION"|"ALTERNATIVE_WORDING"|"DISALLOWED_GRAMMAR_ALIGNMENT"|"UNCERTAIN",
       "corrected_dialogue": "string",
-      "corrections": [{{"from":"string","to":"string","reason":"string"}}]
+      "corrections": [{{"from":"string","to":"string","reason":"string","kind":"MISSPELLING"|"ALTERNATIVE_WORD"}}]
     }}
   ]
 }}

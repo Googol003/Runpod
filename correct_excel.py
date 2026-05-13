@@ -129,11 +129,14 @@ def normalize_corrections_list(corrections: Any) -> List[Dict[str, str]]:
         to = str(c.get("to", ""))
         if normalize_ws(frm) == normalize_ws(to):
             continue
+        kind_raw = str(c.get("kind", "")).strip().upper()
+        kind = kind_raw if kind_raw in ("MISSPELLING", "ALTERNATIVE_WORD") else ""
         out.append(
             {
                 "from": frm,
                 "to": to,
                 "reason": str(c.get("reason", "")),
+                "kind": kind,
             }
         )
     return out
@@ -181,6 +184,7 @@ def main() -> int:
     p.add_argument("--matched-col", default="Matched Text", help="Spaltenname für Matched Text")
     p.add_argument("--corrected-col", default="Corrected Dialogue", help="Neue Spalte: korrigierter Dialogue")
     p.add_argument("--corrections-col", default="Corrections", help="Neue Spalte: Liste der Korrekturen (JSON)")
+    p.add_argument("--kind-col", default="Correction Kind", help="Neue Spalte: Kategorie der übernommenen Korrektur.")
     p.add_argument("--decision-col", default="Decision", help="Neue Spalte: warum eine Zeile (nicht) korrigiert wurde.")
     p.add_argument("--max-rows", type=int, default=0, help="Optional: max Zeilen (0=alle)")
     p.add_argument("--log-every", type=int, default=25, help="Progress-Log alle N Zeilen (0=aus)")
@@ -234,6 +238,7 @@ def main() -> int:
 
     corrected_values: List[str] = []
     corrections_values: List[str] = []
+    kind_values: List[str] = []
     decision_values: List[str] = []
     llm_item_values: List[str] = []
 
@@ -270,6 +275,7 @@ def main() -> int:
     # prefill output arrays with originals
     corrected_values = [stringify(df.at[i, dialogue_col]) for i in range(len(df))]
     corrections_values = ["[]"] * len(df)
+    kind_values = [""] * len(df)
     decision_values = [""] * len(df)
     llm_item_values = [""] * len(df)
 
@@ -291,6 +297,7 @@ def main() -> int:
             leave_reason = stringify(it.get("leave_reason", "")).strip()
             corrected_values[ridx] = original_dialogue
             corrections_values[ridx] = "[]"
+            kind_values[ridx] = ""
             decision_values[ridx] = f"leave_unchanged:{leave_reason}" if leave_reason else "leave_unchanged"
             return (0, 1, 0, 0)
 
@@ -299,6 +306,7 @@ def main() -> int:
             if _reason_disallowed(str(c.get("reason", ""))):
                 corrected_values[ridx] = original_dialogue
                 corrections_values[ridx] = "[]"
+                kind_values[ridx] = ""
                 decision_values[ridx] = "rejected:reason_addition"
                 return (0, 0, 1, 0)
 
@@ -315,12 +323,20 @@ def main() -> int:
         try:
             if normalize_ws(corrected) == normalize_ws(original_dialogue):
                 corrections_values[ridx] = "[]"
+                kind_values[ridx] = ""
                 decision_values[ridx] = "no_change"
             else:
                 corrections_values[ridx] = json.dumps(corrections, ensure_ascii=False)
+                # Row-level category: if any correction is ALTERNATIVE_WORD, mark it; otherwise MISSPELLING.
+                kind_values[ridx] = (
+                    "Alternatives Wort"
+                    if any((c.get("kind") or "").upper() == "ALTERNATIVE_WORD" for c in corrections)
+                    else "Falsche Schreibweise"
+                )
                 decision_values[ridx] = "applied"
         except Exception:
             corrections_values[ridx] = "[]"
+            kind_values[ridx] = ""
             decision_values[ridx] = "applied"
         return (applied_here, 0, 0, 0)
 
@@ -523,6 +539,7 @@ def main() -> int:
     df_out = df.copy()
     df_out[args.corrected_col] = corrected_values
     df_out[args.corrections_col] = corrections_values
+    df_out[args.kind_col] = kind_values
     df_out[args.decision_col] = decision_values
     df_out[args.llm_item_col] = llm_item_values
     df_out.to_excel(out_path, index=False)
