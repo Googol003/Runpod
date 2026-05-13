@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import difflib
 import json
 import math
 import os
@@ -100,22 +99,6 @@ def _reason_disallowed(reason: str) -> bool:
     return bool(_DISALLOWED_REASON_RE.search(reason or ""))
 
 
-def _token_pair_lacks_orthographic_similarity(frm: str, to: str) -> bool:
-    """
-    Heuristik gegen Worttausch ohne plausiblen Tipp-/Schreibfehler (z. B. Stand→Kiosk).
-    Nur Ein-Wort-Paare, beide rein alphabetisch und lang genug; niedrige Zeichenüberschneidung → verwerfen.
-    """
-    a = (frm or "").strip()
-    b = (to or "").strip()
-    if not a or not b or " " in a or " " in b:
-        return False
-    if len(a) < 4 or len(b) < 4:
-        return False
-    if not a.isalpha() or not b.isalpha():
-        return False
-    return difflib.SequenceMatcher(None, a.lower(), b.lower()).ratio() < 0.45
-
-
 def _apply_corrections_to_text(original: str, corrections: List[Dict[str, str]]) -> str:
     """
     Best-effort: wenn das Modell corrections liefert, aber corrected_dialogue unverändert lässt,
@@ -145,8 +128,6 @@ def normalize_corrections_list(corrections: Any) -> List[Dict[str, str]]:
         frm = str(c.get("from", ""))
         to = str(c.get("to", ""))
         if normalize_ws(frm) == normalize_ws(to):
-            continue
-        if _token_pair_lacks_orthographic_similarity(frm, to):
             continue
         kind_raw = str(c.get("kind", "")).strip().upper()
         kind = "MISSPELLING" if kind_raw in ("", "MISSPELLING") else ""
@@ -305,13 +286,8 @@ def main() -> int:
             llm_item_values[ridx] = ""
             return (0, 0, 0, 1)
         leave_unchanged = bool(it.get("leave_unchanged", True))
-        corrected_llm = stringify(it.get("corrected_dialogue", original_dialogue))
+        corrected = stringify(it.get("corrected_dialogue", original_dialogue))
         corrections = normalize_corrections_list(it.get("corrections", []))
-        corrected = (
-            _apply_corrections_to_text(original_dialogue, corrections)
-            if corrections
-            else corrected_llm
-        )
         try:
             llm_item_values[ridx] = json.dumps(it, ensure_ascii=False)
         except Exception:
@@ -335,6 +311,11 @@ def main() -> int:
                 return (0, 0, 1, 0)
 
         applied_here = 0
+        if normalize_ws(corrected) == normalize_ws(original_dialogue) and corrections:
+            corrected_auto = _apply_corrections_to_text(original_dialogue, corrections)
+            if normalize_ws(corrected_auto) != normalize_ws(original_dialogue):
+                corrected = corrected_auto
+
         if normalize_ws(corrected) != normalize_ws(original_dialogue):
             applied_here = 1
 
