@@ -130,8 +130,7 @@ def normalize_corrections_list(corrections: Any) -> List[Dict[str, str]]:
         if normalize_ws(frm) == normalize_ws(to):
             continue
         kind_raw = str(c.get("kind", "")).strip().upper()
-        # Nur phonetische Transkriptions-/Schreibfehler; Legacy ALTERNATIVE_WORD wie MISSPELLING behandeln.
-        kind = "MISSPELLING" if kind_raw in ("MISSPELLING", "ALTERNATIVE_WORD", "") else ""
+        kind = "MISSPELLING" if kind_raw in ("", "MISSPELLING") else ""
         out.append(
             {
                 "from": frm,
