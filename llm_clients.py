@@ -131,6 +131,14 @@ def parse_json_response(text: str) -> Dict[str, Any]:
     Robust gegen LLMs, die ```json ... ``` oder Text außenrum liefern.
     """
     t = text.strip()
+    # Falls das Modell ein JSON als STRING zurückgibt: erst unescapen.
+    if len(t) >= 2 and t[0] == '"' and t[-1] == '"':
+        try:
+            t2 = json.loads(t)
+            if isinstance(t2, str) and t2.strip():
+                t = t2.strip()
+        except Exception:
+            pass
     # Entferne Codefences
     if t.startswith("```"):
         t = t.strip("`")
@@ -143,5 +151,8 @@ def parse_json_response(text: str) -> Dict[str, Any]:
         end = t.rfind("}")
         if start != -1 and end != -1 and end > start:
             t = t[start : end + 1]
+    # Manche Modelle liefern doppelte Anführungszeichen wie ""items""
+    if '""' in t and '"items"' not in t:
+        t = t.replace('""', '"')
     return json.loads(t)
 

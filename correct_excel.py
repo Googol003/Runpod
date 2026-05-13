@@ -99,6 +99,22 @@ def _reason_disallowed(reason: str) -> bool:
     return bool(_DISALLOWED_REASON_RE.search(reason or ""))
 
 
+def _apply_corrections_to_text(original: str, corrections: List[Dict[str, str]]) -> str:
+    """
+    Best-effort: wenn das Modell corrections liefert, aber corrected_dialogue unverändert lässt,
+    versuchen wir die from->to Ersetzungen direkt auf den Originaltext anzuwenden.
+    """
+    out = original
+    for c in corrections:
+        frm = str(c.get("from", ""))
+        to = str(c.get("to", ""))
+        if not frm or normalize_ws(frm) == normalize_ws(to):
+            continue
+        if frm in out:
+            out = out.replace(frm, to, 1)
+    return out
+
+
 def normalize_corrections_list(corrections: Any) -> List[Dict[str, str]]:
     """
     Entfernt No-op Einträge (from==to) und normalisiert das Format.
@@ -287,6 +303,11 @@ def main() -> int:
                 return (0, 0, 1, 0)
 
         applied_here = 0
+        if normalize_ws(corrected) == normalize_ws(original_dialogue) and corrections:
+            corrected_auto = _apply_corrections_to_text(original_dialogue, corrections)
+            if normalize_ws(corrected_auto) != normalize_ws(original_dialogue):
+                corrected = corrected_auto
+
         if normalize_ws(corrected) != normalize_ws(original_dialogue):
             applied_here = 1
 

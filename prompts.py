@@ -17,12 +17,12 @@ Wenn ein Wort im DIALOGUE **kein plausibles deutsches Wort** ist oder im Satz ke
 
 ## Strikte Grenzen
 - **Nie Kontext auffüllen:** Keine Wörter/Satzteile aus MATCHED_TEXT hinzufügen, die im DIALOGUE nicht vorkamen.
-- **Nie umformulieren:** Keine Synonyme, keine stilistischen Varianten, keine Anrede-Umstellung (Du/Sie), kein Kürzen auf die Referenz.
+- **Keine verbotenen Umstellungen:** Keine Anrede-Umstellung (Du/Sie), kein Kürzen auf die Referenz. Synonyme/alternative Wortwahl ist **erlaubt**, muss aber klar als solche klassifiziert werden (siehe Reason-Typen).
 
 ## Entscheidung
 - Wenn mindestens ein echter Fehler aus (1)-(3) sicher vorliegt → korrigiere ihn/sie.
 - Wenn es **wahrscheinlich** ein ASR-/Tippfehler oder ein erfundenes Wort ist (phonetisch nahe an MATCHED_TEXT), dann **korrigiere trotzdem** und klassifiziere es (`ASR_TYPO` oder `INVENTED_WORD`).
-- `leave_unchanged=true` nur, wenn die einzige „Korrektur“ eine verbotene Aktion wäre: **Kontext hinzufügen**, **Synonym/Umformulierung**, **Du/Sie/Verb an Referenz angleichen**, oder wirklich **gar nichts** zu korrigieren.
+- `leave_unchanged=true` nur, wenn die einzige „Korrektur“ eine verbotene Aktion wäre: **Kontext hinzufügen**, **Du/Sie/Verb an Referenz angleichen**, oder wirklich **gar nichts** zu korrigieren.
 
 ## Pflicht: Gründe klassifizieren (immer)
 Jede Korrektur muss einem dieser Reason-Typen zugeordnet werden. Format:
@@ -33,12 +33,8 @@ Erlaubte TYPE-Werte:
 - `ASR_TYPO` (Tipp-/ASR-Schreibfehler, gleicher Begriff gemeint)
 - `INVENTED_WORD` (Pseudo-/Nichtwort → echtes Wort aus MATCHED_TEXT, phonetisch eindeutig)
 - `GRAMMAR` (klar falsche Grammatik, ohne Wortwahl zu ändern)
-- `CAPITALIZATION` (Groß-/Kleinschreibung, wenn eindeutig)
-- `DIACRITICS` (Umlaute/ß/diakritische Zeichen, wenn eindeutig: z. B. `ss`↔`ß`, `u`↔`ü`)
-- `WHITESPACE` (überflüssige/fehlende Leerzeichen, wenn eindeutig)
-- `COMPOUNDING` (Zusammen-/Getrenntschreibung, wenn eindeutig und ohne Bedeutungswechsel)
-- `PUNCTUATION` (nur Satzzeichen, wenn eindeutig)
-- `NUMBER_FORMAT` (Zahlen/Ziffern-Format, wenn eindeutig: z. B. `12` ↔ `zwölf` nur wenn eindeutig gemeint; sonst lassen)
+- `PUNCTUATION` (nur wenn Satzzeichen/Leerzeichen im DIALOGUE **klar kaputt** sind und sonst keinen Sinn ergeben; nicht „verschönern“)
+- `ALTERNATIVE_WORDING` (Synonym/alternative Formulierung; kein ASR-Fehler, aber bewusst als solche klassifiziert)
 
 Nicht erlaubte TYPE-Werte: alles andere.
 
@@ -46,7 +42,7 @@ Nicht erlaubte TYPE-Werte: alles andere.
 Wenn du `leave_unchanged=true` setzt, gib zusätzlich ein Feld `leave_reason` an. Erlaubte Werte:
 - `OK_NO_CHANGES` (nichts Sicheres zu korrigieren)
 - `DISALLOWED_ADDITION` (würde Kontext auffüllen / Wörter hinzufügen)
-- `DISALLOWED_PARAPHRASE` (wäre Synonym/Umformulierung/Stilvariante)
+- `ALTERNATIVE_WORDING` (Synonym/alternative Formulierung erkannt; bewusst nicht geändert)
 - `DISALLOWED_GRAMMAR_ALIGNMENT` (wäre Du/Sie/Verb/Plural an Referenz angleichen)
 - `UNCERTAIN` (unsicher: nicht raten)
 
@@ -61,7 +57,7 @@ USER_PROMPT_TEMPLATE = """Wende die **Systemanweisung** an: ein DIALOGUE, ein MA
 Antworte mit genau diesem JSON-Schema (kein anderer Text):
 {{
   "leave_unchanged": true|false,
-  "leave_reason": ""|"OK_NO_CHANGES"|"DISALLOWED_ADDITION"|"DISALLOWED_PARAPHRASE"|"DISALLOWED_GRAMMAR_ALIGNMENT"|"UNCERTAIN",
+  "leave_reason": ""|"OK_NO_CHANGES"|"DISALLOWED_ADDITION"|"ALTERNATIVE_WORDING"|"DISALLOWED_GRAMMAR_ALIGNMENT"|"UNCERTAIN",
   "corrected_dialogue": "string",
   "corrections": [
     {{"from":"string","to":"string","reason":"string"}}
@@ -93,7 +89,7 @@ Antworte **nur** mit gültigem JSON in genau diesem Schema:
     {{
       "i": 1,
       "leave_unchanged": true|false,
-      "leave_reason": ""|"OK_NO_CHANGES"|"DISALLOWED_ADDITION"|"DISALLOWED_PARAPHRASE"|"DISALLOWED_GRAMMAR_ALIGNMENT"|"UNCERTAIN",
+      "leave_reason": ""|"OK_NO_CHANGES"|"DISALLOWED_ADDITION"|"ALTERNATIVE_WORDING"|"DISALLOWED_GRAMMAR_ALIGNMENT"|"UNCERTAIN",
       "corrected_dialogue": "string",
       "corrections": [{{"from":"string","to":"string","reason":"string"}}]
     }}
