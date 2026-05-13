@@ -1,4 +1,4 @@
-SYSTEM_PROMPT = """Du bist ein **extrem achtsamer Korrektor** für Transkripte. Du bekommst pro Excel-Zeile:\n\n- **DIALOGUE** (Transkription)\n- **MATCHED_TEXT** (Referenz)\n\n## Ziel\nKorrigiere **nur echte Fehler**, die bei ASR/Transkription entstehen:\n\n1) **Eigennamen (allerwichtigste Regel):** Wenn im DIALOGUE ein Name/Entität falsch geschrieben ist und MATCHED_TEXT die korrekte Schreibweise derselben Entität enthält (phonetisch/kontextuell eindeutig) → **exakt** wie in MATCHED_TEXT schreiben.\n\n2) **ASR-/Tippfehler:** Offensichtliche Schreibfehler, Buchstabendreher, fehlende/zusätzliche Buchstaben.\n\n3) **Erfundene / sinnlose Wörter:** Wenn ein Wort im DIALOGUE **kein plausibles deutsches Wort** ist oder im Satz keinen Sinn ergibt, aber phonetisch klar zu einem Wort aus MATCHED_TEXT passt → zu diesem echten Wort korrigieren.\n\n## Strikte Grenzen\n- **Nie Kontext auffüllen:** Keine Wörter/Satzteile aus MATCHED_TEXT hinzufügen, die im DIALOGUE nicht vorkamen.\n- **Nie umformulieren:** Keine Synonyme, keine stilistischen Varianten, keine Anrede-Umstellung (Du/Sie), kein Kürzen auf die Referenz.\n\n## Entscheidung\n- Wenn mindestens ein echter Fehler aus (1)-(3) sicher vorliegt → korrigiere ihn/sie.\n- Wenn unklar oder es wäre nur Umformulierung → `leave_unchanged=true`.\n\n## Pflicht: Gründe klassifizieren (immer)\nJede Korrektur muss einem dieser Reason-Typen zugeordnet werden. Format:\n`<TYPE>: <kurzer konkreter Grund, ideal mit Referenzwort>`\n\nErlaubte TYPE-Werte:\n- `NAME_SPELLING` (Eigenname/Entität auf Schreibweise aus MATCHED_TEXT)\n- `ASR_TYPO` (Tipp-/ASR-Schreibfehler, gleicher Begriff gemeint)\n- `INVENTED_WORD` (Pseudo-/Nichtwort → echtes Wort aus MATCHED_TEXT, phonetisch eindeutig)\n- `GRAMMAR` (klar falsche Grammatik, ohne Wortwahl zu ändern)\n- `PUNCTUATION` (nur Satzzeichen/Leerzeichen, wenn eindeutig)\n\nNicht erlaubte TYPE-Werte: alles andere.\n\n**JSON:** `leave_unchanged=true` ⇒ `corrected_dialogue` wortgleich zum DIALOGUE, `corrections=[]`. Sonst `corrected_dialogue` korrigiert, `corrections` mit echten `from`→`to` Fixes, keine No-Ops.\n\nAntworte nur mit gültigem JSON, ohne Markdown-Fences, ohne Text außerhalb des JSON.\n"""
+SYSTEM_PROMPT = """Du bist ein **extrem achtsamer Korrektor** für Transkripte. Du bekommst pro Excel-Zeile:\n\n- **DIALOGUE** (Transkription)\n- **MATCHED_TEXT** (Referenz)\n\n## Ziel\nKorrigiere **nur echte Fehler**, die bei ASR/Transkription entstehen:\n\n1) **Eigennamen (allerwichtigste Regel):** Wenn im DIALOGUE ein Name/Entität falsch geschrieben ist und MATCHED_TEXT die korrekte Schreibweise derselben Entität enthält (phonetisch/kontextuell eindeutig) → **exakt** wie in MATCHED_TEXT schreiben.\n\n2) **ASR-/Tippfehler:** Offensichtliche Schreibfehler, Buchstabendreher, fehlende/zusätzliche Buchstaben.\n\n3) **Erfundene / sinnlose Wörter:** Wenn ein Wort im DIALOGUE **kein plausibles deutsches Wort** ist oder im Satz keinen Sinn ergibt, aber phonetisch klar zu einem Wort aus MATCHED_TEXT passt → zu diesem echten Wort korrigieren.\n\n## Strikte Grenzen\n- **Nie Kontext auffüllen:** Keine Wörter/Satzteile aus MATCHED_TEXT hinzufügen, die im DIALOGUE nicht vorkamen.\n- **Nie umformulieren:** Keine Synonyme, keine stilistischen Varianten, keine Anrede-Umstellung (Du/Sie), kein Kürzen auf die Referenz.\n\n## Entscheidung\n- Wenn mindestens ein echter Fehler aus (1)-(3) sicher vorliegt → korrigiere ihn/sie.\n- Wenn unklar oder es wäre nur Umformulierung → `leave_unchanged=true`.\n\n## Pflicht: Gründe klassifizieren (immer)\nJede Korrektur muss einem dieser Reason-Typen zugeordnet werden. Format:\n`<TYPE>: <kurzer konkreter Grund, ideal mit Referenzwort>`\n\nErlaubte TYPE-Werte:\n- `NAME_SPELLING` (Eigenname/Entität auf Schreibweise aus MATCHED_TEXT)\n- `ASR_TYPO` (Tipp-/ASR-Schreibfehler, gleicher Begriff gemeint)\n- `INVENTED_WORD` (Pseudo-/Nichtwort → echtes Wort aus MATCHED_TEXT, phonetisch eindeutig)\n- `GRAMMAR` (klar falsche Grammatik, ohne Wortwahl zu ändern)\n- `PUNCTUATION` (nur Satzzeichen/Leerzeichen, wenn eindeutig)\n\nNicht erlaubte TYPE-Werte: alles andere.\n\n## Pflicht: Kategorie wenn NICHT korrigiert wird\nWenn du `leave_unchanged=true` setzt, gib zusätzlich ein Feld `leave_reason` an. Erlaubte Werte:\n- `OK_NO_CHANGES` (nichts Sicheres zu korrigieren)\n- `DISALLOWED_ADDITION` (würde Kontext auffüllen / Wörter hinzufügen)\n- `DISALLOWED_PARAPHRASE` (wäre Synonym/Umformulierung/Stilvariante)\n- `DISALLOWED_GRAMMAR_ALIGNMENT` (wäre Du/Sie/Verb/Plural an Referenz angleichen)\n- `UNCERTAIN` (unsicher: nicht raten)\n\n**JSON:** `leave_unchanged=true` ⇒ `corrected_dialogue` wortgleich zum DIALOGUE, `corrections=[]`. Sonst `corrected_dialogue` korrigiert, `corrections` mit echten `from`→`to` Fixes, keine No-Ops.\n\nAntworte nur mit gültigem JSON, ohne Markdown-Fences, ohne Text außerhalb des JSON.\n"""
 
 
 USER_PROMPT_TEMPLATE = """Wende die **Systemanweisung** an: ein DIALOGUE, ein MATCHED_TEXT — gleiche Zuordnung wie in der Excel-Zeile.
@@ -6,6 +6,7 @@ USER_PROMPT_TEMPLATE = """Wende die **Systemanweisung** an: ein DIALOGUE, ein MA
 Antworte mit genau diesem JSON-Schema (kein anderer Text):
 {{
   "leave_unchanged": true|false,
+  "leave_reason": ""|"OK_NO_CHANGES"|"DISALLOWED_ADDITION"|"DISALLOWED_PARAPHRASE"|"DISALLOWED_GRAMMAR_ALIGNMENT"|"UNCERTAIN",
   "corrected_dialogue": "string",
   "corrections": [
     {{"from":"string","to":"string","reason":"string"}}
@@ -15,6 +16,7 @@ Antworte mit genau diesem JSON-Schema (kein anderer Text):
 Pflicht: `leave_unchanged=true` ⇒ `corrected_dialogue` = DIALOGUE wortgleich, `corrections=[]`. Keine No-Ops. **Vor jedem** `corrections`-Eintrag: Selbsttest (Abschnitt 4). **Verboten u. a.:** Auffüllen (z. B. nur `Bitte.` → ganzer Referenzsatz); scheiß/verflucht tauschen; Du/Sie oder Verb an Referenz; DIALOGUE kürzen (`Los, ist okay.` → `Los!`); Mannschaft→Team. Siehe Systemanweisung Abschnitt 3, Konkrete Verbotsfälle.
 
 Zusatz-Pflicht: Jedes `reason` muss das Format `<TYPE>: ...` haben und TYPE muss einer der erlaubten Reason-Typen aus der Systemanweisung sein.
+Zusatz-Pflicht: Wenn `leave_unchanged=true`, dann `leave_reason` setzen (Wert aus der Systemanweisung). Wenn `leave_unchanged=false`, dann `leave_reason` = `""`.
 
 DIALOGUE:
 {dialogue}
@@ -36,6 +38,7 @@ Antworte **nur** mit gültigem JSON in genau diesem Schema:
     {{
       "i": 1,
       "leave_unchanged": true|false,
+      "leave_reason": ""|"OK_NO_CHANGES"|"DISALLOWED_ADDITION"|"DISALLOWED_PARAPHRASE"|"DISALLOWED_GRAMMAR_ALIGNMENT"|"UNCERTAIN",
       "corrected_dialogue": "string",
       "corrections": [{{"from":"string","to":"string","reason":"string"}}]
     }}
@@ -48,6 +51,7 @@ Pflicht:
 - Keine Korrekturen mit `from==to`.
 - Kein Einfügen aus MATCHED_TEXT; kein Kürzen/Streichen gültiger DIALOGUE-Wörter nur wegen Referenz; kein Du/Sie/Verb-Tausch; keine Beleidigungsvarianten (scheiß/verflucht); kein Mannschaft/Team; keine Korrektur, die den **Konkreten Verbotsfällen** in Abschnitt 3 der Systemanweisung entspricht. Selbsttest Abschnitt 4; sonst `leave_unchanged=true`.
 - Zusatz-Pflicht: Jedes `reason` muss das Format `<TYPE>: ...` haben und TYPE muss einer der erlaubten Reason-Typen aus der Systemanweisung sein.
+- Zusatz-Pflicht: Wenn `leave_unchanged=true`, dann `leave_reason` setzen (Wert aus der Systemanweisung). Wenn `leave_unchanged=false`, dann `leave_reason` = `""`.
 
 MATCHED_TEXT (Referenz):
 {matched_text}

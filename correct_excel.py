@@ -272,9 +272,10 @@ def main() -> int:
             llm_item_values[ridx] = ""
 
         if leave_unchanged:
+            leave_reason = stringify(it.get("leave_reason", "")).strip()
             corrected_values[ridx] = original_dialogue
             corrections_values[ridx] = "[]"
-            decision_values[ridx] = "leave_unchanged"
+            decision_values[ridx] = f"leave_unchanged:{leave_reason}" if leave_reason else "leave_unchanged"
             return (0, 1, 0, 0)
 
         # Hard safety: reject any correction that even hints at fill-in/addition in the reason.
