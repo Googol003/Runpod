@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# RunPod quickstart for: Ollama @ 127.0.0.1:11434 with Qwen 3.5 9B
+# RunPod quickstart for: Ollama @ 127.0.0.1:11434 with Qwen 3.6 35B A3B
 #
 # Usage:
 #   bash runpod_ready.sh "/workspace/input.xlsx"
 #
 # Optional:
-#   LLM_MODEL=qwen3.5:9b bash runpod_ready.sh "/workspace/input.xlsx"
+#   LLM_MODEL=qwen3.6:35b-a3b bash runpod_ready.sh "/workspace/input.xlsx"
 
 INPUT_XLSX="${1:-}"
 if [[ -z "${INPUT_XLSX}" ]]; then
@@ -68,7 +68,7 @@ fi
 
 export LLM_PROVIDER="${LLM_PROVIDER:-ollama}"
 export OLLAMA_BASE_URL="${OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
-export LLM_MODEL="${LLM_MODEL:-qwen3.5:9b}"
+export LLM_MODEL="${LLM_MODEL:-qwen3.6:35b-a3b}"
 
 log "LLM_PROVIDER=${LLM_PROVIDER}"
 log "OLLAMA_BASE_URL=${OLLAMA_BASE_URL}"

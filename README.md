@@ -32,7 +32,7 @@ ollama serve
 In einem zweiten Terminal:
 
 ```bash
-ollama pull qwen3.5:9b
+ollama pull qwen3.6:35b-a3b
 ```
 
 Environment:
@@ -40,7 +40,7 @@ Environment:
 ```bash
 export LLM_PROVIDER=ollama
 export OLLAMA_BASE_URL=http://127.0.0.1:11434
-export LLM_MODEL=qwen3.5:9b
+export LLM_MODEL=qwen3.6:35b-a3b
 ```
 
 ### 2B) Variante: LM Studio (OpenAI-compatible)
