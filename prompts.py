@@ -33,7 +33,12 @@ Erlaubte TYPE-Werte:
 - `ASR_TYPO` (Tipp-/ASR-Schreibfehler, gleicher Begriff gemeint)
 - `INVENTED_WORD` (Pseudo-/Nichtwort → echtes Wort aus MATCHED_TEXT, phonetisch eindeutig)
 - `GRAMMAR` (klar falsche Grammatik, ohne Wortwahl zu ändern)
-- `PUNCTUATION` (nur Satzzeichen/Leerzeichen, wenn eindeutig)
+- `CAPITALIZATION` (Groß-/Kleinschreibung, wenn eindeutig)
+- `DIACRITICS` (Umlaute/ß/diakritische Zeichen, wenn eindeutig: z. B. `ss`↔`ß`, `u`↔`ü`)
+- `WHITESPACE` (überflüssige/fehlende Leerzeichen, wenn eindeutig)
+- `COMPOUNDING` (Zusammen-/Getrenntschreibung, wenn eindeutig und ohne Bedeutungswechsel)
+- `PUNCTUATION` (nur Satzzeichen, wenn eindeutig)
+- `NUMBER_FORMAT` (Zahlen/Ziffern-Format, wenn eindeutig: z. B. `12` ↔ `zwölf` nur wenn eindeutig gemeint; sonst lassen)
 
 Nicht erlaubte TYPE-Werte: alles andere.
 
