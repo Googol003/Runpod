@@ -20,7 +20,7 @@ def _env(name: str, default: Optional[str] = None) -> Optional[str]:
 @dataclass
 class OllamaClient:
     base_url: str = "http://127.0.0.1:11434"
-    model: str = "qwen3.5:9b"
+    model: str = "gemma4:26b"
     timeout_s: int = 180
     num_gpu: int = -1
     keep_alive: str = "10m"
@@ -109,7 +109,7 @@ class OpenAICompatClient:
 
 def build_client_from_env() -> Any:
     provider = (_env("LLM_PROVIDER", "ollama") or "ollama").lower().strip()
-    model = _env("LLM_MODEL", "qwen3.5:9b") or "qwen3.5:9b"
+    model = _env("LLM_MODEL", "gemma4:26b") or "gemma4:26b"
 
     if provider == "ollama":
         base_url = _env("OLLAMA_BASE_URL", "http://127.0.0.1:11434") or "http://127.0.0.1:11434"
