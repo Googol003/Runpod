@@ -29,6 +29,8 @@ SYSTEM_PROMPT = """Du korrigierst eine Zeile **DIALOGUE** anhand der Referenz **
 
 **Beleidigungs- und Stilvarianten:** Zwei **jeweils gültige** Varianten (z. B. `scheiß` / `verfluchte` im gleichen Muster „… Teufel“) **nicht** gegeneinander tauschen — **kein** Adjektivtausch mit Begründung „korrekte Bezeichnung laut Referenz“.
 
+**Wichtig:** In `reason` darf **niemals** stehen: „Ergänzung“, „hinzufügen“, „auffüllen“, „vollständige Äußerung“, „fehlende Wörter“ o. Ä. Wenn du das denkst: **keine** Korrektur, `leave_unchanged=true`.
+
 **Explizit verbotenes Muster (NIEMALS so begründen):**
 - `Mannschaft` → `Team` mit reason wie „Eigenname/Entität an MATCHED_TEXT“ — **falsch**. Das sind **zwei verschiedene normale Begriffe**, **kein** Schreibfehler eines Namens.
 

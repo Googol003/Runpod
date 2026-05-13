@@ -89,6 +89,16 @@ def normalize_ws(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip())
 
 
+_DISALLOWED_REASON_RE = re.compile(
+    r"(ergänz|hinzufüg|auffüll|vollständ|unvollständig|zusatz|fehlende\s+wörter?)",
+    re.IGNORECASE,
+)
+
+
+def _reason_disallowed(reason: str) -> bool:
+    return bool(_DISALLOWED_REASON_RE.search(reason or ""))
+
+
 def normalize_corrections_list(corrections: Any) -> List[Dict[str, str]]:
     """
     Entfernt No-op Einträge (from==to) und normalisiert das Format.
@@ -216,6 +226,7 @@ def main() -> int:
     n_applied = 0  # Zeilen mit geändertem Text (übernommen)
     n_leave_unchanged = 0  # Modell: leave_unchanged=true
     n_failed = 0
+    n_rejected_reason = 0  # Korrektur verworfen (Reason deutet Auffüllen/Ergänzen an)
 
     def _progress(i_done: int) -> None:
         if args.log_every <= 0:
@@ -235,6 +246,7 @@ def main() -> int:
             f"eta={eta_s/60:.1f}m "
             f"applied={n_applied} "
             f"unchanged={n_leave_unchanged} "
+            f"rejected={n_rejected_reason} "
             f"errors={n_failed}"
             + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
         )
@@ -245,12 +257,12 @@ def main() -> int:
     decision_values = [""] * len(df)
     llm_item_values = [""] * len(df)
 
-    def _apply_parsed_item(ridx: int, original_dialogue: str, it: Dict[str, Any] | None) -> Tuple[int, int, int]:
+    def _apply_parsed_item(ridx: int, original_dialogue: str, it: Dict[str, Any] | None) -> Tuple[int, int, int, int]:
         """Wendet ein geparstes LLM-Item auf eine Zeile an. Rückgabe (applied, unchanged, failed)."""
         if not it:
             decision_values[ridx] = "llm_missing_item"
             llm_item_values[ridx] = ""
-            return (0, 0, 1)
+            return (0, 0, 0, 1)
         leave_unchanged = bool(it.get("leave_unchanged", True))
         corrected = stringify(it.get("corrected_dialogue", original_dialogue))
         corrections = normalize_corrections_list(it.get("corrections", []))
@@ -263,7 +275,15 @@ def main() -> int:
             corrected_values[ridx] = original_dialogue
             corrections_values[ridx] = "[]"
             decision_values[ridx] = "leave_unchanged"
-            return (0, 1, 0)
+            return (0, 1, 0, 0)
+
+        # Hard safety: reject any correction that even hints at fill-in/addition in the reason.
+        for c in corrections:
+            if _reason_disallowed(str(c.get("reason", ""))):
+                corrected_values[ridx] = original_dialogue
+                corrections_values[ridx] = "[]"
+                decision_values[ridx] = "rejected:reason_addition"
+                return (0, 0, 1, 0)
 
         applied_here = 0
         if normalize_ws(corrected) != normalize_ws(original_dialogue):
@@ -280,18 +300,19 @@ def main() -> int:
         except Exception:
             corrections_values[ridx] = "[]"
             decision_values[ridx] = "applied"
-        return (applied_here, 0, 0)
+        return (applied_here, 0, 0, 0)
 
     def _chat_kwargs() -> Dict[str, Any]:
         if isinstance(client, OllamaClient):
             return {"options": {"num_ctx": int(args.num_ctx), "num_predict": int(args.num_predict)}}
         return {}
 
-    def process_batch(row_indices: List[int], matched_text: str) -> Tuple[int, int, int]:
-        """Returns (n_applied, n_leave_unchanged, n_failed) for this batch only."""
+    def process_batch(row_indices: List[int], matched_text: str) -> Tuple[int, int, int, int]:
+        """Returns (n_applied, n_leave_unchanged, n_rejected, n_failed) for this batch only."""
         batch_applied = 0
         batch_unchanged = 0
         batch_failed = 0
+        batch_rejected = 0
 
         kept: List[Tuple[int, str]] = []
         for ridx in row_indices:
@@ -299,29 +320,46 @@ def main() -> int:
             kept.append((ridx, dialogue))
 
         if not kept:
-            return (0, 0, 0)
+            return (0, 0, 0, 0)
 
         # IMPORTANT: Always send ALL dialogues for this matched_text together in ONE request.
         dialogue_list = "\n".join([f"{j+1}. {d}" for j, (_, d) in enumerate(kept)])
         user_prompt = BATCH_USER_PROMPT_TEMPLATE.format(matched_text=matched_text, dialogue_list=dialogue_list)
 
-        t_llm0 = time.perf_counter()
-        try:
+        def _call_llm_batch() -> Tuple[Dict[str, Any] | None, str]:
+            t_llm0 = time.perf_counter()
             raw = client.chat(SYSTEM_PROMPT, user_prompt, temperature=0.05, **_chat_kwargs())
-            data = parse_json_response(raw)
-            items = data.get("items", [])
-        except (LLMError, json.JSONDecodeError, ValueError):
             dt_llm = time.perf_counter() - t_llm0
             if args.resource_log == "all":
-                print(f"[BATCH] lines={len(kept)} llm_s={dt_llm:.2f}s FAILED | {format_resource_usage()}")
+                print(f"[BATCH] lines={len(kept)} llm_s={dt_llm:.2f}s | {format_resource_usage()}")
+            try:
+                return parse_json_response(raw), raw
+            except Exception:
+                return None, raw
+
+        last_raw = ""
+        data: Dict[str, Any] | None = None
+        for attempt in range(1, 3):
+            try:
+                data, last_raw = _call_llm_batch()
+                if data is not None:
+                    break
+            except LLMError as e:
+                last_raw = str(e)
+            except Exception as e:
+                last_raw = str(e)
+            time.sleep(0.25 * attempt)
+
+        if data is None or not isinstance(data, dict):
+            if args.resource_log == "all":
+                print(f"[BATCH] lines={len(kept)} FAILED | {format_resource_usage()}")
             batch_failed += len(kept)
             for ridx, _d in kept:
-                decision_values[ridx] = "llm_error"
-                llm_item_values[ridx] = ""
-            return (0, 0, batch_failed)
-        dt_llm = time.perf_counter() - t_llm0
-        if args.resource_log == "all":
-            print(f"[BATCH] lines={len(kept)} llm_s={dt_llm:.2f}s | {format_resource_usage()}")
+                decision_values[ridx] = "llm_bad_json"
+                llm_item_values[ridx] = (last_raw or "")[:8000]
+            return (0, 0, 0, batch_failed)
+
+        items = data.get("items", [])
 
         # index by i
         by_i: Dict[int, Dict[str, Any]] = {}
@@ -334,32 +372,49 @@ def main() -> int:
 
         for j, (ridx, original_dialogue) in enumerate(kept, start=1):
             it = by_i.get(j)
-            a, u, f = _apply_parsed_item(ridx, original_dialogue, it)
+            a, u, r, f = _apply_parsed_item(ridx, original_dialogue, it)
             batch_applied += a
             batch_unchanged += u
             batch_failed += f
+            batch_rejected += r
 
-        return (batch_applied, batch_unchanged, batch_failed)
+        return (batch_applied, batch_unchanged, batch_rejected, batch_failed)
 
-    def process_one_row(ridx: int) -> Tuple[int, int, int]:
+    def process_one_row(ridx: int) -> Tuple[int, int, int, int]:
         """Ein LLM-Call pro Excel-Zeile (row_mode=single)."""
         matched_text = stringify(df.at[ridx, matched_col]).strip()
         original_dialogue = stringify(df.at[ridx, dialogue_col])
         user_prompt = USER_PROMPT_TEMPLATE.format(dialogue=original_dialogue, matched_text=matched_text)
-        t_llm0 = time.perf_counter()
-        try:
+        def _call_llm_row() -> Tuple[Dict[str, Any] | None, str]:
+            t_llm0 = time.perf_counter()
             raw = client.chat(SYSTEM_PROMPT, user_prompt, temperature=0.05, **_chat_kwargs())
-            data = parse_json_response(raw)
-        except (LLMError, json.JSONDecodeError, ValueError):
             dt_llm = time.perf_counter() - t_llm0
             if args.resource_log == "all":
-                print(f"[ROW] ridx={ridx} llm_s={dt_llm:.2f}s FAILED | {format_resource_usage()}")
-            decision_values[ridx] = "llm_error"
-            llm_item_values[ridx] = ""
-            return (0, 0, 1)
-        dt_llm = time.perf_counter() - t_llm0
-        if args.resource_log == "all":
-            print(f"[ROW] ridx={ridx} llm_s={dt_llm:.2f}s | {format_resource_usage()}")
+                print(f"[ROW] ridx={ridx} llm_s={dt_llm:.2f}s | {format_resource_usage()}")
+            try:
+                return parse_json_response(raw), raw
+            except Exception:
+                return None, raw
+
+        last_raw = ""
+        data: Dict[str, Any] | None = None
+        for attempt in range(1, 3):
+            try:
+                data, last_raw = _call_llm_row()
+                if data is not None:
+                    break
+            except LLMError as e:
+                last_raw = str(e)
+            except Exception as e:
+                last_raw = str(e)
+            time.sleep(0.25 * attempt)
+
+        if data is None or not isinstance(data, dict):
+            decision_values[ridx] = "llm_bad_json"
+            llm_item_values[ridx] = (last_raw or "")[:8000]
+            corrected_values[ridx] = original_dialogue
+            corrections_values[ridx] = "[]"
+            return (0, 0, 0, 1)
 
         it = _coerce_single_row_dict(data) if isinstance(data, dict) else None
         if it is None:
@@ -372,8 +427,9 @@ def main() -> int:
             decision_values[ridx] = "llm_bad_shape"
             corrected_values[ridx] = original_dialogue
             corrections_values[ridx] = "[]"
-            return (0, 0, 1)
-        return _apply_parsed_item(ridx, original_dialogue, it)
+            return (0, 0, 0, 1)
+        a, u, r, f = _apply_parsed_item(ridx, original_dialogue, it)
+        return (a, u, r, f)
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -381,9 +437,10 @@ def main() -> int:
         print(f"[START] row_mode=single llm_calls={total} (eine Zeile pro Request, workers={int(args.workers)})")
         if int(args.workers) <= 1:
             for ridx in range(total):
-                a, u, f = process_one_row(ridx)
+                a, u, r, f = process_one_row(ridx)
                 n_applied += a
                 n_leave_unchanged += u
+                n_rejected_reason += r
                 n_failed += f
                 _progress(ridx + 1)
         else:
@@ -391,9 +448,10 @@ def main() -> int:
                 futures = {ex.submit(process_one_row, ridx): ridx for ridx in range(total)}
                 done_rows = 0
                 for fut in as_completed(futures):
-                    a, u, f = fut.result()
+                    a, u, r, f = fut.result()
                     n_applied += a
                     n_leave_unchanged += u
+                    n_rejected_reason += r
                     n_failed += f
                     done_rows += 1
                     _progress(done_rows)
@@ -411,16 +469,17 @@ def main() -> int:
 
         group_items = list(groups.items())
 
-        def run_group(matched_text: str, idxs: List[int]) -> Tuple[Tuple[int, int, int], int]:
+        def run_group(matched_text: str, idxs: List[int]) -> Tuple[Tuple[int, int, int, int], int]:
             counts = process_batch(idxs, matched_text)
             return counts, len(idxs)
 
         if int(args.workers) <= 1:
             done_rows = 0
             for matched_text, idxs in group_items:
-                (a, u, f), n = run_group(matched_text, idxs)
+                (a, u, r, f), n = run_group(matched_text, idxs)
                 n_applied += a
                 n_leave_unchanged += u
+                n_rejected_reason += r
                 n_failed += f
                 done_rows += n
                 _progress(min(done_rows, total))
@@ -429,9 +488,10 @@ def main() -> int:
             with ThreadPoolExecutor(max_workers=int(args.workers)) as ex:
                 futures = [ex.submit(run_group, mt, idxs) for mt, idxs in group_items]
                 for fut in as_completed(futures):
-                    (a, u, f), n = fut.result()
+                    (a, u, r, f), n = fut.result()
                     n_applied += a
                     n_leave_unchanged += u
+                    n_rejected_reason += r
                     n_failed += f
                     done_rows += n
                     _progress(min(done_rows, total))
@@ -449,7 +509,7 @@ def main() -> int:
     print(f"[DONE] written={out_path}")
     print(
         f"[DONE] processed={total} applied={n_applied} "
-        f"unchanged={n_leave_unchanged} errors={n_failed} elapsed={elapsed:.1f}s"
+        f"unchanged={n_leave_unchanged} rejected={n_rejected_reason} errors={n_failed} elapsed={elapsed:.1f}s"
         + (f" | res={format_resource_usage()}" if args.resource_log != "off" else "")
     )
     return 0
