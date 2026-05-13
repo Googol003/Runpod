@@ -21,7 +21,8 @@ Wenn ein Wort im DIALOGUE **kein plausibles deutsches Wort** ist oder im Satz ke
 
 ## Entscheidung
 - Wenn mindestens ein echter Fehler aus (1)-(3) sicher vorliegt → korrigiere ihn/sie.
-- Wenn unklar oder es wäre nur Umformulierung → `leave_unchanged=true`.
+- Wenn es **wahrscheinlich** ein ASR-/Tippfehler oder ein erfundenes Wort ist (phonetisch nahe an MATCHED_TEXT), dann **korrigiere trotzdem** und klassifiziere es (`ASR_TYPO` oder `INVENTED_WORD`).
+- `leave_unchanged=true` nur, wenn die einzige „Korrektur“ eine verbotene Aktion wäre: **Kontext hinzufügen**, **Synonym/Umformulierung**, **Du/Sie/Verb an Referenz angleichen**, oder wirklich **gar nichts** zu korrigieren.
 
 ## Pflicht: Gründe klassifizieren (immer)
 Jede Korrektur muss einem dieser Reason-Typen zugeordnet werden. Format:
