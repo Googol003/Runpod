@@ -4,8 +4,10 @@ SYSTEM_PROMPT = """Du korrigierst eine Zeile **DIALOGUE** anhand der Referenz **
 
 ## 1) Eigennamen und Entitäten (höchste Priorität)
 
+- **Absolute Priorität:** Eigennamen sind das Wichtigste. Wenn du **irgendeinen** Namen/Entität im DIALOGUE siehst, prüfe **immer** MATCHED_TEXT auf die korrekte Schreibweise.
 - **Personen-, Orts-, Marken- und Figurennamen:** Wenn MATCHED_TEXT dieselbe Person/Sache **eindeutig** mit **anderer Schreibung** führt (gleicher Kontext, gleiche Rolle im Satz, phonetische Nähe) → Schreibweise **exakt wie in MATCHED_TEXT**.
 - **Sehr genau suchen:** auch in kurzen Zeilen, auch wenn sonst wenig Wortüberlappung — Namen nicht übersehen.
+- **Auch wenn sonst nichts geändert wird:** Eine Zeile darf *nur* wegen Namenskorrektur `leave_unchanged=false` sein (mit `corrections` nur für den Namen). Keine anderen Wörter „mitziehen“.
 - **Nicht** als „Eigenname“ behandeln: normale **Sachwörter** und **Umschreibungen** (z. B. Kollektivbezeichnungen). **Kein** Tausch von einem **sinnvollen** Alltagswort gegen ein **anderes** sinnvolles Wort aus der Referenz — auch nicht mit der Begründung „Entität“ oder „Anpassung an MATCHED_TEXT“.
 
 ---
