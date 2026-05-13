@@ -130,7 +130,8 @@ def normalize_corrections_list(corrections: Any) -> List[Dict[str, str]]:
         if normalize_ws(frm) == normalize_ws(to):
             continue
         kind_raw = str(c.get("kind", "")).strip().upper()
-        kind = kind_raw if kind_raw in ("MISSPELLING", "ALTERNATIVE_WORD") else ""
+        # Nur phonetische Transkriptions-/Schreibfehler; Legacy ALTERNATIVE_WORD wie MISSPELLING behandeln.
+        kind = "MISSPELLING" if kind_raw in ("MISSPELLING", "ALTERNATIVE_WORD", "") else ""
         out.append(
             {
                 "from": frm,
@@ -327,12 +328,7 @@ def main() -> int:
                 decision_values[ridx] = "no_change"
             else:
                 corrections_values[ridx] = json.dumps(corrections, ensure_ascii=False)
-                # Row-level category: if any correction is ALTERNATIVE_WORD, mark it; otherwise MISSPELLING.
-                kind_values[ridx] = (
-                    "Alternatives Wort"
-                    if any((c.get("kind") or "").upper() == "ALTERNATIVE_WORD" for c in corrections)
-                    else "Falsche Schreibweise"
-                )
+                kind_values[ridx] = "Falsche Schreibweise"
                 decision_values[ridx] = "applied"
         except Exception:
             corrections_values[ridx] = "[]"
