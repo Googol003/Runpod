@@ -80,3 +80,22 @@ python correct_excel.py \
 Alle Zeilen mit gleichem **Matched Text** werden bei **`--row-mode batch`** (Standard) gebündelt an den LLM geschickt; die Ausgabe wird übernommen, solange das Modell nicht `leave_unchanged` setzt (kein technischer Post-Check, kein Related-Filter im Skript). Bei **`--row-mode single`** ist jede Zeile ein eigener Request. Optional: `--resource-log all` für Zeit-/Ressourcenzeilen pro Batch bzw. pro Zeile (single).
 
 **Fortschritt (`[PROGRESS]` / `[DONE]`):** `applied` = Zeilen mit geändertem Text. `unchanged` = Modell hat `leave_unchanged` gesetzt. `errors` = LLM-Fehler, fehlende Batch-Zeile (`llm_missing_item`) oder falsches JSON-Format im Einzelmodus (`llm_bad_shape`).
+
+---
+
+## Segment-Matcher (Drehbuch ↔ Transkript, Test)
+
+Ordnet **Transkript-Segmente** (Timecodes + Dialog) **Drehbuch-Segmenten** (Timecodes + Sprecher + Dialog) zu und schreibt eine Excel mit **Matched Speaker** pro Transkript-Zeile. Der Prompt betont **Drehbuch-Dialogstruktur**, chronologische Szene und WALLA vs. benannte Rollen.
+
+```bash
+cd segment_matcher
+pip install -r requirements.txt   # oder Repo-root: pip install -r requirements.txt
+
+export LLM_PROVIDER=ollama
+export LLM_MODEL=gemma4:26b
+
+python match_segments.py --dry-run
+python match_segments.py -o output/chaos_parreira_wm_match.xlsx
+```
+
+Testdaten: `segment_matcher/chaos_parreira_wm_case.py` (Parreira-WM-Chaos-Case). Gleiche Env-Variablen wie `correct_excel.py` (`OLLAMA_BASE_URL`, …).

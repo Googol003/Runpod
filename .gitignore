@@ -4,3 +4,4 @@ __pycache__/
 .env
 .DS_Store
 Token.txt
+segment_matcher/output/
