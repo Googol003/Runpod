@@ -1,5 +1,6 @@
 """
-Erzeugt aus test.1175.relevant.xlsx eine Version mit simulierten Überlappungs-/Rollen-/Nonsens-Fehlern.
+Subtile Fehler in test.1175 (erste 100 Zeilen): ASR-Nonsens, Wort-Leaks, Sprechervertauschung.
+Keine erfundenen Vollsätze, die „sinnvoll aber nie gesagt“ wären.
 """
 from __future__ import annotations
 
@@ -12,75 +13,85 @@ KEEP = ["TIMECODE-IN", "TIMECODE-OUT", "DIALOGUE", "SOURCE", "MATCHED-TEXT", "NO
 
 def inject(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
-    # Index = Positionsindex 0..n-1
 
-    # 1) TEXT_LEAK: Stede-Zeile bekommt Izzy-Anfang angehängt (Überlappung)
-    # Zeile 3: "Dass du uns an die Engländer verkauft hast."
-    i = 3
-    out.at[i, "DIALOGUE"] = (
-        "Dass du uns an die Engländer verkauft hast. Ich hab dich nie gezwungen."
+    # --- TEXT_LEAK (Überlappung): kurze Brocken vom anderen Sprecher kleben an ---
+    # Stede-Zeile + Anfang von Izzys nächster Zeile (kein neuer Sinn-Satz)
+    out.at[3, "DIALOGUE"] = "Dass du uns an die Engländer verkauft hast. Ich hab dich nie"
+
+    # Stede „Wo ist Ed?“ + Brocken aus Izzys Beleidigung
+    out.at[7, "DIALOGUE"] = "Wo ist Ed? Du unglaubliche"
+
+    # Stede „Es ist noch da.“ + Brocken aus Buttons/Roach-Überlappung („Schnauze“)
+    out.at[34, "DIALOGUE"] = "Es ist noch da. Schnauze"
+
+    # Black Pete-Zeile bekommt Stede-Brocken mit
+    out.at[36, "DIALOGUE"] = (
+        "Kann nicht schlimmer sein als sein Et-O-Et-Gestöhne die ganze Nacht. Haltet"
     )
 
-    # 2) SPEAKER_WRONG: Izzy-Text, aber SOURCE=STEDE + falscher MATCHED-TEXT
-    i = 4
-    out.at[i, "SOURCE"] = "STEDE"
-    out.at[i, "MATCHED-TEXT"] = "Wo ist er? .. Wo ist Ed?"
+    # --- SPEAKER_WRONG: Text bleibt (nahezu) gleich, Rolle falsch ---
+    # Izzy-Text, aber als STEDE gelabelt + falscher MATCHED-Hinweis
+    out.at[4, "SOURCE"] = "STEDE"
+    out.at[4, "MATCHED-TEXT"] = "Wo ist er? .. Wo ist Ed?"
 
-    # 3) TEXT_LEAK + Überlappung: Stede-Frage und Izzy-Beleidigung in einer Zeile
-    i = 7
-    out.at[i, "DIALOGUE"] = "Wo ist Ed? Du unglaubliche Muschi."
-    out.at[i, "SOURCE"] = "STEDE"
-    out.at[i, "MATCHED-TEXT"] = "Wo ist er? .. Wo ist Ed?"
+    # Ed! fälschlich BLACKBEARD
+    out.at[10, "SOURCE"] = "BLACKBEARD"
+    out.at[10, "MATCHED-TEXT"] = "Stede!"
 
-    # 4) SPEAKER_WRONG im Ruf-Block: Ed! fälschlich BLACKBEARD
-    i = 10
-    out.at[i, "SOURCE"] = "BLACKBEARD"
-    out.at[i, "MATCHED-TEXT"] = "Stede!"
+    # Sid! (= ASR für Stede!) fälschlich STEDE / Ed!
+    out.at[13, "SOURCE"] = "STEDE"
+    out.at[13, "MATCHED-TEXT"] = "Ed!"
 
-    # 5) SPEAKER_WRONG: Sid! → sollte BLACKBEARD/Stede bleiben, hier STEDE + Ed!
-    i = 13
-    out.at[i, "SOURCE"] = "STEDE"
-    out.at[i, "MATCHED-TEXT"] = "Ed!"
-    out.at[i, "DIALOGUE"] = "Sid! Ed!"
+    # Ach, Schnauze! → fälschlich ROACH statt BLACK PETE
+    out.at[33, "SOURCE"] = "ROACH"
+    out.at[33, "MATCHED-TEXT"] = "Halt die Klappe!"
 
-    # 6) NONSENSE: klare Abweichung zum MATCHED-TEXT / Kontext
-    i = 35
-    out.at[i, "DIALOGUE"] = "Die Pizza ist kalt und der Mond ist aus Käse."
-    # SOURCE/MATCHED lassen (Absicht: Text ergibt keinen Sinn zum Script)
+    # --- ASR-NONSENSE: falsch gehört, phonetisch/ähnlich, im Kontext Quatsch ---
+    # (Zeile 8 hat schon „Muschi“ statt Kackvogel — belassen/leicht verstärken)
+    out.at[8, "DIALOGUE"] = "Du unglaubliche Muschi."
 
-    # 7) TEXT_LEAK bei Buttons/Roach-Bereich: Schnauze klebt an Stede
-    i = 34
-    out.at[i, "DIALOGUE"] = "Es ist noch da. Schnauze, Mann!"
-    out.at[i, "SOURCE"] = "STEDE"
+    # Wee John → Oui John (schon ähnlich; etwas kaputter)
+    out.at[29, "DIALOGUE"] = "Oui, John!"
 
-    # 8) Leere SOURCE (orphan) bei einer Cue-Zeile
-    i = 12
-    out.at[i, "SOURCE"] = ""
-    out.at[i, "MATCHED-TEXT"] = ""
+    # Wand aus Gestank → kaputte Hörvariante (kein neuer Satz)
+    out.at[35, "DIALOGUE"] = "Es ist eine Wand ausgestankt."
+
+    # sauer → Saur (leichter Typo/Nonsens bleibt)
+    out.at[16, "DIALOGUE"] = "Du bist nicht Saur?"
+
+    # Ed, oh Ed → Et-O-Et (bereits stark; noch etwas undeutlicher)
+    out.at[36, "DIALOGUE"] = (
+        "Kann nicht schlimmer sein als sein Et-O-Et-Gestöhne die ganze Nacht. Haltet"
+    )
+
+    # Cue-Leak: Ed! und Sid! in einer Zeile (Überlappung der Rufe)
+    out.at[12, "DIALOGUE"] = "Ed! Sid!"
+    out.at[12, "SOURCE"] = "STEDE"
+    out.at[12, "MATCHED-TEXT"] = "Ed!"
 
     return out
 
 
 def main() -> None:
-    src = Path(__file__).resolve().parent / "output" / "test.1175.relevant.xlsx"
+    base = Path(__file__).resolve().parent / "output"
+    # Saubere 100er-Basis bevorzugen
+    src = base / "test.1175.relevant_100.xlsx"
     if not src.exists():
-        # Fallback: full backup stripped
-        backup = Path(__file__).resolve().parent / "output" / "test.1175.full_backup.xlsx"
-        if not backup.exists():
-            raise SystemExit(f"Keine Quell-Excel: {src}")
+        src = base / "test.1175.relevant.xlsx"
+    if not src.exists():
+        backup = base / "test.1175.full_backup.xlsx"
         df = pd.read_excel(backup, sheet_name="Transkription")
-        df = df[[c for c in KEEP if c in df.columns]]
+        df = df[[c for c in KEEP if c in df.columns]].iloc[:100].copy()
     else:
         df = pd.read_excel(src)
-        df = df[[c for c in KEEP if c in df.columns]]
+        df = df[[c for c in KEEP if c in df.columns]].iloc[:100].copy()
 
     injected = inject(df)
-    out = Path(__file__).resolve().parent / "output" / "test.1175.injected.xlsx"
-    out.parent.mkdir(parents=True, exist_ok=True)
+    out = base / "test.1175.injected.xlsx"
     with pd.ExcelWriter(out, engine="openpyxl") as w:
         injected.to_excel(w, sheet_name="Transkription", index=False)
     print(f"wrote {out} rows={len(injected)}")
-    print("Injected row indices (0-based): 3,4,7,10,12,13,34,35")
+    print("subtle injects: leaks @3,7,12,34,36 | wrong speaker @4,10,13,33 | asr-nonsense @8,16,29,35")
 
 
 if __name__ == "__main__":
