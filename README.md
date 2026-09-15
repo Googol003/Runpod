@@ -99,3 +99,22 @@ python match_segments.py -o output/chaos_parreira_wm_match.xlsx
 ```
 
 Testdaten: `segment_matcher/chaos_parreira_wm_case.py` (Parreira-WM-Chaos-Case). Gleiche Env-Variablen wie `correct_excel.py` (`OLLAMA_BASE_URL`, …).
+
+---
+
+## Overlap-Reviewer (Transkript vs. Drehbuch: Sprecher/Leak/Sinn)
+
+Vergleicht **Transkription** (Timecodes + Dialog + Sprecher) mit dem **Original-Drehbuch** (Timecodes + Sprecher + Dialog). Flaggt typische Überlappungs-Fehler (`TEXT_LEAK`, `SPEAKER_WRONG`, `NONSENSE`) und schreibt Korrekturen in eigene Spalten.
+
+```bash
+cd overlap_reviewer
+pip install -r requirements.txt
+
+export LLM_PROVIDER=ollama
+export LLM_MODEL=gemma4:26b
+
+python review_overlap.py --dry-run
+python review_overlap.py -o output/chaos_parreira_wm_overlap_review.xlsx
+```
+
+Testdaten: Chaos-Case aus `segment_matcher` (Sprecher auf Transkript-Zeilen aus `expected_sequence`). Gleiche Env-Variablen wie oben.

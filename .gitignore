@@ -5,3 +5,4 @@ __pycache__/
 .DS_Store
 Token.txt
 segment_matcher/output/
+overlap_reviewer/output/
