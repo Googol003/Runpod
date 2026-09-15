@@ -16,11 +16,17 @@ Wenn plausibel: `flagged=false`, `issue_type=OK`, Korrekturfelder leer.
 - `OTHER` — anderer Strukturfehler.
 - `OK` — kein Flag.
 
+## Timecodes (immer mitdenken)
+Pro Transkript-Zeile gibt es **zwei** Zeitfenster:
+- **TRANSCRIPT-TC** (`TIMECODE-IN`/`OUT`): wann die Zeile in der Transkription liegt.
+- **MATCHED-TEXT-TC** (`REF-IN`/`REF-OUT`): wann derselbe Text im **Original-Drehbuch** steht.
+Gleiches `MATCHED-TEXT` hat **immer dieselben** REF-Timecodes. Nutze REF-TCs für die **Drehbuch-Reihenfolge** und den Vergleich mit Nachbar-Originalen; nutze TRANSCRIPT-TCs für Überlappung mit anderen Trans-/Script-Fenstern. Wenn TRANSCRIPT-TC und REF-TC stark auseinanderlaufen oder mehrere Sprecher-Fenster überlappen → besonders auf Leak / falsche Rolle achten.
+
 ## Indizien (Priorität)
 1) **Starke inhaltliche Abweichung** zwischen Transkript und passendem Drehbuch-Moment — das ist der Haupt-Trigger.
-2) **Timecode-Überlappung:** Wenn Transkript-Fenster und **mehrere** Original-Sprecher gleichzeitig überlappen, erhöhte Aufmerksamkeit für Leak / falsche Rolle.
-3) **NOT_MATCHED:** Originalzeilen ohne Match — prüfe, ob ihr Inhalt fälschlich in einer Transkript-Zeile „mitgelaufen“ ist oder ob eine Trans-Zeile ohne `SOURCE` zu so einem Unmatched gehört.
-4) **MATCHED-TEXT** inkl. **Original-Timecodes (REF-IN/REF-OUT)**: zeigt, **wann** im Drehbuch dieser Text steht — nutze das für die chronologische Reihenfolge. Bei Konflikt gewinnt Drehbuch + Zeit + Sinn.
+2) **Timecode-Überlappung** (TRANSCRIPT-TC und/oder REF-TC mit anderen Sprecher-Fenstern) — erhöhtes Indiz für Leak / falsche Rolle.
+3) **NOT_MATCHED:** Originalzeilen ohne Match — prüfen, ob Inhalt in einer Trans-Zeile „mitgelaufen“ ist oder eine Trans-Zeile ohne `SOURCE` dazu gehört.
+4) **MATCHED-TEXT + REF-TC:** Anker im Drehbuch (Text + Original-Zeit). Bei Konflikt: Drehbuch + Zeit + Sinn.
 
 ## Regeln
 - **Gesamtes Skript** berücksichtigen: gematchte **und** nicht gematchte Originalzeilen.
@@ -68,7 +74,7 @@ def build_user_prompt(
 
     return f"""Vergleiche **gesamte** Transkription und **gesamtes** Drehbuch (inkl. NOT_MATCHED).
 Flagge und korrigiere vor allem **stark abweichende** Stellen (Überlappung / falsche Rolle / Leak / Unsinn).
-Timecode-Überlappung mehrerer Sprecher = zusätzliches Indiz, kein alleiniger Beweis.
+**Timecodes mitdenken:** TRANSCRIPT-TC und MATCHED-TEXT-TC (REF-IN/OUT); gleiches MATCHED-TEXT = gleiche REF-TCs; ORIGINAL-Liste ist nach REF/Script-Zeit sortiert.
 
 Antworte mit **genau** diesem JSON-Schema (`issue_type` nur OK|TEXT_LEAK|SPEAKER_WRONG|NONSENSE|OTHER; `confidence` nur high|medium|low):
 {_JSON_SCHEMA_EXAMPLE}
@@ -76,11 +82,11 @@ Antworte mit **genau** diesem JSON-Schema (`issue_type` nur OK|TEXT_LEAK|SPEAKER
 Pflicht:
 - `reviews` enthält **genau {n_trans}** Einträge, `trans_i` von 1 bis {n_trans} jeweils **einmal**.
 - Bei `flagged=false`: `issue_type=OK`, Korrekturfelder leer.
-- Bei `flagged=true`: kurze konkrete `issue_note`.
+- Bei `flagged=true`: kurze konkrete `issue_note` (gern mit Zeitbezug).
 
-## TRANSKRIPTION — Post-Match ({n_trans} Segmente; SPEAKER=SOURCE, oft inkl. MATCHED-TEXT-Hinweis)
+## TRANSKRIPTION — Post-Match ({n_trans} Segmente; je Zeile: TRANSCRIPT-TC + SPEAKER + DIALOGUE + MATCHED-TEXT mit Original-TC)
 {transcription_block}
 
-## ORIGINAL — DREHBUCH komplett ({n_orig} Segmente)
+## ORIGINAL — DREHBUCH komplett, chronologisch nach Original-Timecode ({n_orig} Segmente)
 {original_block}
 {unmatched_section}"""

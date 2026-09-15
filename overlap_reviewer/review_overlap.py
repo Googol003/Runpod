@@ -211,9 +211,9 @@ def _format_trans_block(rows: List[Tuple[int, str, str, str, str, str, str, str]
         else:
             mt = "(kein MATCHED-TEXT)"
         lines.append(
-            f"{idx}. TRANSCRIPT [{_tc_norm(tc_in)} – {_tc_norm(tc_out)}] "
+            f"{idx}. TRANSCRIPT-TC [{_tc_norm(tc_in)} – {_tc_norm(tc_out)}] "
             f"SPEAKER={sp!r} | DIALOGUE={dialogue!r} | "
-            f"MATCHED-TEXT(Original-TC+Text)={mt!r}"
+            f"MATCHED-TEXT + ORIGINAL-TC={mt!r}"
         )
     return "\n".join(lines)
 
