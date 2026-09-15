@@ -108,7 +108,7 @@ Vergleicht **gesamte Transkription** (Timecodes + Dialog + `SOURCE`/`MATCHED-TEX
 
 ```bash
 cd overlap_reviewer
-# Default: testdata/test.1175.injected.xlsx (100 Zeilen, subtile Fehler) — kein --input nötig
+# Default: testdata/test.1175.xlsx (100 Zeilen, SAUBER, ohne Injects) + Original-CSV
 python review_overlap.py -o output/test1175_overlap_review.xlsx
 
 # Optional: andere Excel

@@ -1,6 +1,9 @@
 """
-Subtile Fehler in test.1175 (erste 100 Zeilen): ASR-Nonsens, Wort-Leaks, Sprechervertauschung.
-Keine erfundenen Vollsätze, die „sinnvoll aber nie gesagt“ wären.
+OPTIONAL: Fehler in test.1175 injizieren (nur auf explizite Anweisung).
+
+Default-Testdatei ist testdata/test.1175.xlsx — SAUBER, ohne Injects.
+Dieses Skript nicht mehr als Teil des Normal-Workflows nutzen; gezielt nur wenn
+konkrete Fehlerfälle spezifiziert wurden.
 """
 from __future__ import annotations
 

@@ -367,12 +367,19 @@ def _format_trans_block(rows: List[Tuple[int, str, str, str, str, str, str, str]
     return "\n".join(lines)
 
 
-def _format_orig_block(rows: List[Tuple[int, str, str, str, str]]) -> str:
+def _format_orig_block(
+    rows: List[Tuple[int, str, str, str, str]],
+    *,
+    unmatched_keys: Optional[set] = None,
+) -> str:
     lines: List[str] = []
+    unmatched_keys = unmatched_keys or set()
     for idx, tc_in, tc_out, speaker, dialogue in rows:
+        key = (speaker.upper(), normalize_ws(dialogue))
+        tag = " [NOT_MATCHED]" if key in unmatched_keys else ""
         lines.append(
             f"{idx}. [{_tc_norm(tc_in)} – {_tc_norm(tc_out)}] "
-            f"SPEAKER={speaker!r} | {dialogue}"
+            f"SPEAKER={speaker!r} | {dialogue}{tag}"
         )
     return "\n".join(lines)
 
@@ -540,9 +547,9 @@ def main() -> int:
     p.add_argument(
         "--input",
         "-i",
-        default=str(_REVIEW_DIR / "testdata" / "test.1175.injected.xlsx"),
+        default=str(_REVIEW_DIR / "testdata" / "test.1175.xlsx"),
         help="SM2-Excel (TIMECODE-IN/OUT, DIALOGUE, SOURCE, MATCHED-TEXT, REF-IN/OUT, NOT_MATCHED). "
-        "Default: testdata/test.1175.injected.xlsx. Mit --case izzy den eingebauten Mini-Case nutzen.",
+        "Default: testdata/test.1175.xlsx (sauber, ohne Test-Injects). Mit --case izzy den Mini-Case nutzen.",
     )
     p.add_argument(
         "--case",
@@ -682,12 +689,15 @@ def main() -> int:
     t0 = time.time()
     trans_rows, orig_rows, unmatched_rows = _build_lists(transcription, original, not_matched)
     n_trans, n_orig, n_unmatched = len(trans_rows), len(orig_rows), len(unmatched_rows)
+    unmatched_keys = {
+        (sp.upper(), normalize_ws(dlg)) for _, _, _, sp, dlg in unmatched_rows if sp and dlg
+    }
     user_prompt = build_user_prompt(
         n_trans=n_trans,
         n_orig=n_orig,
         n_unmatched=n_unmatched,
         transcription_block=_format_trans_block(trans_rows),
-        original_block=_format_orig_block(orig_rows),
+        original_block=_format_orig_block(orig_rows, unmatched_keys=unmatched_keys),
         not_matched_block=_format_orig_block(unmatched_rows),
     )
     log(
