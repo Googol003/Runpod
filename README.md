@@ -104,7 +104,7 @@ Testdaten: `segment_matcher/chaos_parreira_wm_case.py` (Parreira-WM-Chaos-Case).
 
 ## Overlap-Reviewer (Transkript vs. Drehbuch: Sprecher/Leak/Sinn)
 
-Vergleicht **Transkription** (Timecodes + Dialog + Sprecher) mit dem **Original-Drehbuch** (Timecodes + Sprecher + Dialog). Flaggt typische Überlappungs-Fehler (`TEXT_LEAK`, `SPEAKER_WRONG`, `NONSENSE`) und schreibt Korrekturen in eigene Spalten.
+Vergleicht **gesamte Transkription** (Timecodes + Dialog + `SOURCE`/`MATCHED-TEXT`) mit dem **kompletten Drehbuch** inkl. **`NOT_MATCHED`**. Flaggt Überlappungs-Fehler (`TEXT_LEAK`, `SPEAKER_WRONG`, `NONSENSE`) und schreibt Korrekturen. Timecode-Überlappung mehrerer Sprecher ist ein **Indiz**, Fokus liegt auf **stark abweichenden** Stellen.
 
 ```bash
 cd overlap_reviewer
@@ -113,8 +113,10 @@ pip install -r requirements.txt
 export LLM_PROVIDER=ollama
 export LLM_MODEL=gemma4:26b
 
-python review_overlap.py --dry-run
-python review_overlap.py -o output/chaos_parreira_wm_overlap_review.xlsx
+# Testcase als Excel ansehen (3 Sheets)
+python review_overlap.py --dry-run --export-case output/izzy_stede_overlap_case.xlsx
+
+python review_overlap.py -o output/izzy_stede_overlap_review.xlsx
 ```
 
-Testdaten: Chaos-Case aus `segment_matcher` (Sprecher auf Transkript-Zeilen aus `expected_sequence`). Gleiche Env-Variablen wie oben.
+Testdaten: `izzy_stede_overlap_case.py` (Izzy/Stede/Blackbeard: Leaks, falsche Rollen, Unmatched). Gleiche Env-Variablen wie oben.
