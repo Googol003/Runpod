@@ -33,6 +33,15 @@ _NOT_MATCHED_RE = re.compile(
 )
 
 
+def _ts() -> str:
+    return time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def log(msg: str) -> None:
+    """Fortschritt wie beim Excel-Corrector — sofort sichtbar auf RunPod."""
+    print(f"[{_ts()}] {msg}", flush=True)
+
+
 def normalize_ws(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip())
 
@@ -417,21 +426,39 @@ def main() -> int:
     p.add_argument("--num-predict", type=int, default=8192)
     p.add_argument("--dry-run", action="store_true", help="Nur Prompt bauen, kein LLM.")
     p.add_argument("--save-prompt", type=str, default="", help="User-Prompt in Datei speichern.")
+    p.add_argument("--no-warmup", action="store_true", help="LLM-Warmup überspringen.")
     args = p.parse_args()
 
+    t_all = time.time()
+    log("[START] overlap_reviewer")
+
     if args.input:
-        transcription, original, not_matched = load_sm2_excel(Path(args.input))
+        in_path = Path(args.input)
+        log(f"[LOAD] Excel: {in_path}")
+        t0 = time.time()
+        transcription, original, not_matched = load_sm2_excel(in_path)
+        log(
+            f"[LOAD] done in {time.time() - t0:.2f}s | "
+            f"trans={len(transcription)} orig={len(original)} not_matched={len(not_matched)}"
+        )
         default_out = _REVIEW_DIR / "output" / "test1175_overlap_review.xlsx"
     else:
+        log("[LOAD] embedded izzy_stede_overlap_case")
+        t0 = time.time()
         case = build_case()
         transcription = case.transcription.copy()
         original = case.original.copy()
         not_matched = case.not_matched.copy()
+        log(
+            f"[LOAD] done in {time.time() - t0:.2f}s | "
+            f"trans={len(transcription)} orig={len(original)} not_matched={len(not_matched)}"
+        )
         default_out = _REVIEW_DIR / "output" / "izzy_stede_overlap_review.xlsx"
 
     if args.max_rows and args.max_rows > 0:
+        log(f"[SLICE] max-rows={args.max_rows} (vorher trans={len(transcription)})")
+        t0 = time.time()
         transcription = transcription.iloc[: args.max_rows].copy()
-        # Original/NOT_MATCHED nur aus dem Slice neu ableiten (sonst riesiger Prompt)
         tmp = _REVIEW_DIR / "output" / "_slice_tmp.xlsx"
         tmp.parent.mkdir(parents=True, exist_ok=True)
         transcription.to_excel(tmp, index=False)
@@ -440,19 +467,25 @@ def main() -> int:
             tmp.unlink()
         except OSError:
             pass
+        log(
+            f"[SLICE] done in {time.time() - t0:.2f}s | "
+            f"trans={len(transcription)} orig={len(original)} not_matched={len(not_matched)}"
+        )
 
     if args.export_case:
         export_path = Path(args.export_case)
         export_path.parent.mkdir(parents=True, exist_ok=True)
+        log(f"[EXPORT] case → {export_path}")
         with pd.ExcelWriter(export_path, engine="openpyxl") as writer:
             transcription.to_excel(writer, sheet_name="transcription", index=False)
             original.to_excel(writer, sheet_name="original", index=False)
             not_matched.to_excel(writer, sheet_name="not_matched", index=False)
-        print(f"[OK] Case-Excel: {export_path}")
+        log(f"[EXPORT] done")
 
+    log("[BUILD] Listen + Prompt")
+    t0 = time.time()
     trans_rows, orig_rows, unmatched_rows = _build_lists(transcription, original, not_matched)
     n_trans, n_orig, n_unmatched = len(trans_rows), len(orig_rows), len(unmatched_rows)
-
     user_prompt = build_user_prompt(
         n_trans=n_trans,
         n_orig=n_orig,
@@ -461,27 +494,47 @@ def main() -> int:
         original_block=_format_orig_block(orig_rows),
         not_matched_block=_format_orig_block(unmatched_rows),
     )
+    log(
+        f"[BUILD] done in {time.time() - t0:.2f}s | "
+        f"trans={n_trans} orig={n_orig} not_matched={n_unmatched} "
+        f"prompt_chars={len(user_prompt)}"
+    )
 
     if args.save_prompt:
         Path(args.save_prompt).write_text(user_prompt, encoding="utf-8")
-        print(f"[OK] Prompt gespeichert: {args.save_prompt}")
+        log(f"[OK] Prompt gespeichert: {args.save_prompt}")
 
     if args.dry_run:
-        print(
+        log(
             f"[DRY-RUN] trans={n_trans} orig={n_orig} not_matched={n_unmatched} "
             f"chars={len(user_prompt)}"
         )
-        print(user_prompt[:2500] + ("\n…" if len(user_prompt) > 2500 else ""))
+        print(user_prompt[:2500] + ("\n…" if len(user_prompt) > 2500 else ""), flush=True)
+        log(f"[DONE] dry-run total={time.time() - t_all:.1f}s")
         return 0
 
+    log("[CLIENT] build_client_from_env")
     client = build_client_from_env()
     model = getattr(client, "model", "?")
-    print(f"[START] model={model} trans={n_trans} orig={n_orig} not_matched={n_unmatched}")
+    provider = type(client).__name__
+    base_url = getattr(client, "base_url", "?")
+    log(f"[START] provider={provider} base_url={base_url} model={model}")
+    log(f"[START] num_ctx={args.num_ctx} num_predict={args.num_predict} temperature={args.temperature}")
 
-    t0 = time.time()
-    raw = ""
+    if not args.no_warmup and hasattr(client, "warmup"):
+        log("[WARMUP] starting…")
+        t0w = time.time()
+        try:
+            client.warmup()
+            log(f"[WARMUP] done in {time.time() - t0w:.1f}s")
+        except Exception as e:
+            log(f"[WARMUP] skipped/failed: {e}")
+
     out_path = Path(args.output) if args.output else default_out
     dump = out_path.with_name(out_path.stem + "_raw.txt")
+    log(f"[LLM] request starting (1 call for {n_trans} rows) → waiting…")
+    t0 = time.time()
+    raw = ""
     try:
         raw = _call_llm(
             client,
@@ -490,24 +543,35 @@ def main() -> int:
             num_predict=args.num_predict,
             temperature=args.temperature,
         )
+        dt_llm = time.time() - t0
+        log(f"[LLM] response received in {dt_llm:.1f}s | raw_chars={len(raw)}")
+        log("[PARSE] JSON + reviews")
+        t0p = time.time()
         data = parse_json_response(raw)
         by_trans = _parse_reviews(data, n_trans, n_orig)
+        n_flagged_parse = sum(1 for v in by_trans.values() if v.get("flagged"))
+        log(
+            f"[PARSE] done in {time.time() - t0p:.2f}s | "
+            f"items={len(by_trans)} flagged={n_flagged_parse}"
+        )
     except (LLMError, json.JSONDecodeError, ValueError) as e:
         if raw:
             dump.parent.mkdir(parents=True, exist_ok=True)
             dump.write_text(raw, encoding="utf-8")
-        print(f"[ERROR] {e}")
-        if raw:
-            print(f"[ERROR] Rohe Antwort: {dump}")
+            log(f"[ERROR] raw dumped: {dump}")
+        log(f"[ERROR] {e}")
         return 1
 
+    log("[WRITE] building Excel")
+    t0 = time.time()
     df_out = _reviews_to_dataframe(trans_rows, orig_rows, by_trans)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     df_out.to_excel(out_path, index=False)
-
     n_flagged = int((df_out["Flagged"] == "yes").sum())
-    print(f"[DONE] {out_path} rows={len(df_out)} flagged={n_flagged}")
-    print(f"[DONE] elapsed={time.time() - t0:.1f}s")
+    by_type = df_out["Issue Type"].value_counts().to_dict() if "Issue Type" in df_out.columns else {}
+    log(f"[WRITE] done in {time.time() - t0:.2f}s → {out_path}")
+    log(f"[DONE] rows={len(df_out)} flagged={n_flagged} issue_types={by_type}")
+    log(f"[DONE] elapsed_total={time.time() - t_all:.1f}s")
     return 0
 
 
