@@ -20,7 +20,7 @@ Wenn plausibel: `flagged=false`, `issue_type=OK`, Korrekturfelder leer.
 1) **Starke inhaltliche Abweichung** zwischen Transkript und passendem Drehbuch-Moment — das ist der Haupt-Trigger.
 2) **Timecode-Überlappung:** Wenn Transkript-Fenster und **mehrere** Original-Sprecher gleichzeitig überlappen, erhöhte Aufmerksamkeit für Leak / falsche Rolle.
 3) **NOT_MATCHED:** Originalzeilen ohne Match — prüfe, ob ihr Inhalt fälschlich in einer Transkript-Zeile „mitgelaufen“ ist oder ob eine Trans-Zeile ohne `SOURCE` zu so einem Unmatched gehört.
-4) **MATCHED-TEXT** ist nur ein Hinweis aus dem Matcher — bei Konflikt gewinnt das **volle Drehbuch** + Zeit + Sinn.
+4) **MATCHED-TEXT** inkl. **Original-Timecodes (REF-IN/REF-OUT)**: zeigt, **wann** im Drehbuch dieser Text steht — nutze das für die chronologische Reihenfolge. Bei Konflikt gewinnt Drehbuch + Zeit + Sinn.
 
 ## Regeln
 - **Gesamtes Skript** berücksichtigen: gematchte **und** nicht gematchte Originalzeilen.

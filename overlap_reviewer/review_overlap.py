@@ -48,11 +48,11 @@ def _cell(v: Any) -> str:
 
 def load_sm2_excel(path: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    SM2-Ergebnis-Excel (Spalten: TIMECODE-IN/OUT, DIALOGUE, SOURCE, MATCHED-TEXT, NOT_MATCHED).
-    Baut Original-Liste aus eindeutigen MATCHED-TEXT+SOURCE plus geparsten NOT_MATCHED-Zeilen.
+    SM2-Ergebnis-Excel:
+    TIMECODE-IN/OUT, DIALOGUE, SOURCE, MATCHED-TEXT, NOT_MATCHED,
+    optional REF-IN/REF-OUT (Original-Timecodes zum Match).
     """
     df = pd.read_excel(path)
-    # erste Sheet falls multi
     if not isinstance(df, pd.DataFrame):
         df = pd.read_excel(path, sheet_name=0)
 
@@ -61,9 +61,21 @@ def load_sm2_excel(path: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
         if c not in df.columns:
             raise ValueError(f"Spalte fehlt in {path}: {c}")
 
-    transcription = df[need].copy()
+    cols = list(need)
+    for opt in ("REF-IN", "REF-OUT", "MATCHED-TEXT-IN", "MATCHED-TEXT-OUT"):
+        if opt in df.columns:
+            cols.append(opt)
+    transcription = df[cols].copy()
+    if "REF-IN" not in transcription.columns and "MATCHED-TEXT-IN" in transcription.columns:
+        transcription["REF-IN"] = transcription["MATCHED-TEXT-IN"]
+    if "REF-OUT" not in transcription.columns and "MATCHED-TEXT-OUT" in transcription.columns:
+        transcription["REF-OUT"] = transcription["MATCHED-TEXT-OUT"]
+    if "REF-IN" not in transcription.columns:
+        transcription["REF-IN"] = ""
+    if "REF-OUT" not in transcription.columns:
+        transcription["REF-OUT"] = ""
 
-    # Original aus Matches (1:n erlaubt → dedupe)
+    # Original aus Matches — Timecodes bevorzugt REF-IN/OUT (Drehbuch-Reihenfolge)
     orig_rows: List[Dict[str, str]] = []
     seen: set[Tuple[str, str]] = set()
     for _, row in transcription.iterrows():
@@ -75,10 +87,12 @@ def load_sm2_excel(path: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
         if key in seen:
             continue
         seen.add(key)
+        ref_in = _cell(row.get("REF-IN")) or _cell(row.get("TIMECODE-IN"))
+        ref_out = _cell(row.get("REF-OUT")) or _cell(row.get("TIMECODE-OUT"))
         orig_rows.append(
             {
-                "timecode_in": _cell(row.get("TIMECODE-IN")),
-                "timecode_out": _cell(row.get("TIMECODE-OUT")),
+                "timecode_in": ref_in,
+                "timecode_out": ref_out,
                 "source": src,
                 "dialogue": mat,
             }
@@ -114,6 +128,13 @@ def load_sm2_excel(path: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
                 }
             )
 
+    # Original chronologisch nach REF-/Script-Timecode sortieren
+    def _tc_key(r: Dict[str, str]) -> str:
+        return r.get("timecode_in") or ""
+
+    orig_rows.sort(key=_tc_key)
+    unmatched_rows.sort(key=_tc_key)
+
     original = pd.DataFrame(orig_rows) if orig_rows else pd.DataFrame(
         columns=["timecode_in", "timecode_out", "source", "dialogue"]
     )
@@ -130,15 +151,24 @@ def _tc_norm(tc: str) -> str:
     return s
 
 
-def _format_trans_block(rows: List[Tuple[int, str, str, str, str, str]]) -> str:
-    """idx, tc_in, tc_out, speaker, dialogue, matched_text"""
+def _format_trans_block(rows: List[Tuple[int, str, str, str, str, str, str, str]]) -> str:
+    """idx, tc_in, tc_out, speaker, dialogue, matched_text, ref_in, ref_out"""
     lines: List[str] = []
-    for idx, tc_in, tc_out, speaker, dialogue, matched in rows:
+    for idx, tc_in, tc_out, speaker, dialogue, matched, ref_in, ref_out in rows:
         sp = speaker if speaker else "(kein Sprecher / unmatched)"
-        mt = matched if matched else "(kein MATCHED-TEXT)"
+        if matched:
+            if ref_in or ref_out:
+                mt = (
+                    f"[{_tc_norm(ref_in)} – {_tc_norm(ref_out)}] {matched}"
+                )
+            else:
+                mt = matched
+        else:
+            mt = "(kein MATCHED-TEXT)"
         lines.append(
-            f"{idx}. [{_tc_norm(tc_in)} – {_tc_norm(tc_out)}] "
-            f"SPEAKER={sp!r} | DIALOGUE={dialogue!r} | MATCHED-TEXT={mt!r}"
+            f"{idx}. TRANSCRIPT [{_tc_norm(tc_in)} – {_tc_norm(tc_out)}] "
+            f"SPEAKER={sp!r} | DIALOGUE={dialogue!r} | "
+            f"MATCHED-TEXT(Original-TC+Text)={mt!r}"
         )
     return "\n".join(lines)
 
@@ -158,20 +188,22 @@ def _build_lists(
     original: pd.DataFrame,
     not_matched: pd.DataFrame,
 ) -> Tuple[
-    List[Tuple[int, str, str, str, str, str]],
+    List[Tuple[int, str, str, str, str, str, str, str]],
     List[Tuple[int, str, str, str, str]],
     List[Tuple[int, str, str, str, str]],
 ]:
-    trans_rows: List[Tuple[int, str, str, str, str, str]] = []
+    trans_rows: List[Tuple[int, str, str, str, str, str, str, str]] = []
     for _, row in transcription.iterrows():
         trans_rows.append(
             (
                 len(trans_rows) + 1,
-                str(row.get("TIMECODE-IN", row.get("timecode_in", ""))),
-                str(row.get("TIMECODE-OUT", row.get("timecode_out", ""))),
-                str(row.get("SOURCE", row.get("SPEAKER", ""))),
-                str(row.get("DIALOGUE", row.get("dialogue", ""))),
-                str(row.get("MATCHED-TEXT", row.get("Matched Text", ""))),
+                _cell(row.get("TIMECODE-IN", row.get("timecode_in", ""))),
+                _cell(row.get("TIMECODE-OUT", row.get("timecode_out", ""))),
+                _cell(row.get("SOURCE", row.get("SPEAKER", ""))),
+                _cell(row.get("DIALOGUE", row.get("dialogue", ""))),
+                _cell(row.get("MATCHED-TEXT", row.get("Matched Text", ""))),
+                _cell(row.get("REF-IN", row.get("MATCHED-TEXT-IN", ""))),
+                _cell(row.get("REF-OUT", row.get("MATCHED-TEXT-OUT", ""))),
             )
         )
 
@@ -180,10 +212,10 @@ def _build_lists(
         orig_rows.append(
             (
                 len(orig_rows) + 1,
-                str(row.get("timecode_in", row.get("TIMECODE-IN", ""))),
-                str(row.get("timecode_out", row.get("TIMECODE-OUT", ""))),
-                str(row.get("source", row.get("SOURCE", row.get("SPEAKER", "")))),
-                str(row.get("dialogue", row.get("DIALOGUE", ""))),
+                _cell(row.get("timecode_in", row.get("TIMECODE-IN", ""))),
+                _cell(row.get("timecode_out", row.get("TIMECODE-OUT", ""))),
+                _cell(row.get("source", row.get("SOURCE", row.get("SPEAKER", "")))),
+                _cell(row.get("dialogue", row.get("DIALOGUE", ""))),
             )
         )
 
@@ -192,10 +224,10 @@ def _build_lists(
         unmatched_rows.append(
             (
                 len(unmatched_rows) + 1,
-                str(row.get("timecode_in", row.get("TIMECODE-IN", ""))),
-                str(row.get("timecode_out", row.get("TIMECODE-OUT", ""))),
-                str(row.get("source", row.get("SOURCE", row.get("SPEAKER", "")))),
-                str(row.get("dialogue", row.get("DIALOGUE", ""))),
+                _cell(row.get("timecode_in", row.get("TIMECODE-IN", ""))),
+                _cell(row.get("timecode_out", row.get("TIMECODE-OUT", ""))),
+                _cell(row.get("source", row.get("SOURCE", row.get("SPEAKER", "")))),
+                _cell(row.get("dialogue", row.get("DIALOGUE", ""))),
             )
         )
     return trans_rows, orig_rows, unmatched_rows
@@ -265,14 +297,14 @@ def _parse_reviews(data: Dict[str, Any], n_trans: int, n_orig: int) -> Dict[int,
 
 
 def _reviews_to_dataframe(
-    trans_rows: List[Tuple[int, str, str, str, str, str]],
+    trans_rows: List[Tuple[int, str, str, str, str, str, str, str]],
     orig_rows: List[Tuple[int, str, str, str, str]],
     by_trans: Dict[int, Dict[str, Any]],
 ) -> pd.DataFrame:
     orig_by_idx = {r[0]: r for r in orig_rows}
     out_rows: List[Dict[str, Any]] = []
 
-    for ti, tc_in, tc_out, speaker, dialogue, matched in trans_rows:
+    for ti, tc_in, tc_out, speaker, dialogue, matched, ref_in, ref_out in trans_rows:
         r = by_trans.get(ti, {})
         oj = r.get("related_orig_j")
         if oj and oj in orig_by_idx:
@@ -289,6 +321,8 @@ def _reviews_to_dataframe(
                 "Transcript Speaker": speaker,
                 "Transcript Dialogue": dialogue,
                 "MATCHED-TEXT": matched,
+                "REF-IN": ref_in,
+                "REF-OUT": ref_out,
                 "Flagged": "yes" if flagged else "no",
                 "Issue Type": r.get("issue_type", "OK"),
                 "Issue Note": r.get("issue_note", ""),

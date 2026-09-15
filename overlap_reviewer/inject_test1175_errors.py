@@ -8,7 +8,16 @@ from pathlib import Path
 
 import pandas as pd
 
-KEEP = ["TIMECODE-IN", "TIMECODE-OUT", "DIALOGUE", "SOURCE", "MATCHED-TEXT", "NOT_MATCHED"]
+KEEP = [
+    "TIMECODE-IN",
+    "TIMECODE-OUT",
+    "DIALOGUE",
+    "SOURCE",
+    "MATCHED-TEXT",
+    "REF-IN",
+    "REF-OUT",
+    "NOT_MATCHED",
+]
 
 
 def inject(df: pd.DataFrame) -> pd.DataFrame:
