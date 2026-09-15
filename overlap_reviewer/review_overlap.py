@@ -400,9 +400,15 @@ def main() -> int:
     p.add_argument(
         "--input",
         "-i",
-        default="",
-        help="SM2-Excel mit Spalten TIMECODE-IN/OUT, DIALOGUE, SOURCE, MATCHED-TEXT, NOT_MATCHED. "
-        "Leer = eingebauter Izzy/Stede-Case.",
+        default=str(_REVIEW_DIR / "testdata" / "test.1175.injected.xlsx"),
+        help="SM2-Excel (TIMECODE-IN/OUT, DIALOGUE, SOURCE, MATCHED-TEXT, REF-IN/OUT, NOT_MATCHED). "
+        "Default: testdata/test.1175.injected.xlsx. Mit --case izzy den eingebauten Mini-Case nutzen.",
+    )
+    p.add_argument(
+        "--case",
+        choices=("excel", "izzy"),
+        default="excel",
+        help="excel = Default-Test-Excel; izzy = eingebauter Mini-Case ohne Datei.",
     )
     p.add_argument(
         "--output",
@@ -432,18 +438,9 @@ def main() -> int:
     t_all = time.time()
     log("[START] overlap_reviewer")
 
-    if args.input:
-        in_path = Path(args.input)
-        log(f"[LOAD] Excel: {in_path}")
-        t0 = time.time()
-        transcription, original, not_matched = load_sm2_excel(in_path)
-        log(
-            f"[LOAD] done in {time.time() - t0:.2f}s | "
-            f"trans={len(transcription)} orig={len(original)} not_matched={len(not_matched)}"
-        )
-        default_out = _REVIEW_DIR / "output" / "test1175_overlap_review.xlsx"
-    else:
-        log("[LOAD] embedded izzy_stede_overlap_case")
+    use_izzy = args.case == "izzy"
+    if use_izzy:
+        log("[LOAD] embedded izzy_stede_overlap_case (--case izzy)")
         t0 = time.time()
         case = build_case()
         transcription = case.transcription.copy()
@@ -454,6 +451,20 @@ def main() -> int:
             f"trans={len(transcription)} orig={len(original)} not_matched={len(not_matched)}"
         )
         default_out = _REVIEW_DIR / "output" / "izzy_stede_overlap_review.xlsx"
+    else:
+        in_path = Path(args.input)
+        if not in_path.is_file():
+            log(f"[ERROR] Input-Excel fehlt: {in_path}")
+            log("[ERROR] Erwartet z.B. overlap_reviewer/testdata/test.1175.injected.xlsx (im Repo).")
+            return 2
+        log(f"[LOAD] Excel: {in_path}")
+        t0 = time.time()
+        transcription, original, not_matched = load_sm2_excel(in_path)
+        log(
+            f"[LOAD] done in {time.time() - t0:.2f}s | "
+            f"trans={len(transcription)} orig={len(original)} not_matched={len(not_matched)}"
+        )
+        default_out = _REVIEW_DIR / "output" / "test1175_overlap_review.xlsx"
 
     if args.max_rows and args.max_rows > 0:
         log(f"[SLICE] max-rows={args.max_rows} (vorher trans={len(transcription)})")

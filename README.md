@@ -108,21 +108,15 @@ Vergleicht **gesamte Transkription** (Timecodes + Dialog + `SOURCE`/`MATCHED-TEX
 
 ```bash
 cd overlap_reviewer
-pip install -r requirements.txt
+# Default: testdata/test.1175.injected.xlsx (100 Zeilen, subtile Fehler) — kein --input nötig
+python review_overlap.py -o output/test1175_overlap_review.xlsx
 
-export LLM_PROVIDER=ollama
-export LLM_MODEL=gemma4:26b
+# Optional: andere Excel
+python review_overlap.py --input /pfad/andere.xlsx -o output/review.xlsx
 
-# Fehler in echte SM2-Excel einbauen (Test 1175)
-python inject_test1175_errors.py
-
-# Prompt check (erste 40 Zeilen empfohlen)
-python review_overlap.py --input output/test.1175.injected.xlsx --max-rows 40 --dry-run
-
-# Review mit LLM → Excel mit Flagged + Corrected-*
-python review_overlap.py --input output/test.1175.injected.xlsx --max-rows 40 \
-  -o output/test1175_overlap_review.xlsx
+# Optional: eingebauter Mini-Case
+python review_overlap.py --case izzy -o output/izzy_review.xlsx
 ```
 
-Input-Excel braucht die Spalten: `TIMECODE-IN`, `TIMECODE-OUT`, `DIALOGUE`, `SOURCE`, `MATCHED-TEXT`, `NOT_MATCHED`.  
-**1:n** (mehrere Transkript-Zeilen → ein Original) ist **erlaubt** und kein Fehler. Timecode-Überlappung = Indiz; Fokus = stark abweichende Stellen.
+Input-Excel braucht: `TIMECODE-IN`, `TIMECODE-OUT`, `DIALOGUE`, `SOURCE`, `MATCHED-TEXT`, optional `REF-IN`/`REF-OUT`, `NOT_MATCHED`.  
+**1:n** (mehrere Transkript-Zeilen → ein Original) ist **erlaubt**. Timecodes (Trans + REF) werden mitgedacht.
