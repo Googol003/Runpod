@@ -97,11 +97,146 @@ def _normalize_matched_ref_timecodes(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def load_sm2_excel(path: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def load_original_script_csv(path: Path) -> pd.DataFrame:
+    """
+    Original-Drehbuch-CSV (Semikolon), Dateireihenfolge = Script-Reihenfolge.
+    Erwartet Spalten: Source, Text, Startzeit/Endzeit (oder In/Out).
+    """
+    last_err: Optional[Exception] = None
+    df: Optional[pd.DataFrame] = None
+    for enc in ("utf-8", "utf-8-sig", "cp1252", "latin1"):
+        try:
+            df = pd.read_csv(path, sep=";", encoding=enc)
+            break
+        except Exception as e:  # noqa: BLE001 — Encoding-Probe
+            last_err = e
+            df = None
+    if df is None:
+        raise ValueError(f"Original-CSV nicht lesbar ({path}): {last_err}")
+
+    colmap = {str(c).strip().lower(): c for c in df.columns}
+
+    def _col(*names: str) -> Optional[str]:
+        for n in names:
+            if n.lower() in colmap:
+                return colmap[n.lower()]
+        return None
+
+    c_src = _col("Source", "SOURCE", "Speaker", "SPEAKER")
+    c_txt = _col("Text", "TEXT", "Dialogue", "DIALOGUE")
+    c_in = _col("Startzeit", "In", "TIMECODE-IN", "timecode_in")
+    c_out = _col("Endzeit", "Out", "TIMECODE-OUT", "timecode_out")
+    if not c_src or not c_txt:
+        raise ValueError(f"Original-CSV braucht Source+Text: {path} cols={list(df.columns)}")
+
+    rows: List[Dict[str, str]] = []
+    for _, row in df.iterrows():
+        src = _cell(row.get(c_src))
+        dialogue = _cell(row.get(c_txt))
+        if not src and not dialogue:
+            continue
+        if not src:
+            continue
+        tin = _cell(row.get(c_in)) if c_in else ""
+        tout = _cell(row.get(c_out)) if c_out else ""
+        rows.append(
+            {
+                "timecode_in": tin,
+                "timecode_out": tout,
+                "source": src,
+                "dialogue": dialogue,
+            }
+        )
+    if not rows:
+        raise ValueError(f"Original-CSV ohne Dialogzeilen: {path}")
+    return pd.DataFrame(rows)
+
+
+def _transcription_tc_window(transcription: pd.DataFrame) -> Tuple[str, str]:
+    """Min/Max Timecode aus REF- und TRANSCRIPT-TCs (für Original-Fenster)."""
+    vals_in: List[str] = []
+    vals_out: List[str] = []
+    for _, row in transcription.iterrows():
+        for c in ("REF-IN", "TIMECODE-IN", "MATCHED-TEXT-IN"):
+            v = _cell(row.get(c))
+            if v:
+                vals_in.append(v)
+        for c in ("REF-OUT", "TIMECODE-OUT", "MATCHED-TEXT-OUT"):
+            v = _cell(row.get(c))
+            if v:
+                vals_out.append(v)
+    if not vals_in or not vals_out:
+        return "", ""
+    return min(vals_in), max(vals_out)
+
+
+def filter_original_by_window(
+    original: pd.DataFrame,
+    tc_lo: str,
+    tc_hi: str,
+    *,
+    pad_before: str = "00:00:15:00",
+    pad_after: str = "00:00:15:00",
+) -> pd.DataFrame:
+    """
+    Schneidet Original auf das Transkript-Zeitfenster (Datei-Reihenfolge bleibt).
+    pad_* sind relative Dauern HH:MM:SS:FF die vom Fenster abgezogen/addiert werden.
+    """
+    if original.empty or not tc_lo or not tc_hi:
+        return original
+
+    def _tc_to_frames(tc: str) -> Optional[int]:
+        parts = (tc or "").strip().split(":")
+        if len(parts) != 4 or not all(p.isdigit() for p in parts):
+            return None
+        h, m, s, f = (int(x) for x in parts)
+        return ((h * 60 + m) * 60 + s) * 25 + f
+
+    def _frames_to_tc(n: int) -> str:
+        if n < 0:
+            n = 0
+        f = n % 25
+        n //= 25
+        s = n % 60
+        n //= 60
+        m = n % 60
+        h = n // 60
+        return f"{h:02d}:{m:02d}:{s:02d}:{f:02d}"
+
+    lo_f = _tc_to_frames(tc_lo)
+    hi_f = _tc_to_frames(tc_hi)
+    if lo_f is None or hi_f is None:
+        return original
+    pad_lo = _tc_to_frames(pad_before) or 0
+    pad_hi = _tc_to_frames(pad_after) or 0
+    win_lo = _frames_to_tc(lo_f - pad_lo)
+    win_hi = _frames_to_tc(hi_f + pad_hi)
+
+    keep_idx: List[Any] = []
+    for i, row in original.iterrows():
+        tin = _cell(row.get("timecode_in"))
+        tout = _cell(row.get("timecode_out")) or tin
+        if not tin:
+            keep_idx.append(i)
+            continue
+        # Overlap: start <= win_hi AND end >= win_lo
+        if tin <= win_hi and tout >= win_lo:
+            keep_idx.append(i)
+    return original.loc[keep_idx].reset_index(drop=True)
+
+
+def load_sm2_excel(
+    path: Path,
+    *,
+    original_override: Optional[pd.DataFrame] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     SM2-Ergebnis-Excel:
     TIMECODE-IN/OUT, DIALOGUE, SOURCE, MATCHED-TEXT, NOT_MATCHED,
     optional REF-IN/REF-OUT (Original-Timecodes zum Match).
+
+    Wenn original_override gesetzt ist (z.B. aus Drehbuch-CSV), wird das als
+    ORIGINAL genutzt — Dateireihenfolge bleibt erhalten.
     """
     df = pd.read_excel(path)
     if not isinstance(df, pd.DataFrame):
@@ -129,7 +264,46 @@ def load_sm2_excel(path: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
     # Gleicher MATCHED-TEXT (+ SOURCE) → gleiche REF-Timecodes (kanonisch: frühester IN, spätester OUT)
     transcription = _normalize_matched_ref_timecodes(transcription)
 
-    # Original aus Matches — Timecodes bevorzugt REF-IN/OUT (Drehbuch-Reihenfolge)
+    unmatched_rows: List[Dict[str, str]] = []
+    for _, row in transcription.iterrows():
+        nm = _cell(row.get("NOT_MATCHED"))
+        if not nm:
+            continue
+        m = _NOT_MATCHED_RE.search(nm.replace("\n", " "))
+        if m:
+            tin, tout, speaker, dialogue = m.group(1), m.group(2), m.group(3).strip(), m.group(4).strip()
+            dialogue = dialogue.split("|")[0].strip()
+            unmatched_rows.append(
+                {
+                    "timecode_in": tin,
+                    "timecode_out": tout,
+                    "source": speaker,
+                    "dialogue": dialogue,
+                }
+            )
+        else:
+            unmatched_rows.append(
+                {
+                    "timecode_in": _cell(row.get("TIMECODE-IN")),
+                    "timecode_out": _cell(row.get("TIMECODE-OUT")),
+                    "source": "?",
+                    "dialogue": nm[:200],
+                }
+            )
+
+    def _tc_key(r: Dict[str, str]) -> str:
+        return r.get("timecode_in") or ""
+
+    unmatched_rows.sort(key=_tc_key)
+    not_matched = pd.DataFrame(unmatched_rows) if unmatched_rows else pd.DataFrame(
+        columns=["timecode_in", "timecode_out", "source", "dialogue"]
+    )
+
+    if original_override is not None and not original_override.empty:
+        original = original_override.copy().reset_index(drop=True)
+        return transcription, original, not_matched
+
+    # Fallback: Original aus Matches + NOT_MATCHED rekonstruieren
     orig_rows: List[Dict[str, str]] = []
     seen: set[Tuple[str, str]] = set()
     for _, row in transcription.iterrows():
@@ -151,48 +325,14 @@ def load_sm2_excel(path: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
                 "dialogue": mat,
             }
         )
-
-    unmatched_rows: List[Dict[str, str]] = []
-    for _, row in transcription.iterrows():
-        nm = _cell(row.get("NOT_MATCHED"))
-        if not nm:
-            continue
-        m = _NOT_MATCHED_RE.search(nm.replace("\n", " "))
-        if m:
-            tin, tout, speaker, dialogue = m.group(1), m.group(2), m.group(3).strip(), m.group(4).strip()
-            dialogue = dialogue.split("|")[0].strip()
-            key = (speaker.upper(), normalize_ws(dialogue))
-            entry = {
-                "timecode_in": tin,
-                "timecode_out": tout,
-                "source": speaker,
-                "dialogue": dialogue,
-            }
-            unmatched_rows.append(entry)
-            if key not in seen:
-                seen.add(key)
-                orig_rows.append(entry)
-        else:
-            unmatched_rows.append(
-                {
-                    "timecode_in": _cell(row.get("TIMECODE-IN")),
-                    "timecode_out": _cell(row.get("TIMECODE-OUT")),
-                    "source": "?",
-                    "dialogue": nm[:200],
-                }
-            )
-
-    # Original chronologisch nach REF-/Script-Timecode sortieren
-    def _tc_key(r: Dict[str, str]) -> str:
-        return r.get("timecode_in") or ""
+    for entry in unmatched_rows:
+        key = (entry["source"].upper(), normalize_ws(entry["dialogue"]))
+        if key not in seen:
+            seen.add(key)
+            orig_rows.append(entry)
 
     orig_rows.sort(key=_tc_key)
-    unmatched_rows.sort(key=_tc_key)
-
     original = pd.DataFrame(orig_rows) if orig_rows else pd.DataFrame(
-        columns=["timecode_in", "timecode_out", "source", "dialogue"]
-    )
-    not_matched = pd.DataFrame(unmatched_rows) if unmatched_rows else pd.DataFrame(
         columns=["timecode_in", "timecode_out", "source", "dialogue"]
     )
     return transcription, original, not_matched
@@ -411,6 +551,17 @@ def main() -> int:
         help="excel = Default-Test-Excel; izzy = eingebauter Mini-Case ohne Datei.",
     )
     p.add_argument(
+        "--original",
+        default=str(_REVIEW_DIR / "testdata" / "CsvOurFlagMeansDeath201.csv"),
+        help="Original-Drehbuch-CSV (Semikolon, Dateireihenfolge). "
+        "Default: testdata/CsvOurFlagMeansDeath201.csv. Leer = aus Matches rekonstruieren.",
+    )
+    p.add_argument(
+        "--original-full",
+        action="store_true",
+        help="Gesamtes Original-CSV ins Prompt (sonst nur Zeitfenster der Transkription ±15s).",
+    )
+    p.add_argument(
         "--output",
         "-o",
         default="",
@@ -438,7 +589,22 @@ def main() -> int:
     t_all = time.time()
     log("[START] overlap_reviewer")
 
+    original_csv_path = Path(args.original) if str(args.original).strip() else None
+    original_full_script: Optional[pd.DataFrame] = None
     use_izzy = args.case == "izzy"
+    if original_csv_path and not use_izzy:
+        if original_csv_path.is_file():
+            log(f"[LOAD] Original-Script CSV: {original_csv_path}")
+            t0 = time.time()
+            original_full_script = load_original_script_csv(original_csv_path)
+            log(
+                f"[LOAD] original CSV done in {time.time() - t0:.2f}s | "
+                f"lines={len(original_full_script)} (Datei-Reihenfolge)"
+            )
+        else:
+            log(f"[WARN] --original nicht gefunden, Fallback Matches: {original_csv_path}")
+            original_csv_path = None
+
     if use_izzy:
         log("[LOAD] embedded izzy_stede_overlap_case (--case izzy)")
         t0 = time.time()
@@ -459,7 +625,10 @@ def main() -> int:
             return 2
         log(f"[LOAD] Excel: {in_path}")
         t0 = time.time()
-        transcription, original, not_matched = load_sm2_excel(in_path)
+        transcription, original, not_matched = load_sm2_excel(
+            in_path,
+            original_override=original_full_script,
+        )
         log(
             f"[LOAD] done in {time.time() - t0:.2f}s | "
             f"trans={len(transcription)} orig={len(original)} not_matched={len(not_matched)}"
@@ -473,7 +642,10 @@ def main() -> int:
         tmp = _REVIEW_DIR / "output" / "_slice_tmp.xlsx"
         tmp.parent.mkdir(parents=True, exist_ok=True)
         transcription.to_excel(tmp, index=False)
-        transcription, original, not_matched = load_sm2_excel(tmp)
+        transcription, original, not_matched = load_sm2_excel(
+            tmp,
+            original_override=original_full_script,
+        )
         try:
             tmp.unlink()
         except OSError:
@@ -482,6 +654,19 @@ def main() -> int:
             f"[SLICE] done in {time.time() - t0:.2f}s | "
             f"trans={len(transcription)} orig={len(original)} not_matched={len(not_matched)}"
         )
+
+    # Original auf Transkript-Zeitfenster schneiden (Reihenfolge bleibt), außer --original-full / izzy
+    if original_full_script is not None and not args.original_full and not use_izzy:
+        tc_lo, tc_hi = _transcription_tc_window(transcription)
+        before = len(original)
+        original = filter_original_by_window(original_full_script, tc_lo, tc_hi)
+        log(
+            f"[ORIG-WINDOW] {tc_lo} - {tc_hi} (+/-15s) -> "
+            f"orig {before} -> {len(original)} (Script-Reihenfolge)"
+        )
+    elif original_full_script is not None and args.original_full:
+        original = original_full_script.copy().reset_index(drop=True)
+        log(f"[ORIG-FULL] gesamtes Script | orig={len(original)}")
 
     if args.export_case:
         export_path = Path(args.export_case)

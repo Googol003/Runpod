@@ -119,4 +119,5 @@ python review_overlap.py --case izzy -o output/izzy_review.xlsx
 ```
 
 Input-Excel braucht: `TIMECODE-IN`, `TIMECODE-OUT`, `DIALOGUE`, `SOURCE`, `MATCHED-TEXT`, optional `REF-IN`/`REF-OUT`, `NOT_MATCHED`.  
+**Original-Drehbuch** kommt standardmäßig aus `testdata/CsvOurFlagMeansDeath201.csv` (**Script-Reihenfolge**); Zeitfenster der Transkription ±15s. Mit `--original-full` das ganze CSV, mit `--original ""` Fallback aus Matches.  
 **1:n** (mehrere Transkript-Zeilen → ein Original) ist **erlaubt**. Timecodes (Trans + REF) werden mitgedacht.

@@ -1,0 +1,1126 @@
+TakeNr;In;Startzeit;Out;Endzeit;Typ;Marker1;Marker2;Bemerkung;Source;Text
+;;;;;;;;;;
+1.0;01:00:00:00;00:00:00:00;01:00:09:09;00:00:09:09;A;;;;;
+;;;;;;;;;;
+2.0;01:00:09:09;00:00:09:09;01:00:18:02;00:00:18:02;;;;;IZZY;(INS ON) (LAUTE)
+;;;;;;;;;;
+2.0;01:00:09:09;00:00:09:09;01:00:18:02;00:00:18:02;;;;;STEDE;(ÜBERL) (EVTL) (ATMER) (Laute)
+;;00;;00;;;;;;
+3.0;01:00:18:02;00:00:18:02;01:00:27:01;00:00:27:01;;;;;STEDE;(KAMPFLAUTE)
+;;00;;00;;;;;;
+3.0;01:00:18:02;00:00:18:02;01:00:27:01;00:00:27:01;;;;;IZZY;(KAMPFLAUTE)
+;;00;;00;;;;;;
+4.0;01:00:27:01;00:00:27:01;01:00:30:02;00:00:30:02;;;;;STEDE;Izzy, warte. .. Ich hab's dir nie zurückgezahlt.
+;;00;;00;;;;;;
+5.0;01:00:30:02;00:00:30:02;01:00:33:21;00:00:33:21;;;;;IZZY;Was hast du mir nie zurückgezahlt? .. (CONT) (LAUT)
+;;00;;00;;;;;;
+6.0;01:00:33:12;00:00:33:12;01:00:35:12;00:00:35:12;Ü;;;;STEDE;(CONT/ON) (VORSCHL) Dass du uns an die Engländer verkauft hast.
+;;00;;00;;;;;;
+7.0;01:00:35:12;00:00:35:12;01:00:40:21;00:00:40:21;;;;;IZZY;(INS ON) (ATMER) (LAUTE) .. 
+;;00;;00;;;;;;
+8.0;01:00:40:21;00:00:40:21;01:00:44:18;00:00:44:18;;;;;IZZY;(OFF) Ich hab dich nie gezwungen, ihn zu verlassen. .. Das hast du von allein getan.
+;;00;;00;;;;;;
+9.0;01:00:44:18;00:00:44:18;01:00:54:18;00:00:54:18;;;;;STEDE;(LAUT)
+;;00;;00;;;;;;
+9.0;01:00:44:18;00:00:44:18;01:00:54:18;00:00:54:18;;;;;IZZY;(SCHREI) (ATMER) (LAUTE)
+;;00;;00;;;;;;
+10.0;01:00:54:18;00:00:54:18;01:00:59:22;00:00:59:22;;;;;STEDE;(OFF) Wo ist er? .. (INS ON) (EVTL ATMER) Wo ist Ed?
+;;00;;00;;;;;;
+11.0;01:00:59:22;00:00:59:22;01:01:00:24;00:01:00:24;A;;;;;
+;;00;;00;;;;;;
+12.0;01:01:00:24;00:01:00:24;01:01:11:14;00:01:11:14;;;;;IZZY;Du unglaublicher . Kackvogel. (2.F.: Du unglaubliches Arschloch.)
+;;00;;00;;;;;;
+13.0;01:01:11:14;00:01:11:14;01:01:16:11;00:01:16:11;;;;;STEDE;(ATMER) (KL SCHNIEFER) (ATMER)
+;;00;;00;;;;;;
+13.0;01:01:11:14;00:01:11:14;01:01:16:11;00:01:16:11;;;;;BLACKBEARD;(OFF) (überl) Stede!
+;;00;;00;;;;;;
+13.0;01:01:11:14;00:01:11:14;01:01:16:11;00:01:16:11;;;;;STEDE;Ed!
+;;00;;00;;;;;;
+14.0;01:01:16:11;00:01:16:11;01:01:17:11;00:01:17:11;A;;;;;
+;;00;;00;;;;;;
+15.0;01:01:17:11;00:01:17:11;01:01:19:09;00:01:19:09;;;;;BLACKBEARD;(ON) Stede!
+;;00;;00;;;;;;
+16.0;01:01:19:09;00:01:19:09;01:01:23:13;00:01:23:13;;;;;STEDE;(ATMER) Ed!
+;;00;;00;;;;;;
+17.0;01:01:23:13;00:01:23:13;01:01:27:21;00:01:27:21;A;;;;;
+;;00;;00;;;;;;
+18.0;01:01:27:21;00:01:27:21;01:01:37:01;00:01:37:01;;01:01:35:04;;;BLACKBEARD;Stede! .. (x) Stede!
+;;00;;00;;;;;;
+19.0;01:01:37:01;00:01:37:01;01:01:42:13;00:01:42:13;A;;;;;
+;;00;;00;;;;;;
+20.0;01:01:42:13;00:01:42:13;01:01:49:06;00:01:49:06;;;;;STEDE;Ed!
+;;00;;00;;;;;;
+20.0;01:01:42:13;00:01:42:13;01:01:49:06;00:01:49:06;;;;;BLACKBEARD;(ATMER) (LAUTE)
+;;00;;00;;;;;;
+20.0;01:01:42:13;00:01:42:13;01:01:49:06;00:01:49:06;;;;;STEDE;(ATMER) (LAUTE)
+;;00;;00;;;;;;
+20.0;01:01:42:13;00:01:42:13;01:01:49:06;00:01:49:06;;;;;STEDE;(LACHEN)
+;;00;;00;;;;;;
+21.0;01:01:49:06;00:01:49:06;01:01:51:15;00:01:51:15;;;;;BLACKBEARD;Ich wusste, du würdest mich finden.
+;;00;;00;;;;;;
+22.0;01:01:51:15;00:01:51:15;01:01:55:19;00:01:55:19;;;;;STEDE;Du bist nicht sauer?
+;;00;;00;;;;;;
+22.0;01:01:51:15;00:01:51:15;01:01:55:19;00:01:55:19;;;;;BLACKBEARD;Liebster, ich hab es gewusst.
+;;00;;00;;;;;;
+23.0;01:01:55:19;00:01:55:19;01:02:00:09;00:02:00:09;;;;;STEDE;(evtl Atmer) Dann ist (ATMER) zwischen uns (ATMER) soweit alles geklärt?
+;;00;;00;;;;;;
+24.0;01:02:00:09;00:02:00:09;01:02:05:06;00:02:05:06;;;;;BLACKBEARD;Scheiße, dein Bart ist super.
+;;00;;00;;;;;;
+24.0;01:02:00:09;00:02:00:09;01:02:05:06;00:02:05:06;;;;;STEDE;Ich hab gedacht, ich versuch mal was Neues.
+;;00;;00;;;;;;
+25.0;01:02:05:06;00:02:05:06;01:02:07:15;00:02:07:15;A;;;;;
+;;00;;00;;;;;;
+26.0;01:02:07:15;00:02:07:15;01:02:13:07;00:02:13:07;;;;;BLACKBEARD;Uh, Bro. .. (OFF) Bist du das?
+;;00;;00;;;;;;
+26.0;01:02:07:15;00:02:07:15;01:02:13:07;00:02:13:07;;;;;STEDE;Nein. .. Oh Gott. .. (OFF) Nein! .. 
+;;00;;00;;;;;;
+27.0;01:02:13:07;00:02:13:07;01:02:15:21;00:02:15:21;;;;;STEDE;Tut mir echt leid. Tut mir echt leid.
+;;00;;00;;;;;;
+28.0;01:02:15:21;00:02:15:21;01:02:21:18;00:02:21:18;;;;;STEDE;(ATMER) (RIECHLAUTE) Oh. (Zög) Herrgott! .. Wee John!
+;;00;;00;;;;;;
+29.0;01:02:21:18;00:02:21:18;01:02:25:07;00:02:25:07;;;;;BUTTONS;Kannst du die Schnauze halten, Mann? (2.F. Können Sie...)
+;;00;;00;;;;;;
+29.0;01:02:21:18;00:02:21:18;01:02:25:07;00:02:25:07;;;;;STEDE;(OFF) Er hat mich angefurzt.
+;;00;;00;;;;;;
+30.0;01:02:24:22;00:02:24:22;01:02:28:15;00:02:28:15;Ü;;;;ROACH;(OFF) (SCHREI) Halt die Klappe! (ATMER) (2. Halten Sie...)
+;;00;;00;;;;;;
+30.0;01:02:24:22;00:02:24:22;01:02:28:15;00:02:28:15;Ü;;;;BLACK PETE;(OFF) (ÜBERL) Halt's Maul! Es reicht! (2. Maul halten!)
+;;00;;00;;;;;;
+30.0;01:02:24:22;00:02:24:22;01:02:28:15;00:02:28:15;Ü;;;;BUTTONS;(OFF) (ÜBERL) (Halt die) Schnauze, Mann!
+;;00;;00;;;;;;
+30.0;01:02:24:22;00:02:24:22;01:02:28:15;00:02:28:15;Ü;;;;ROACH;(OFF) (ÜBERL) (SEUFZER)
+;;00;;00;;;;;;
+31.0;01:02:28:02;00:02:28:02;01:02:31:02;00:02:31:02;Ü;;;;STEDE;Es ist noch da. (Zög) Es ist 'ne Wand aus Gestank.
+;;00;;00;;;;;;
+31.0;01:02:28:02;00:02:28:02;01:02:31:02;00:02:31:02;Ü;;;;WEE JOHN FEENEY;(OFF) (überl) (SEUFZER) (ATMER)
+;;00;;00;;;;;;
+32.0;01:02:30:12;00:02:30:12;01:02:35:02;00:02:35:02;Ü;;;;BLACK PETE;"Kann nicht schlimmer sein als Ihr Ed, oh Ed""-Gestöhne die ganze Nacht."""
+;;00;;00;;;;;;
+32.0;01:02:30:12;00:02:30:12;01:02:35:02;00:02:35:02;Ü;;;;ROACH;Mhm.
+;;00;;00;;;;;;
+33.0;01:02:34:21;00:02:34:21;01:02:40:04;00:02:40:04;Ü;;;;STEDE;Haltet die Klappe! .. Oh, er hat's wieder getan. Oh Gott.
+;;00;;00;;;;;;
+34.0;01:02:38:21;00:02:38:21;01:02:48:20;00:02:48:20;Ü;;;;BLACK PETE;(OFF) (Unverständl.) Meine Güte, ein kleines Püpschen. .. Ist doch nicht so schlimm.
+;;00;;00;;;;;;
+34.0;01:02:38:21;00:02:38:21;01:02:48:20;00:02:48:20;Ü;;;;WEE JOHN FEENEY;(OFF) (Unverständl.) Kann doch mal passieren.
+;;00;;00;;;;;;
+34.0;01:02:38:21;00:02:38:21;01:02:48:20;00:02:48:20;Ü;;;;OLUWANDE;(OFF) (ÜBERL) (REAKTION)
+;;00;;00;;;;;;
+34.0;01:02:38:21;00:02:38:21;01:02:48:20;00:02:48:20;Ü;;;;BUTTONS;Ist ja gut. Klappe, Mann!
+;;00;;00;;;;;;
+34.0;01:02:38:21;00:02:38:21;01:02:48:20;00:02:48:20;Ü;;;;ROACH;(OFF) Schsch...
+;;00;;00;;;;;;
+34.0;01:02:38:21;00:02:38:21;01:02:48:20;00:02:48:20;Ü;;;;STEDE;"Unfassbar. .. Dein Sch"" macht mehr Lärm als meine Beschwerde darüber, dass ich fast durch seine Fürze sterbe."""
+;;00;;00;;;;;;
+34.0;01:02:38:21;00:02:38:21;01:02:48:20;00:02:48:20;Ü;;;;ROACH;(OFF) Sch.
+;;00;;00;;;;;;
+35.0;01:02:45:08;00:02:45:08;01:02:48:23;00:02:48:23;Ü;;;;MAINTITLE;OUR FLAG MEANS DEATH
+;;00;;00;;;;;;
+35.0;01:02:45:08;00:02:45:08;01:02:48:23;00:02:48:23;Ü;;;;ANMERKUNG;(Anm: Ich muss leider die Du/Sie-Thematik noch einmal aufgreifen. In Staffel 1 hatten sich Stede und Izzy gesiezt. Vielleicht könnte das allerdings vorne im Kampf komisch kommen. Man kennt sich ja nun auch besser. Außerdem hat Stede zwar seine Crew geduzt, aber alle haben ihn gesiezt. Da zwischenzeitlich viel passiert ist, könnte man auch das aufweichen. Und alle duzen sich. Der Respekt scheint ja auch immer mehr zu fehlen.)
+;;00;;00;;;;;;
+36.0;01:02:48:23;00:02:48:23;01:02:50:10;00:02:50:10;A;;;;IT;(SCHNARCHEN) (auch ff Takes)
+;;00;;00;;;;;;
+37.0;01:02:50:10;00:02:50:10;01:02:57:00;00:02:57:00;;;;;STEDE VO;(VO) Lieber Ed. (Zög) Die Mannschaft und ich sind in Sicherheit .. und das blühende Leben. ..
+;;00;;00;;;;;;
+38.0;01:02:57:00;00:02:57:00;01:03:06:13;00:03:06:13;;;;;STEDE VO; Da ich dem Wohlstand abgeschworen habe, waren wir gezwungen, uns vorübergehend in der Piraten-Republik niederzulassen. .. Zum Glück konnten wir einige von Oluwandes Beziehungen aktivieren...
+;;00;;00;;;;;;
+39.0;01:03:06:12;00:03:06:12;01:03:10:09;00:03:10:09;Ü;;;;OLUWANDE;(OFF/INS ON) In der Kurz- und in der Langversion (Zög) suchen wir also Arbeit. .. 
+;;00;;00;;;;;;
+40.0;01:03:10:09;00:03:10:09;01:03:12:11;00:03:12:11;A;;;;;
+;;00;;00;;;;;;
+41.0;01:03:12:11;00:03:12:11;01:03:14:21;00:03:14:21;;;;;OLUWANDE;Womöglich, (Zög) womöglich auch ein Schlafplätzchen?
+;;00;;00;;;;;;
+42.0;01:03:14:21;00:03:14:21;01:03:18:01;00:03:18:01;;;;;SPANISH JACKIE;Hat dieser Hirnie nicht mein Nasenglas zerstört?
+;;00;;00;;;;;;
+43.0;01:03:18:01;00:03:18:01;01:03:22:19;00:03:22:19;;;;;STEDE;Ähm... Ja. Hi. (ATMER) (OFF) Erneut bitte ich um Verzeihung.
+;;00;;00;;;;;;
+44.0;01:03:22:19;00:03:22:19;01:03:24:07;00:03:24:07;;;;;SPANISH JACKIE;Wer ist Blondie?
+;;00;;00;;;;;;
+45.0;01:03:24:07;00:03:24:07;01:03:28:11;00:03:28:11;;;;;STEDE;Ja, du.
+;;00;;00;;;;;;
+45.0;01:03:24:07;00:03:24:07;01:03:28:11;00:03:28:11;;;;;OLUWANDE;(OFF) Das (Zög) ist der Schwede.
+;;00;;00;;;;;;
+45.0;01:03:24:07;00:03:24:07;01:03:28:11;00:03:28:11;;;;;SCHWEDE;Ich bin der Schwede.
+;;00;;00;;;;;;
+46.0;01:03:28:11;00:03:28:11;01:03:30:00;00:03:30:00;;;;;ROACH;(INS ON) Er ist Single.
+;;00;;00;;;;;;
+47.0;01:03:30:00;00:03:30:00;01:03:33:05;00:03:33:05;;;;;SPANISH JACKIE;(OFF) Komm mal zu mir, Baby. .. (ON) Warum so schüchtern? (Zög) (OFF) Komm her.
+;;00;;00;;;;;;
+48.0;01:03:33:05;00:03:33:05;01:03:35:06;00:03:35:06;;;;;WEE JOHN FEENEY;Los!
+;;00;;00;;;;;;
+48.0;01:03:33:05;00:03:33:05;01:03:35:06;00:03:35:06;;;;;ROACH;Geh!
+;;00;;00;;;;;;
+48.0;01:03:33:05;00:03:33:05;01:03:35:06;00:03:35:06;;;;;STEDE;Ist okay!
+;;00;;00;;;;;;
+48.0;01:03:33:05;00:03:33:05;01:03:35:06;00:03:35:06;;;;;ROACH;(ÜBERL) Immer schön mutig.
+;;00;;00;;;;;;
+48.0;01:03:33:05;00:03:33:05;01:03:35:06;00:03:35:06;;;;;WEE JOHN FEENEY;(ÜBERL) Los. (Zög) Los.
+;;00;;00;;;;;;
+49.0;01:03:35:04;00:03:35:04;01:03:38:17;00:03:38:17;Ü;;;;SPANISH JACKIE;(LACHER) (ATMER) Dreh dich mal für mich.
+;;00;;00;;;;;;
+50.0;01:03:38:17;00:03:38:17;01:03:44:17;00:03:44:17;;;;;SCHWEDE;Okay.
+;;00;;00;;;;;;
+50.0;01:03:38:17;00:03:38:17;01:03:44:17;00:03:44:17;;;;;SPANISH JACKIE;(OFF) (KL LACHER) .. (INS ON) Was für ein prächtiges Exemplar von Mann. .. 
+;;00;;00;;;;;;
+51.0;01:03:44:17;00:03:44:17;01:03:49:07;00:03:49:07;;;;;SPANISH JACKIE;(INS ON) (LACHEN) Ihr Jungs kriegt 'n Schlafplatz im Keller.
+;;00;;00;;;;;;
+51.0;01:03:44:17;00:03:44:17;01:03:49:07;00:03:49:07;;;;;SPANISH JACKIE;(OFF) Die Arbeit beginnt in 20 Minuten.
+;;00;;00;;;;;;
+52.0;01:03:48:08;00:03:48:08;01:03:51:24;00:03:51:24;Ü;;;;SCHWEDE;(REAKTION)
+;;00;;00;;;;;;
+52.0;01:03:48:08;00:03:48:08;01:03:51:24;00:03:51:24;Ü;;;;ROACH;(LACHEN)
+;;00;;00;;;;;;
+52.0;01:03:48:08;00:03:48:08;01:03:51:24;00:03:51:24;Ü;;;;STEDE;Ja!
+;;00;;00;;;;;;
+52.0;01:03:48:08;00:03:48:08;01:03:51:24;00:03:51:24;Ü;;;;SCHWEDE;Okay.
+;;00;;00;;;;;;
+53.0;01:03:50:23;00:03:50:23;01:03:56:21;00:03:56:21;Ü;;;;SPANISH JACKIE;(INS ON) Nein, nein, nein, nein, nein. Nicht du. Nicht du. .. Nimm Platz. (2.F.: Setz dich.) .. (OFF) (LACHER)
+;;00;;00;;;;;;
+54.0;01:03:56:18;00:03:56:18;01:04:00:14;00:04:00:14;Ü;;;;STEDE;Okay.
+;;00;;00;;;;;;
+54.0;01:03:56:18;00:03:56:18;01:04:00:14;00:04:00:14;Ü;;;;OLUWANDE;Bis dann, Kumpel.
+;;00;;00;;;;;;
+54.0;01:03:56:18;00:03:56:18;01:04:00:14;00:04:00:14;Ü;;;;BLACK PETE;(OFF) Danke, Schwede.
+;;00;;00;;;;;;
+55.0;01:04:00:14;00:04:00:14;01:04:04:02;00:04:04:02;;;;;SPANISH JACKIE;Rück näher ran. (KL LAUT) Spanish Jackie wird (schon) nicht beißen. 
+;;00;;00;;;;;;
+56.0;01:04:04:02;00:04:04:02;01:04:09:15;00:04:09:15;;;;;SPANISH JACKIE;(LACHER) (ATMER) Kleine Lüge. .. Ich beiße.
+;;00;;00;;;;;;
+56.0;01:04:04:02;00:04:04:02;01:04:09:15;00:04:09:15;;;;;SCHWEDE;(ÜBERL) (SEUFZER) .. (LACHEN)
+;;00;;00;;;;;;
+56.0;01:04:04:02;00:04:04:02;01:04:09:15;00:04:09:15;;;;;SPANISH JACKIE;(ÜBERL) (LACHEN)
+;;00;;00;;;;;;
+57.0;01:04:09:15;00:04:09:15;01:04:15:01;00:04:15:01;;;;;MANN 1;(SCHREI)
+;;00;;00;;;;;;
+57.0;01:04:09:15;00:04:09:15;01:04:15:01;00:04:15:01;;;;;WOMAN;(ÜBERL) (LACHEN)
+;;00;;00;;;;;;
+57.0;01:04:09:15;00:04:09:15;01:04:15:01;00:04:15:01;;;;;WEE JOHN FEENEY;(ÜBERL) Okay. (LAUT) Abmarsch!
+;;00;;00;;;;;;
+57.0;01:04:09:15;00:04:09:15;01:04:15:01;00:04:15:01;;;;;IT;(Unverständl. Durcheinander) (Allg. HG) (+ Archiv) (auch ff Takes)
+;;00;;00;;;;;;
+58.0;01:04:15:01;00:04:15:01;01:04:18:09;00:04:18:09;;;;;STEDE;"Guten Abend. Willkommen bei Spanish Jackie('s)"". Reservierung?"""
+;;00;;00;;;;;;
+59.0;01:04:18:09;00:04:18:09;01:04:23:20;00:04:23:20;;;;;SCARIEST GUY;Friss meine verfluchte Scheiße!
+;;00;;00;;;;;;
+59.0;01:04:18:09;00:04:18:09;01:04:23:20;00:04:23:20;;;;;STEDE;Wie schön. (Zög) Laufkundschaft.
+;;00;;00;;;;;;
+59.0;01:04:18:09;00:04:18:09;01:04:23:20;00:04:23:20;;;;;SCARIEST GUY;(LAUT)
+;;00;;00;;;;;;
+60.0;01:04:23:20;00:04:23:20;01:04:26:14;00:04:26:14;;;;;STEDE;Ich habe ein Filetstück von Tisch für Sie. Folgen Sie mir.
+;;00;;00;;;;;;
+61.0;01:04:26:01;00:04:26:01;01:04:30:07;00:04:30:07;Ü;;;;MANN 1;(LAUT) Meine Lieblingshand!
+;;00;;00;;;;;;
+61.0;01:04:26:01;00:04:26:01;01:04:30:07;00:04:30:07;Ü;;;;WOMAN;Er hat angefangen.
+;;00;;00;;;;;;
+61.0;01:04:26:01;00:04:26:01;01:04:30:07;00:04:30:07;Ü;;;;WEE JOHN FEENEY;Was hab ich zu Messerstechereien gesagt?
+;;00;;00;;;;;;
+62.0;01:04:30:07;00:04:30:07;01:04:34:09;00:04:34:09;;;;;STEDE VO;(VO) Man könnte sagen, wir befinden uns als Crew in einer Wiederaufbauphase. (2.F.: Umstrukturierungsphase.)
+;;00;;00;;;;;;
+63.0;01:04:34:09;00:04:34:09;01:04:35:10;00:04:35:10;A;;;;IT;(HG )
+;;00;;00;;;;;;
+64.0;01:04:35:10;00:04:35:10;01:04:38:04;00:04:38:04;;;;;ROACH;Bestellt! (2.F.: Bestellung!)
+;;00;;00;;;;;;
+64.0;01:04:35:10;00:04:35:10;01:04:38:04;00:04:38:04;;;;;MANN 2;(OFF) Das ist für Mama!
+;;00;;00;;;;;;
+64.0;01:04:35:10;00:04:35:10;01:04:38:04;00:04:38:04;;;;;IT;(JUBELN) (LACHEN)
+;;00;;00;;;;;;
+65.0;01:04:38:04;00:04:38:04;01:04:41:07;00:04:41:07;;;;;BLACK PETE;Herrgott... Sehr nett. .. Äußerst erwachsen.
+;;00;;00;;;;;;
+66.0;01:04:41:07;00:04:41:07;01:04:45:20;00:04:45:20;;;;;STEDE VO;(VO) Wir konnten zeigen, was wir drauf haben.
+;;00;;00;;;;;;
+66.0;01:04:41:07;00:04:41:07;01:04:45:20;00:04:45:20;;;;;STEDE;Bitte sehr.
+;;00;;00;;;;;;
+66.0;01:04:41:07;00:04:41:07;01:04:45:20;00:04:45:20;;;;;STEDE VO;(VO) Als Team. (2.F.: Als Mannschaft.)
+;;00;;00;;;;;;
+66.0;01:04:41:07;00:04:41:07;01:04:45:20;00:04:45:20;;;;;STEDE;Gefällt Ihnen der Tisch?
+;;00;;00;;;;;;
+67.0;01:04:45:20;00:04:45:20;01:04:49:09;00:04:49:09;;;;;SCARIEST GUY;Fick dich!
+;;00;;00;;;;;;
+67.0;01:04:45:20;00:04:45:20;01:04:49:09;00:04:49:09;;;;;STEDE;Zauberhaft. .. Oh, das klingt gut, Buttons.
+;;00;;00;;;;;;
+68.0;01:04:49:09;00:04:49:09;01:04:54:22;00:04:54:22;;;;;BUTTONS;Wann können wir mal wieder zur See fahren, Captain?
+;;00;;00;;;;;;
+68.0;01:04:49:09;00:04:49:09;01:04:54:22;00:04:54:22;;;;;STEDE;Demnächst. (Zög) Wir müssen noch etwas mehr Geld anhäufen.
+;;00;;00;;;;;;
+69.0;01:04:54:22;00:04:54:22;01:04:59:10;00:04:59:10;;;;;STEDE VO;(VO) Die Moral ist so hoch, wie nie zuvor. (Zög) Es ist ein goldenes Zeitalter.
+;;00;;00;;;;;;
+69.0;01:04:54:22;00:04:54:22;01:04:59:10;00:04:59:10;;;;;WOMAN 2;(überl) (Text)
+;;00;;00;;;;;;
+70.0;01:04:59:10;00:04:59:10;01:05:03:20;00:05:03:20;;;;;STEDE;Gib mir irgendwas Hartes, Olu. Bitte.
+;;00;;00;;;;;;
+70.0;01:04:59:10;00:04:59:10;01:05:03:20;00:05:03:20;;;;;OLUWANDE;Die Getränke gehen nicht auf's Haus, das wissen Sie?
+;;00;;00;;;;;;
+71.0;01:05:03:20;00:05:03:20;01:05:09:19;00:05:09:19;;;;;STEDE;Oh, komm schon, bitte.
+;;00;;00;;;;;;
+71.0;01:05:03:20;00:05:03:20;01:05:09:19;00:05:09:19;;;;;RICKY;(INS ON) Ich (Winz Zög) spendiere Ihnen gerne einen Drink.
+;;00;;00;;;;;;
+71.0;01:05:03:20;00:05:03:20;01:05:09:19;00:05:09:19;;;;;STEDE;(OFF) Oh! Vielen Dank.
+;;00;;00;;;;;;
+72.0;01:05:09:19;00:05:09:19;01:05:17:03;00:05:17:03;;;;;RICKY;(Anatmer) Äh, Richard Banes. Meine Freunde (Winz Zög) nennen mich Ricky. .. (CONT) (Und) Sie sind Stede Bonnet, nicht wahr?
+;;00;;00;;;;;;
+73.0;01:05:17:03;00:05:17:03;01:05:20:12;00:05:20:12;;;;;STEDE;(OFF) Ich fürchte, ich hab keine Ahnung, was Sie sagen (Zög) und wer er ist. .. 
+;;00;;00;;;;;;
+74.0;01:05:20:12;00:05:20:12;01:05:23:01;00:05:23:01;;;;;STEDE;(ON) Oh, mein Typ wird verlangt. (Zög) Entschuldigen Sie mich.
+;;00;;00;;;;;;
+75.0;01:05:23:01;00:05:23:01;01:05:32:10;00:05:32:10;;;;;STEDE VO;(VO) Wie gesagt, es geht uns toll. (Zög) Dir hoffentlich auch. .. Ich denk an dich. (Zög) Oft.
+;;00;;00;;;;;;
+76.0;01:05:32:10;00:05:32:10;01:05:36:02;00:05:36:02;A;;;;;
+;;00;;00;;;;;;
+77.0;01:05:36:02;00:05:36:02;01:05:38:17;00:05:38:17;;;;;IZZY;(OFF) Wir nähern uns dem Schiff, Captain.
+;;00;;00;;;;;;
+78.0;01:05:38:17;00:05:38:17;01:05:42:06;00:05:42:06;;;;;STEDE VO;(VO) Ich hoffe, du denkst an mich (Winz Zög) ebenfalls.
+;;00;;00;;;;;;
+79.0;01:05:40:09;00:05:40:09;01:05:47:10;00:05:47:10;Ü;;;;BLACKBEARD;(CONT) (ÜBERL) (ATMER) (SEUFZER)
+;;00;;00;;;;;;
+79.0;01:05:40:09;00:05:40:09;01:05:47:10;00:05:47:10;Ü;;;;BLACKBEARD;(CONT) Wird Zeit, dass wir endlich zu dem scheiß Schiff kommen. (Zög) Hat ewig gedauert.
+;;00;;00;;;;;;
+79.0;01:05:40:09;00:05:40:09;01:05:47:10;00:05:47:10;Ü;;;;ON-SCREEN TEXT;Vertraue niemandem
+;;00;;00;;;;;;
+80.0;01:05:47:10;00:05:47:10;01:05:49:15;00:05:49:15;;;;;STEDE VO;(VO) Ich weiß, die Chancen, dich zu finden, sind gering.
+;;00;;00;;;;;;
+81.0;01:05:49:15;00:05:49:15;01:05:55:14;00:05:55:14;;;;;STEDE;(ATMER) Ich werd' dich finden, Ed. .. (KUSS)
+;;00;;00;;;;;;
+82.0;01:05:55:14;00:05:55:14;01:05:58:18;00:05:58:18;;;;;STEDE VO;(VO) Aber ebenso waren die Chancen, als wir uns zum ersten Mal fanden...
+;;00;;00;;;;;;
+83.0;01:05:58:18;00:05:58:18;01:06:00:11;00:06:00:11;A;;;;;
+;;00;;00;;;;;;
+84.0;01:06:00:11;00:06:00:11;01:06:04:10;00:06:04:10;;;;;PRIESTER;(VORGEZ TON) Die Menschheit ist von Natur aus niederträchtig und gemein. .. 
+;;00;;00;;;;;;
+85.0;01:06:04:10;00:06:04:10;01:06:12:20;00:06:12:20;;;;;PRIESTER;Es ist die Pflicht der Menschen von Ansehen, wie ihr es seid, das gemeine, menschliche Gesindel durch den heiligen Akt (INS ON) der Ehe emporzuheben. .. 
+;;00;;00;;;;;;
+86.0;01:06:12:20;00:06:12:20;01:06:17:21;00:06:17:21;;;;;PRIESTER;Wer etwas gegen diese Verbindung vorzubringen hat, (Zög) möge jetzt sprechen oder für immer schweigen.
+;;00;;00;;;;;;
+87.0;01:06:17:21;00:06:17:21;01:06:21:23;00:06:21:23;;;;;BLACKBEARD;(OFF) Einspruch.
+;;00;;00;;;;;;
+87.0;01:06:17:21;00:06:17:21;01:06:21:23;00:06:21:23;;;;;2 FRAUEN, 2 MÄNNER;(REAKTION IT)  (evtl) (Spitzen)
+;;00;;00;;;;;;
+88.0;01:06:21:23;00:06:21:23;01:06:24:21;00:06:24:21;;;;;PRIESTER;Was für ein Dämon ist das?
+;;00;;00;;;;;;
+89.0;01:06:24:21;00:06:24:21;01:06:29:05;00:06:29:05;;;;;BLACKBEARD;Dämon? .. Ich bin der verfluchte Teufel.
+;;00;;00;;;;;;
+90.0;01:06:29:05;00:06:29:05;01:06:37:08;00:06:37:08;;;;;2 FRAUEN, 2 MÄNNER;(REAKTION IT) ... (Reaktion IT) (evtl) (Spitzen)
+;;00;;00;;;;;;
+91.0;01:06:31:23;00:06:31:23;01:06:33:24;00:06:33:24;Ü;;;;BLACKBEARD;(Und) das sind die Kinder.
+;;00;;00;;;;;;
+92.0;01:06:33:24;00:06:33:24;01:06:36:02;00:06:36:02;A;;;;;
+;;00;;00;;;;;;
+93.0;01:06:36:02;00:06:36:02;01:06:37:10;00:06:37:10;;;;;PRIESTER;Wachen!
+;;00;;00;;;;;;
+94.0;01:06:37:10;00:06:37:10;01:06:39:15;00:06:39:15;;;;;IZZY;evtl (SCHREIE)
+;;00;;00;;;;;;
+94.0;01:06:37:10;00:06:37:10;01:06:39:15;00:06:39:15;;;;;IT;(SCHREIE)
+;;00;;00;;;;;;
+95.0;01:06:39:15;00:06:39:15;01:06:46:20;00:06:46:20;A;;;;IT;(KAMPFLAUTE)
+;;00;;00;;;;;;
+96.0;01:06:46:20;00:06:46:20;01:06:51:15;00:06:51:15;;;;;JIM;(evtl Laute) (SCHREI)
+;;00;;00;;;;;;
+97.0;01:06:51:15;00:06:51:15;01:06:52:15;00:06:52:15;A;;;;IT;(KAMPFLAUTE) (Laute)
+;;00;;00;;;;;;
+98.0;01:06:51:13;00:06:51:13;01:06:56:17;00:06:56:17;;;;;FANG;(LAUT)
+;;00;;00;;;;;;
+98.0;01:06:51:13;00:06:51:13;01:06:56:17;00:06:56:17;;;;;FRENCHIE;(HEULEN)
+;;00;;00;;;;;;
+99.0;01:06:56:17;00:06:56:17;01:06:58:11;00:06:58:11;;;;;NARRATIVE TITLE;Dienstag
+;;00;;00;;;;;;
+100.0;01:06:58:11;00:06:58:11;01:07:00:06;00:07:00:06;;;;;FANG;(LAUT)
+;;00;;00;;;;;;
+100.0;01:06:58:11;00:06:58:11;01:07:00:06;00:07:00:06;;;;;2 TYPEN;(EVTL) (LAUT)
+;;00;;00;;;;;;
+100.0;01:06:58:11;00:06:58:11;01:07:00:06;00:07:00:06;;;;;NARRATIVE TITLE;Der Tag davor
+;;00;;00;;;;;;
+101.0;01:07:00:06;00:07:00:06;01:07:09:15;00:07:09:15;A;;;;IT;MENGE (ATMER) (LAUTE)
+;;00;;00;;;;;;
+102.0;01:07:09:15;00:07:09:15;01:07:11:00;00:07:11:00;;;;;NARRATIVE TITLE;Und der Tag davor
+;;00;;00;;;;;;
+103.0;01:07:11:00;00:07:11:00;01:07:16:03;00:07:16:03;;;;;IT;CREWMEN (LAUTE) (LAUT)
+;;00;;00;;;;;;
+104.0;01:07:16:03;00:07:16:03;01:07:19:08;00:07:19:08;;;;;CREWMAN 2;(LAUT)
+;;00;;00;;;;;;
+104.0;01:07:16:03;00:07:16:03;01:07:19:08;00:07:19:08;;;;;FANG;(SCHREI)
+;;00;;00;;;;;;
+105.0;01:07:19:08;00:07:19:08;01:07:27:00;00:07:27:00;A;;;;IT;(RIECHEN)
+;;00;;00;;;;;;
+106.0;01:07:27:00;00:07:27:00;01:07:35:23;00:07:35:23;;;;;JIM;(ATMER) Täusch ich mich oder (Winz Zög) war die Sache mit der Hochzeit ein wenig überzogen?
+;;00;;00;;;;;;
+107.0;01:07:35:23;00:07:35:23;01:07:38:10;00:07:38:10;;;;;ARCHIE;(INS ON) Ähm... (ATMER) Keine Ahnung. (Winz Zög) 
+;;00;;00;;;;;;
+108.0;01:07:38:10;00:07:38:10;01:07:43:21;00:07:43:21;;;;;ARCHIE;Ich (Winz Zög) war noch (Winz Zög) nie so wirklich auf 'ner Hochzeit. Deswegen (ATMER) hab ich keinen Vergleich.
+;;00;;00;;;;;;
+109.0;01:07:43:21;00:07:43:21;01:07:49:11;00:07:49:11;;;;;FANG;(OFF) Ich hab Blackbeard noch nie so gesehen. (ON) (ANATMER) Er hat noch nicht mal mit der Wimper gezuckt, als Ivan getötet wurde.
+;;00;;00;;;;;;
+110.0;01:07:49:04;00:07:49:04;01:07:52:18;00:07:52:18;Ü;;;;FRENCHIE;Der Kuchen ist mega, oder? (2.F.: Der Kuchen ist fabelhaft, oder?) .. (OFF) Großartig. (Zög) Sehr gut. (Zög) 
+;;00;;00;;;;;;
+111.0;01:07:52:18;00:07:52:18;01:07:58:02;00:07:58:02;;;;;FRENCHIE;(ON) (ATMER) Na ja, ist meine Meinung. (SCHNIEFER)
+;;00;;00;;;;;;
+111.0;01:07:52:18;00:07:52:18;01:07:58:02;00:07:58:02;;;;;FRENCHIE;Ich meine, Buttercreme mag auch nicht (Zög) jeder. Nicht?
+;;00;;00;;;;;;
+112.0;01:07:58:02;00:07:58:02;01:08:00:15;00:08:00:15;;;;;JIM;Wie kannst du das alles so gut wegstecken?
+;;00;;00;;;;;;
+113.0;01:08:00:15;00:08:00:15;01:08:05:08;00:08:05:08;;;;;FRENCHIE;(LIPPENLAUT) (ANATMER) (LAUT) Ich hab da so 'n System, (Zög) wie ich mit schrecklichen Erfahrungen umgehe. 
+;;00;;00;;;;;;
+114.0;01:08:05:08;00:08:05:08;01:08:08:19;00:08:08:19;;;;;FRENCHIE;(ATMER) Ich hab 'ne Schachtel (Zög) in meinem Kopf. ..
+;;00;;00;;;;;;
+115.0;01:08:08:19;00:08:08:19;01:08:13:01;00:08:13:01;;;;;FRENCHIE;Und die Sachen werden in die Schachtel gepackt, .. (OFF) dann schließe ich die Schachtel ab .. 
+;;00;;00;;;;;;
+116.0;01:08:13:01;00:08:13:01;01:08:17:14;00:08:17:14;;;;;FRENCHIE;(ON) und öffne sie nie wieder. ..
+;;00;;00;;;;;;
+116.0;01:08:13:01;00:08:13:01;01:08:17:14;00:08:17:14;;;;;FRENCHIE;(OFF) Wirkt wie 'n Zauber.
+;;00;;00;;;;;;
+117.0;01:08:17:14;00:08:17:14;01:08:23:00;00:08:23:00;;;;;FANG;(WEINEN)
+;;00;;00;;;;;;
+118.0;01:08:19:08;00:08:19:08;01:08:24:19;00:08:24:19;Ü;;;;FRENCHIE;(ÜBERL) (INS ON) Oh. .. Ist ja gut. Ach, jehchen. Willst du... Willst du deinen Kuchen noch?
+;;00;;00;;;;;;
+119.0;01:08:24:19;00:08:24:19;01:08:31:20;00:08:31:20;;;;;FANG;(ATMER) (WIMMERN) (WEINEN)
+;;00;;00;;;;;;
+119.0;01:08:24:19;00:08:24:19;01:08:31:20;00:08:31:20;;;;;FRENCHIE;(überl) Nein? (Unverständl.) In Ordnung, ich ess' den.
+;;00;;00;;;;;;
+120.0;01:08:31:20;00:08:31:20;01:08:34:01;00:08:34:01;A;;;;IT;(Unverständl. Durcheinander für gesamte Szene IT/Archiv?)
+;;00;;00;;;;;;
+121.0;01:08:34:01;00:08:34:01;01:08:38:20;00:08:38:20;;;;;STEDE;(CONT) (REAKTION) .. (ON) Im Prinzip fehlen nur noch Hörner, oder? (Zög) Er kann unmöglich so aussehen.
+;;00;;00;;;;;;
+122.0;01:08:38:20;00:08:38:20;01:08:44:00;00:08:44:00;;;;;OLUWANDE;Er hatte viel zu tun, was? .. (LAUT) Hab noch nie gesehen, dass hinten auch was draufsteht.
+;;00;;00;;;;;;
+123.0;01:08:44:00;00:08:44:00;01:08:48:04;00:08:48:04;;;;;STEDE;Er musste nur 'n bisschen Dampf ablassen. Susan! (Zög) Zwei Suppen, bitte.       (Anm: Ich gehe davon aus, dass auf der Rückseite die Vorwürfe gegenüber Blackbeard erfasst wurden und Stede gleichzeitig die Entschuldigung bringt, warum die Vorwürfe so umfangreich sind.)
+;;00;;00;;;;;;
+124.0;01:08:48:04;00:08:48:04;01:08:54:00;00:08:54:00;;;;;OLUWANDE;Hey, Suse. (2.F.: Hey, Susan.)
+;;00;;00;;;;;;
+124.0;01:08:48:04;00:08:48:04;01:08:54:00;00:08:54:00;;;;;OLUWANDE;Captain, Sie wissen, dass wir nicht genug sparen werden für 'n Schiff nach ihren Vorstellungen.
+;;00;;00;;;;;;
+125.0;01:08:54:00;00:08:54:00;01:09:00:11;00:09:00:11;;;;;STEDE;Ja, mit der Einstellung ganz bestimmt nicht. .. Sue, wenn Sie so denken würden, hätten Sie dann diesen wunderbaren Suppen-Kiosk?
+;;00;;00;;;;;;
+126.0;01:09:00:11;00:09:00:11;01:09:06:22;00:09:06:22;;;;;SUSAN;Ja, vermutlich schon.
+;;00;;00;;;;;;
+126.0;01:09:00:11;00:09:00:11;01:09:06:22;00:09:06:22;;;;;STEDE;Sue hatte Beharrlichkeit .. und Mumm.
+;;00;;00;;;;;;
+126.0;01:09:00:11;00:09:00:11;01:09:06:22;00:09:06:22;;;;;SUSAN;(OFF) (überl) (Anatmer) Ich hab den Vorbesitzer umgebracht und mir den Kiosk gekrallt. (LEICHT INS ON) .. 
+;;00;;00;;;;;;
+127.0;01:09:06:22;00:09:06:22;01:09:13:03;00:09:13:03;;;;;SUSAN;Manchmal ist Handeln besser (Zög) als 'ne Vision.
+;;00;;00;;;;;;
+127.0;01:09:06:22;00:09:06:22;01:09:13:03;00:09:13:03;;;;;OLUWANDE;Ja, hab ich ihm auch gesagt.
+;;00;;00;;;;;;
+127.0;01:09:06:22;00:09:06:22;01:09:13:03;00:09:13:03;;;;;SUSAN;Tja, weil du der Schlaue bist.
+;;00;;00;;;;;;
+127.0;01:09:06:22;00:09:06:22;01:09:13:03;00:09:13:03;;;;;OLUWANDE;(LAUT)
+;;00;;00;;;;;;
+127.0;01:09:06:22;00:09:06:22;01:09:13:03;00:09:13:03;;;;;SUSAN;(KL LACHER)
+;;00;;00;;;;;;
+128.0;01:09:11:08;00:09:11:08;01:09:16:06;00:09:16:06;Ü;;;;STEDE;(ÜBERL) (SEUFZER) .. (CONT/ON) Wir können nicht mit einem alten Schiff ankommen. Wir müssen gut aussehen.
+;;00;;00;;;;;;
+129.0;01:09:16:06;00:09:16:06;01:09:19:07;00:09:19:07;;;;;OLUWANDE;Zögern Sie's hinaus, weil Sie glauben, dass Blackbeard Sie umbringt?
+;;00;;00;;;;;;
+130.0;01:09:19:07;00:09:19:07;01:09:22:18;00:09:22:18;;;;;STEDE;Was? .. Warum sollte er das machen?
+;;00;;00;;;;;;
+130.0;01:09:19:07;00:09:19:07;01:09:22:18;00:09:22:18;;;;;SUSAN;(INS ON) Na, weil der Typ 'n Irrer ist. (2.F.: Weil der Typ 'n Ding an der Waffel hat.)
+;;00;;00;;;;;;
+131.0;01:09:22:13;00:09:22:13;01:09:25:03;00:09:25:03;Ü;;;;OLUWANDE;Und Sie haben ihn verlassen.
+;;00;;00;;;;;;
+131.0;01:09:22:13;00:09:22:13;01:09:25:03;00:09:25:03;Ü;;;;STEDE;Ich hab ihn nicht verlassen.
+;;00;;00;;;;;;
+131.0;01:09:22:13;00:09:22:13;01:09:25:03;00:09:25:03;Ü;;;;OLUWANDE;(CONT) Sie haben ihn verlassen.
+;;00;;00;;;;;;
+132.0;01:09:24:20;00:09:24:20;01:09:28:22;00:09:28:22;Ü;;;;TANTE;(OFF) (LACHER) (ON) Er hat Sie verlassen.
+;;00;;00;;;;;;
+132.0;01:09:24:20;00:09:24:20;01:09:28:22;00:09:28:22;Ü;;;;SUSAN;(überl) (LACHER)
+;;00;;00;;;;;;
+133.0;01:09:28:02;00:09:28:02;01:09:30:10;00:09:30:10;Ü;;;;STEDE;Nein. (Zög) Wir machen eine Pause.
+;;00;;00;;;;;;
+134.0;01:09:29:19;00:09:29:19;01:09:32:23;00:09:32:23;Ü;;;;TANTE;(INS ON) Ha! (Zög) Eine Pause. .. Völliger Blödsinn.                          (Anm: Ich überlege weiter, ob dieses Wortspiel irgendwie zu retten ist.)
+;;00;;00;;;;;;
+135.0;01:09:32:23;00:09:32:23;01:09:36:12;00:09:36:12;;;;;STEDE;(INS ON) Es ist mir egal, was ihr alle sagt. (2.F.: ...was alle sagen.) .. Er ist eigentlich 'n guter Kerl.
+;;00;;00;;;;;;
+136.0;01:09:36:12;00:09:36:12;01:09:41:09;00:09:41:09;A;;;;;
+;;00;;00;;;;;;
+137.0;01:09:41:09;00:09:41:09;01:09:44:14;00:09:44:14;;;;;IZZY;Die Mannschaft (Winz Zög) sieht ein bisschen lädiert aus.
+;;00;;00;;;;;;
+138.0;01:09:44:14;00:09:44:14;01:09:46:05;00:09:46:05;A;;;;;
+;;00;;00;;;;;;
+139.0;01:09:46:05;00:09:46:05;01:09:48:05;00:09:48:05;;;;;BLACKBEARD;(CONT) Haben alle Kuchen bekommen?
+;;00;;00;;;;;;
+140.0;01:09:48:05;00:09:48:05;01:09:50:17;00:09:50:17;;;;;IZZY;Ja, alle.
+;;00;;00;;;;;;
+141.0;01:09:50:17;00:09:50:17;01:09:56:23;00:09:56:23;;;;;BLACKBEARD;Dann können sie (Zög) ein wenig Rhinozeros-Horn haben. .. (CONT) Ich hab grad 'n bisschen was (Winz Zög) frisch gemahlen. .. 
+;;00;;00;;;;;;
+142.0;01:09:56:23;00:09:56:23;01:10:00:18;00:10:00:18;;;;;BLACKBEARD;(Schniefer) Oh, fuck! .. Willst du auch?
+;;00;;00;;;;;;
+143.0;01:10:00:18;00:10:00:18;01:10:02:01;00:10:02:01;;;;;IZZY;Nein, grade nicht, nein.
+;;00;;00;;;;;;
+144.0;01:10:02:01;00:10:02:01;01:10:07:15;00:10:07:15;;;;;BLACKBEARD;(OFF) Na, dann (Zög) zurück an die Arbeit, du scheiß Leichtgewicht. (2.F.: ...scheiß Schwachmat.) Wenn du den Job nicht machen kannst, (Zög) macht ihn 'n anderer. (hinten in Hall)
+;;00;;00;;;;;;
+145.0;01:10:07:15;00:10:07:15;01:10:10:14;00:10:10:14;;;;;IZZY;(EVTL LIPPENLAUT) Los. .. Alles nach oben an Deck.
+;;00;;00;;;;;;
+146.0;01:10:10:14;00:10:10:14;01:10:13:21;00:10:13:21;;;;;FRENCHIE;Dann teilen wir (Zög) alles auf und nehmen uns unseren Anteil?
+;;00;;00;;;;;;
+147.0;01:10:13:21;00:10:13:21;01:10:18:08;00:10:18:08;;;;;IZZY;Nein, wir werfen alles über Bord. (AUSATMER) Wir haben (inzwischen) viel zu viel Beute. .. 
+;;00;;00;;;;;;
+148.0;01:10:18:08;00:10:18:08;01:10:21:08;00:10:21:08;;;;;IZZY;(CONT) Wir müssen was versenken, sonst kommen wir nicht zum nächsten Ziel.
+;;00;;00;;;;;;
+149.0;01:10:21:08;00:10:21:08;01:10:25:00;00:10:25:00;;;;;JIM;Wir sollen wirklich unsere Schätze wegwerfen, nur (Winz Zög) um neue zu stehlen?
+;;00;;00;;;;;;
+150.0;01:10:25:00;00:10:25:00;01:10:27:17;00:10:27:17;;;;;FRENCHIE;(INS ON) Ja, das (Winz Zög) ergibt definitiv keinen Sinn, Mann.
+;;00;;00;;;;;;
+151.0;01:10:27:01;00:10:27:01;01:10:32:17;00:10:32:17;Ü;;;;IZZY;Es steht euch überhaupt nicht zu, mir zu sagen, was Sinn ergibt und was nicht. .. 
+;;00;;00;;;;;;
+152.0;01:10:32:17;00:10:32:17;01:10:38:14;00:10:38:14;;;;;IZZY;Eure Aufgabe ist es, mei- (Atmer)  .. meinen scheiß Befehlen zu folgen. (Atmer)
+;;00;;00;;;;;;
+153.0;01:10:38:14;00:10:38:14;01:10:40:23;00:10:40:23;A;;;;;
+;;00;;00;;;;;;
+154.0;01:10:40:23;00:10:40:23;01:10:46:11;00:10:46:11;;;;;FANG;Hey, wie geht's, Izzy? .. Hä?
+;;00;;00;;;;;;
+154.0;01:10:40:23;00:10:40:23;01:10:46:11;00:10:46:11;;;;;IZZY;Es geht mir... Hand weg. (Zög) Nimm die Hand weg.
+;;00;;00;;;;;;
+154.0;01:10:40:23;00:10:40:23;01:10:46:11;00:10:46:11;;;;;FANG;(ÜBERL) (LAUTE) Ich hab das Gefühl, das stimmt nicht.
+;;00;;00;;;;;;
+155.0;01:10:46:11;00:10:46:11;01:10:51:20;00:10:51:20;;;;;JIM;Ja, wir denken, du stehst in einem ungesunden Verhältnis zu, zu Blackbeard.
+;;00;;00;;;;;;
+156.0;01:10:51:17;00:10:51:17;01:10:54:17;00:10:54:17;Ü;;;;ARCHIE;Oh, ja. .. Oh, ja. .. Ja, der zieht sich ganz schön viel Rhinohorn rein.
+;;00;;00;;;;;;
+157.0;01:10:54:17;00:10:54:17;01:10:59:03;00:10:59:03;;;;;FRENCHIE;Ja, er hat dir mindestens zwei weitere Zehen abgetrennt. Das wirkt (Zög) ganz schön toxisch auf mich, Mann.
+;;00;;00;;;;;;
+158.0;01:10:57:04;00:10:57:04;01:11:04:10;00:11:04:10;Ü;;;;IZZY;(ATMER) (WEINEN) (Laute)
+;;00;;00;;;;;;
+159.0;01:11:00:14;00:11:00:14;01:11:06:22;00:11:06:22;Ü;;;;FANG;(ÜBERL) (LAUTE) Hey, hey, hey, Izzy. Hey, Iz... Schschsch...
+;;00;;00;;;;;;
+159.0;01:11:00:14;00:11:00:14;01:11:06:22;00:11:06:22;Ü;;;;FRENCHIE;(ÜBERL) Hey, hey, hey, hey.
+;;00;;00;;;;;;
+160.0;01:11:04:22;00:11:04:22;01:11:10:18;00:11:10:18;Ü;;;;IZZY;(ÜBERL) (LAUTE)
+;;00;;00;;;;;;
+161.0;01:11:06:22;00:11:06:22;01:11:10:17;00:11:10:17;Ü;;;;FANG;Schsch. Alles gut. .. Schsch. Alles gut, alles gut.
+;;00;;00;;;;;;
+162.0;01:11:10:17;00:11:10:17;01:11:15:24;00:11:15:24;;;;;FANG;Drück, drück ich zu fest? .. Na, bitte. .. Schsch...
+;;00;;00;;;;;;
+163.0;01:11:13:18;00:11:13:18;01:11:18:01;00:11:18:01;Ü;;;;IZZY;(ÜBERL) (WIMMERN)
+;;00;;00;;;;;;
+164.0;01:11:15:24;00:11:15:24;01:11:18:02;00:11:18:02;Ü;;;;FANG;(ÜBERL) Ist ja gut. .. Alles fein.
+;;00;;00;;;;;;
+165.0;01:11:18:02;00:11:18:02;01:11:23:24;00:11:23:24;;;;;STEDE;(INS ON) Hey, ähm, (ATMER) Leute. .. Ich will niemanden beunruhigen, .. aber habt ihr das Glas gesehen?
+;;00;;00;;;;;;
+166.0;01:11:22:23;00:11:22:23;01:11:27:14;00:11:27:14;Ü;;;;ROACH;(RAUCHEN) Das mit unseren Ersparnissen?
+;;00;;00;;;;;;
+166.0;01:11:22:23;00:11:22:23;01:11:27:14;00:11:27:14;Ü;;;;STEDE;Ja.
+;;00;;00;;;;;;
+166.0;01:11:22:23;00:11:22:23;01:11:27:14;00:11:27:14;Ü;;;;BLACK PETE;Nein.
+;;00;;00;;;;;;
+167.0;01:11:27:14;00:11:27:14;01:11:33:17;00:11:33:17;;;;;SPANISH JACKIE;(OFF) Dieses Glas (hier)?... (OFF) Wie ich sehe, habt ihr mir was vorenthalten.
+;;00;;00;;;;;;
+168.0;01:11:33:17;00:11:33:17;01:11:36:09;00:11:36:09;;;;;STEDE;Jackie, das ist unser Geld. Das haben wir verdient.
+;;00;;00;;;;;;
+169.0;01:11:36:09;00:11:36:09;01:11:42:14;00:11:42:14;;;;;SPANISH JACKIE;(REAKTION) Weißt du, ich hatte dich als bankrotten Wichser auf dem Zettel. .. (ANATMER) Jetzt kommt dazu, dass du leichtfertig und undankbar bist. (INS OFF)
+;;00;;00;;;;;;
+170.0;01:11:42:14;00:11:42:14;01:11:46:21;00:11:46:21;;;;;SCHWEDE;Das erhöht die Gebühren.
+;;00;;00;;;;;;
+170.0;01:11:42:14;00:11:42:14;01:11:46:21;00:11:46:21;;;;;SPANISH JACKIE;(überl) Oh ja, und wie. .. Kost und Logis.
+;;00;;00;;;;;;
+171.0;01:11:46:21;00:11:46:21;01:11:53:21;00:11:53:21;;;;;STEDE;(LAUT)
+;;00;;00;;;;;;
+171.0;01:11:46:21;00:11:46:21;01:11:53:21;00:11:53:21;;;;;SPANISH JACKIE;Und ich glaube sogar, sie haben die Vista Suite.
+;;00;;00;;;;;;
+171.0;01:11:46:21;00:11:46:21;01:11:53:21;00:11:53:21;;;;;STEDE;Vista Suite?
+;;00;;00;;;;;;
+171.0;01:11:46:21;00:11:46:21;01:11:53:21;00:11:53:21;;;;;SPANISH JACKIE;Das Zimmer mit Fenster.
+;;00;;00;;;;;;
+171.0;01:11:46:21;00:11:46:21;01:11:53:21;00:11:53:21;;;;;STEDE;Oh.
+;;00;;00;;;;;;
+171.0;01:11:46:21;00:11:46:21;01:11:53:21;00:11:53:21;;;;;ROACH;(ÜBERL) (EVTL) (REAKTION)
+;;00;;00;;;;;;
+172.0;01:11:53:21;00:11:53:21;01:11:59:23;00:11:59:23;;;;;SPANISH JACKIE;Halb sauberes Wasser.
+;;00;;00;;;;;;
+172.0;01:11:53:21;00:11:53:21;01:11:59:23;00:11:59:23;;;;;STEDE;(EVTL LAUT) Kommen Sie.
+;;00;;00;;;;;;
+172.0;01:11:53:21;00:11:53:21;01:11:59:23;00:11:59:23;;;;;SPANISH JACKIE;Fällt dir noch was anderes ein, Mausezahn?
+;;00;;00;;;;;;
+173.0;01:11:59:23;00:11:59:23;01:12:03:20;00:12:03:20;;;;;SCHWEDE;Vielleicht (Winz Zög) Gebühren für Aus- und Weiterbildung?
+;;00;;00;;;;;;
+173.0;01:11:59:23;00:11:59:23;01:12:03:20;00:12:03:20;;;;;SPANISH JACKIE;Absolut. Ja.
+;;00;;00;;;;;;
+174.0;01:12:03:11;00:12:03:11;01:12:05:13;00:12:05:13;Ü;;;;WEE JOHN FEENEY;Oh Mann, im Ernst?
+;;00;;00;;;;;;
+174.0;01:12:03:11;00:12:03:11;01:12:05:13;00:12:05:13;Ü;;;;ROACH;Kommen Sie!
+;;00;;00;;;;;;
+174.0;01:12:03:11;00:12:03:11;01:12:05:13;00:12:05:13;Ü;;;;STEDE;(ÜBERL) Schwede...
+;;00;;00;;;;;;
+175.0;01:12:05:09;00:12:05:09;01:12:07:13;00:12:07:13;Ü;;;;SPANISH JACKIE;Ihr schuldet mir was.
+;;00;;00;;;;;;
+176.0;01:12:07:13;00:12:07:13;01:12:12:01;00:12:12:01;;;;;STEDE;(OFF) Ach, ja? .. (ON) Was, wenn wir .. es wieder an uns nehmen würden?
+;;00;;00;;;;;;
+177.0;01:12:12:01;00:12:12:01;01:12:17:10;00:12:17:10;;;;;SPANISH JACKIE;(REAKTION) Ich glaub, meine Ehemänner hätten ein Problem damit.
+;;00;;00;;;;;;
+177.0;01:12:12:01;00:12:12:01;01:12:17:10;00:12:17:10;;;;;IT;(RÄUSPERN)
+;;00;;00;;;;;;
+178.0;01:12:17:10;00:12:17:10;01:12:22:13;00:12:22:13;;;;;SPANISH JACKIE;(OFF) Kennt ihr schon alle 20?
+;;00;;00;;;;;;
+178.0;01:12:17:10;00:12:17:10;01:12:22:13;00:12:22:13;;;;;IT;(ATMER) (RÄUSPERER)
+;;00;;00;;;;;;
+179.0;01:12:22:13;00:12:22:13;01:12:24:12;00:12:24:12;;;;;BLACK PETE;Das sind viele Ehemänner.
+;;00;;00;;;;;;
+180.0;01:12:24:12;00:12:24:12;01:12:27:07;00:12:27:07;;;;;SCHWEDE;(INS ON) Den einen kenne ich. Wir haben zusammen gefrühstückt.
+;;00;;00;;;;;;
+181.0;01:12:27:07;00:12:27:07;01:12:32:06;00:12:32:06;;;;;SPANISH JACKIE;Ihr werdet noch sehr oft zusammen frühstücken. (Winz Zög) Verstanden?
+;;00;;00;;;;;;
+181.0;01:12:27:07;00:12:27:07;01:12:32:06;00:12:32:06;;;;;SCHWEDE;Oh, okay.
+;;00;;00;;;;;;
+182.0;01:12:32:06;00:12:32:06;01:12:36:13;00:12:36:13;;;;;STEDE;Also, 'n Tapetenwechsel hat immer was Gutes. .. Die Zeichen standen eh auf Stagnation.
+;;00;;00;;;;;;
+183.0;01:12:36:13;00:12:36:13;01:12:40:12;00:12:40:12;;;;;WEE JOHN FEENEY;Dann schlagen Sie vor, dass wir unter 'ner Brücke wohnen?
+;;00;;00;;;;;;
+183.0;01:12:36:13;00:12:36:13;01:12:40:12;00:12:40:12;;;;;ROACH;Wie soll ich hier irgendwas kochen?
+;;00;;00;;;;;;
+184.0;01:12:40:12;00:12:40:12;01:12:45:06;00:12:45:06;;;;;STEDE;(SEUFZER)
+;;00;;00;;;;;;
+184.0;01:12:40:12;00:12:40:12;01:12:45:06;00:12:45:06;;;;;OLUWANDE;Wenigstens haben wir 'n Dach. .. Frische Luft.
+;;00;;00;;;;;;
+185.0;01:12:45:06;00:12:45:06;01:12:50:08;00:12:50:08;;;;;ROACH;(LAUT)
+;;00;;00;;;;;;
+185.0;01:12:45:06;00:12:45:06;01:12:50:08;00:12:50:08;;;;;WEE JOHN FEENEY;(ÜBERL) Oh, Scheiße!
+;;00;;00;;;;;;
+185.0;01:12:45:06;00:12:45:06;01:12:50:08;00:12:50:08;;;;;BUTTONS;(EVTL) (LAUTE)
+;;00;;00;;;;;;
+185.0;01:12:45:06;00:12:45:06;01:12:50:08;00:12:50:08;;;;;STEDE;(ÜBERL) (LAUT)
+;;00;;00;;;;;;
+185.0;01:12:45:06;00:12:45:06;01:12:50:08;00:12:50:08;;;;;BLACK PETE;Oh, sogar .. fließend Wasser.
+;;00;;00;;;;;;
+186.0;01:12:50:08;00:12:50:08;01:12:54:03;00:12:54:03;;;;;STEDE;(OFF) Lieber Ed. (2.F.: Oh, Ed.) Es ist alles schrecklich. .. 
+;;00;;00;;;;;;
+187.0;01:12:54:03;00:12:54:03;01:12:58:07;00:12:58:07;;;;;STEDE;(ON) Ich fürchte, ich hab Angst, dich zu sehen. .. (CONT) Ich hab keine Angst, dass du mich umbringst. .. 
+;;00;;00;;;;;;
+188.0;01:12:58:07;00:12:58:07;01:13:02:12;00:13:02:12;;;;;STEDE;(ON) Ich hab Angst, dass dein, (ATMER) dass dein Leben ohne mich besser ist. ..
+;;00;;00;;;;;;
+189.0;01:13:02:12;00:13:02:12;01:13:05:15;00:13:05:15;A;;;;;
+;;00;;00;;;;;;
+190.0;01:13:05:15;00:13:05:15;01:13:08:24;00:13:08:24;;;;;STEDE; Schon möglich. ..
+;;00;;00;;;;;;
+190.0;01:13:05:15;00:13:05:15;01:13:08:24;00:13:08:24;;;;;STEDE;(CONT) Schon möglich, Kumpel.
+;;00;;00;;;;;;
+191.0;01:13:08:24;00:13:08:24;01:13:11:13;00:13:11:13;;;;;RICKY;(OFF) Ich weiß, wer Sie sind.
+;;00;;00;;;;;;
+192.0;01:13:11:13;00:13:11:13;01:13:15:13;00:13:15:13;;;;;STEDE;(OFF) Großer Gott. .. (ON) Kennen Sie nicht so was wie Privatsphäre?
+;;00;;00;;;;;;
+193.0;01:13:15:13;00:13:15:13;01:13:21:11;00:13:21:11;;;;;RICKY;Bitte verzeihen Sie mir, aber .. ich weiß wirklich alles über Sie. (Zög) (OFF) Über all ihre Abenteuer.
+;;00;;00;;;;;;
+193.0;01:13:15:13;00:13:15:13;01:13:21:11;00:13:21:11;;;;;STEDE;(ÜBERL) (SEUFZER)
+;;00;;00;;;;;;
+194.0;01:13:21:11;00:13:21:11;01:13:28:01;00:13:28:01;;;;;RICKY;Tut mir leid, wenn das ein bisschen unheimlich ist.
+;;00;;00;;;;;;
+194.0;01:13:21:11;00:13:21:11;01:13:28:01;00:13:28:01;;;;;STEDE;(CONT) Sie sind unheimlich. (2.F.: Ist es in der Tat.) .. (INS ON) Und was immer Sie verkaufen, ich will es nicht.
+;;00;;00;;;;;;
+195.0;01:13:28:01;00:13:28:01;01:13:31:12;00:13:31:12;;;;;RICKY;(Atmer) Aber der Gentleman-Pirat hat mir das Leben gerettet. ..
+;;00;;00;;;;;;
+196.0;01:13:31:12;00:13:31:12;01:13:37:03;00:13:37:03;;;;;RICKY;Ganz ehrlich. .. Sie sind mein Held.
+;;00;;00;;;;;;
+196.0;01:13:31:12;00:13:31:12;01:13:37:03;00:13:37:03;;;;;STEDE;(EVTL) (ATMER)
+;;00;;00;;;;;;
+197.0;01:13:37:03;00:13:37:03;01:13:39:06;00:13:39:06;A;;;;IT;(Allg. HG für gesamte Szene IT/Archiv?)
+;;00;;00;;;;;;
+198.0;01:13:39:06;00:13:39:06;01:13:46:08;00:13:46:08;;;;;RICKY;(INS ON) Sehen Sie, auch ich (Zög) stamme aus reichem Hause. .. (CONT) Ich bin sogar (Winz Zög) ein Prinz (2.F.: Zwergfürst) königlichen Geblüts. .. 
+;;00;;00;;;;;;
+199.0;01:13:46:08;00:13:46:08;01:13:50:07;00:13:50:07;;;;;RICKY;"Und ich war drauf und dran, alles zu beenden. Doch dann hörte ich von Ihnen. (Anm: Wortwörtlich ist ein Minor Prince"" ein Zwergfürst oder Duodezfürst. Ich habe allerdings Sorge, dass man das nicht versteht.)"""
+;;00;;00;;;;;;
+200.0;01:13:50:07;00:13:50:07;01:13:54:07;00:13:54:07;;;;;RICKY;(ON) (Anatmer) Sie gaben einem schrägen Vogel wie mir Hoffnung, Bonnet. .. 
+;;00;;00;;;;;;
+201.0;01:13:54:07;00:13:54:07;01:13:58:16;00:13:58:16;;;;;RICKY;Und ich könnte ein Leben führen nach (Zög) meinem Gutdünken. (ATMER)
+;;00;;00;;;;;;
+202.0;01:13:58:13;00:13:58:13;01:14:05:05;00:14:05:05;Ü;;;;STEDE;(ATMER) Okay. Kommen Sie raus aus dem Regen. .. 
+;;00;;00;;;;;;
+203.0;01:14:05:05;00:14:05:05;01:14:08:01;00:14:08:01;;;;;STEDE;(INS ON) Hören Sie. (Zög) Die Republik der Piraten ist kein Spiel. (2.F.: ...ist sehr gefährlich.)
+;;00;;00;;;;;;
+204.0;01:14:08:01;00:14:08:01;01:14:11:20;00:14:11:20;;;;;STEDE;(CONT) Sie täten gut daran, diesen Ort zu verlassen, bevor Sie Schaden nehmen.
+;;00;;00;;;;;;
+204.0;01:14:08:01;00:14:08:01;01:14:11:20;00:14:11:20;;;;;RICKY;(ÜBERL) (LAUT) .. (EVTL ATMER) (LAUT)
+;;00;;00;;;;;;
+205.0;01:14:11:16;00:14:11:16;01:14:18:06;00:14:18:06;Ü;;;;STEDE;Halten Sie sich von Spanish Jackie fern.
+;;00;;00;;;;;;
+205.0;01:14:11:16;00:14:11:16;01:14:18:06;00:14:18:06;Ü;;;;RICKY;Die haben mich aus ihrem Laden geworfen. .. Ja, ich war zu neugierig. (2.F.: Ja, ich war zu naseweis.) (KLEINER LACHER)
+;;00;;00;;;;;;
+206.0;01:14:18:06;00:14:18:06;01:14:23:03;00:14:23:03;;;;;STEDE;(CONT) Verstehe.
+;;00;;00;;;;;;
+206.0;01:14:18:06;00:14:18:06;01:14:23:03;00:14:23:03;;;;;RICKY;Es war wohl meine Bemerkung über ihre (Zög) römische Rätseltruhe.
+;;00;;00;;;;;;
+207.0;01:14:23:03;00:14:23:03;01:14:25:00;00:14:25:00;;;;;STEDE;Was? (Winz Zög) Eine römische Rätseltruhe?
+;;00;;00;;;;;;
+208.0;01:14:13:12;00:14:13:12;01:14:36:21;00:14:36:21;Ü;;;;2 FRAUEN, 2 MÄNNER;(evtl Text) (keine HG Stimmen mehr) (Archiv?)
+;;00;;00;;;;;;
+209.0;01:14:24:24;00:14:24:24;01:14:31:16;00:14:31:16;;;;;RICKY;Ja. Sie wurde vor allen reingebracht. .. Und diese Bauerntölpel, die erkennen so was niemals. Aber Männer unseres Standes... 
+;;00;;00;;;;;;
+210.0;01:14:31:16;00:14:31:16;01:14:34:24;00:14:34:24;;;;;RICKY;Wir wissen, wenn wir einen Wertgegenstand vor uns haben.
+;;00;;00;;;;;;
+211.0;01:14:34:24;00:14:34:24;01:14:36:19;00:14:36:19;;;;;STEDE;Eine römische Rätseltruhe.
+;;00;;00;;;;;;
+212.0;01:14:36:19;00:14:36:19;01:14:37:19;00:14:37:19;A;;;;;
+;;00;;00;;;;;;
+213.0;01:14:37:19;00:14:37:19;01:14:41:04;00:14:41:04;;;;;SCHWEDE;Okay. (ATMER) Die Truhe bewahrt Jackie am Fußende ihres Bettes auf. 
+;;00;;00;;;;;;
+214.0;01:14:41:04;00:14:41:04;01:14:46:20;00:14:46:20;;;;;SCHWEDE;(ATMER) Ich weiß gar nicht, was drin ist, aber (ATMER) sie sagt, es ist von großem Wert.
+;;00;;00;;;;;;
+214.0;01:14:41:04;00:14:41:04;01:14:46:20;00:14:46:20;;;;;IT;(HG Stimmen) (+ Archiv?)
+;;00;;00;;;;;;
+215.0;01:14:46:20;00:14:46:20;01:14:50:24;00:14:50:24;;;;;BLACK PETE;Woher wissen wir, dass wir dir trauen können? .. Du bist immerhin Ehemann Nummer 20.
+;;00;;00;;;;;;
+216.0;01:14:50:05;00:14:50:05;01:14:52:18;00:14:52:18;Ü;;;;ROACH;Komm schon, Mann. Das ist der Schwede.
+;;00;;00;;;;;;
+216.0;01:14:50:05;00:14:50:05;01:14:52:18;00:14:52:18;Ü;;;;WEE JOHN FEENEY;Oh, Black Pete, also ehrlich.
+;;00;;00;;;;;;
+216.0;01:14:50:05;00:14:50:05;01:14:52:18;00:14:52:18;Ü;;;;STEDE;(ÜBERL) Black Pete, komm schon.
+;;00;;00;;;;;;
+217.0;01:14:52:18;00:14:52:18;01:14:57:14;00:14:57:14;;;;;SCHWEDE;Meine Zeit mit Jackie (ATMER) war die glücklichste Phase meines Lebens. 
+;;00;;00;;;;;;
+218.0;01:14:57:14;00:14:57:14;01:15:01:22;00:15:01:22;;;;;SCHWEDE;(ATMER) Ihre Liebe hat Teile in mir aktiviert, von deren Existenz ich nicht einmal wusste.
+;;00;;00;;;;;;
+219.0;01:15:01:22;00:15:01:22;01:15:06:03;00:15:06:03;;;;;SCHWEDE;Und ich hab Teile wiedergewonnen, (Zög) die ich lange (Zög) vermisst hatte.
+;;00;;00;;;;;;
+220.0;01:15:06:03;00:15:06:03;01:15:07:03;00:15:07:03;;;;;ROACH;Oh.
+;;00;;00;;;;;;
+221.0;01:15:06:21;00:15:06:21;01:15:14:20;00:15:14:20;Ü;;;;SCHWEDE;(INS ON) Aber .. ich stehe in eurer Schuld, lebenslang, (ATMER) und hab die Pflicht, sie zu erfüllen.
+;;00;;00;;;;;;
+222.0;01:15:14:20;00:15:14:20;01:15:18:03;00:15:18:03;;;;;ROACH;Ein echter Freund.
+;;00;;00;;;;;;
+222.0;01:15:14:20;00:15:14:20;01:15:18:03;00:15:18:03;;;;;WEE JOHN FEENEY;"Lebenslange Schuld""... Oh, Mann."""
+;;00;;00;;;;;;
+222.0;01:15:14:20;00:15:14:20;01:15:18:03;00:15:18:03;;;;;BLACK PETE;(ÜBERL) (EVTL REAKTION) (Zustimmender Laut)
+;;00;;00;;;;;;
+222.0;01:15:14:20;00:15:14:20;01:15:18:03;00:15:18:03;;;;;OLUWANDE;(Zustimmender Laut) Das ist wahr.
+;;00;;00;;;;;;
+222.0;01:15:14:20;00:15:14:20;01:15:18:03;00:15:18:03;;;;;STEDE;Hört, hört...
+;;00;;00;;;;;;
+222.0;01:15:14:20;00:15:14:20;01:15:18:03;00:15:18:03;;;;;ROACH;Ja. (Zög) Ja, ja. (INS OFF)
+;;00;;00;;;;;;
+223.0;01:15:18:03;00:15:18:03;01:15:19:24;00:15:19:24;A;;;;;
+;;00;;00;;;;;;
+224.0;01:15:19:24;00:15:19:24;01:15:25:14;00:15:25:14;;;;;STEDE;Du bist ein guter Mann, Schwede.
+;;00;;00;;;;;;
+224.0;01:15:19:24;00:15:19:24;01:15:25:14;00:15:25:14;;;;;SCHWEDE;(REAKTION)
+;;00;;00;;;;;;
+224.0;01:15:19:24;00:15:19:24;01:15:25:14;00:15:25:14;;;;;STEDE;Ich danke dir. (ANATMER) Würde heute Abend gehen?
+;;00;;00;;;;;;
+224.0;01:15:19:24;00:15:19:24;01:15:25:14;00:15:25:14;;;;;SCHWEDE;(AUSATMER) 
+;;00;;00;;;;;;
+225.0;01:15:25:14;00:15:25:14;01:15:32:09;00:15:32:09;;;;;SCHWEDE;In der Tat. (ANATMER) Heute (Zög) bin ich an der Reihe, den ehelichen Pflichten nachzugehen, insofern...
+;;00;;00;;;;;;
+226.0;01:15:32:09;00:15:32:09;01:15:34:16;00:15:34:16;;;;;STEDE;Okay.
+;;00;;00;;;;;;
+227.0;01:15:34:16;00:15:34:16;01:15:38:13;00:15:38:13;;;;;IZZY;(VORGEZ TON) Die Crew weigert sich, sich vom Schatz zu trennen.
+;;00;;00;;;;;;
+227.0;01:15:34:16;00:15:34:16;01:15:38:13;00:15:38:13;;;;;BLACKBEARD;(OFF) Warum?
+;;00;;00;;;;;;
+228.0;01:15:38:13;00:15:38:13;01:15:41:13;00:15:41:13;;;;;IZZY;Weil es ein verfluchter Schatz ist.
+;;00;;00;;;;;;
+229.0;01:15:41:13;00:15:41:13;01:15:45:07;00:15:45:07;;;;;BLACKBEARD;Zu schwaches Argument. .. 
+;;00;;00;;;;;;
+230.0;01:15:45:07;00:15:45:07;01:15:50:23;00:15:50:23;;;;;BLACKBEARD;Das wär dann noch ein Zeh. .. (CONT) Zieh deinen Stiefel aus.
+;;00;;00;;;;;;
+231.0;01:15:50:23;00:15:50:23;01:15:53:23;00:15:53:23;A;;;;;
+;;00;;00;;;;;;
+232.0;01:15:53:23;00:15:53:23;01:15:56:23;00:15:56:23;;;;;IZZY;Was bin ich für dich?
+;;00;;00;;;;;;
+233.0;01:15:56:23;00:15:56:23;01:16:01:08;00:16:01:08;;;;;BLACKBEARD;Was?
+;;00;;00;;;;;;
+233.0;01:15:56:23;00:15:56:23;01:16:01:08;00:16:01:08;;;;;IZZY;Wir arbeiten seit vielen Jahren zusammen. (Hängt auf Mundschluss) .. (SCHNIEFER) 
+;;00;;00;;;;;;
+234.0;01:16:01:08;00:16:01:08;01:16:06:02;00:16:06:02;;;;;IZZY;Du kennst mich besser als irgendjemand sonst und ich wage zu sagen, das ist umgekehrt genauso. .. 
+;;00;;00;;;;;;
+235.0;01:16:06:02;00:16:06:02;01:16:07:19;00:16:07:19;A;;;;;
+;;00;;00;;;;;;
+236.0;01:16:07:19;00:16:07:19;01:16:12:10;00:16:12:10;;;;;IZZY;Ja, ich .. (INS CONT) liebe dich, Edward.
+;;00;;00;;;;;;
+237.0;01:16:11:23;00:16:11:23;01:16:14:00;00:16:14:00;Ü;;;;BLACKBEARD;(ÜBERL) Oh Mann. Komm schon.
+;;00;;00;;;;;;
+238.0;01:16:13:00;00:16:13:00;01:16:20:00;00:16:20:00;Ü;;;;IZZY;(INS CONT) Ich mach mir Sorgen um dich. Das tun wir alle. (ON) Die Atmosphäre auf diesem Schiff ist völlig vergiftet. .. 
+;;00;;00;;;;;;
+239.0;01:16:20:00;00:16:20:00;01:16:27:17;00:16:27:17;;;;;IZZY;Aber wir können das hinkriegen. (Winz Zög) Reden wir .. im Nu darüber...
+;;00;;00;;;;;;
+240.0;01:16:27:17;00:16:27:17;01:16:30:06;00:16:30:06;A;;;;;
+;;00;;00;;;;;;
+241.0;01:16:30:06;00:16:30:06;01:16:32:01;00:16:32:01;;;;;BLACKBEARD;...als Crew. (Anm: Der Satz ist nicht schön, aber leider ist da wenig dran zu rütteln. Das ist ein Zitat aus Staffel 1.)
+;;00;;00;;;;;;
+242.0;01:16:32:01;00:16:32:01;01:16:35:11;00:16:35:11;A;;;;;
+;;00;;00;;;;;;
+243.0;01:16:35:11;00:16:35:11;01:16:41:23;00:16:41:23;;;;;IZZY;(OFF) Edward. Ed! Ca-Captain! .. Ich hatte zu keinem Zeitpunkt vor, dem früheren Eigentümer dieses Schiffes eine Stimme zu geben. (INS ON)
+;;00;;00;;;;;;
+244.0;01:16:40:24;00:16:40:24;01:16:44:13;00:16:44:13;Ü;;;;BLACKBEARD;(ÜBERL) Hallo. .. (CONT) Ganz kurz. .. 
+;;00;;00;;;;;;
+245.0;01:16:44:13;00:16:44:13;01:16:48:10;00:16:48:10;;;;;BLACKBEARD;Wie ich hörte, empfindet ihr die Stimmung auf dem Schiff als vergiftet. .. 
+;;00;;00;;;;;;
+246.0;01:16:48:10;00:16:48:10;01:16:50:11;00:16:50:11;A;;;;;
+;;00;;00;;;;;;
+247.0;01:16:50:11;00:16:50:11;01:16:53:05;00:16:53:05;;;;;BLACKBEARD;(OFF) Ha? Will keiner was sagen? (Zög) (ON) Niemand? .. Hm?
+;;00;;00;;;;;;
+248.0;01:16:53:05;00:16:53:05;01:16:57:12;00:16:57:12;;;;;BLACKBEARD;Jim... Ich werde mit dir anfangen. .. (OFF) Ist die Stimmung hier vergiftet?
+;;00;;00;;;;;;
+249.0;01:16:57:12;00:16:57:12;01:16:59:19;00:16:59:19;;;;;JIM;Nope. (2.F.: Kein bisschen.)
+;;00;;00;;;;;;
+249.0;01:16:57:12;00:16:57:12;01:16:59:19;00:16:59:19;;;;;BLACKBEARD;Hä? Du?
+;;00;;00;;;;;;
+250.0;01:16:59:19;00:16:59:19;01:17:02:13;00:17:02:13;;;;;ARCHIE;Meinen Sie mich? Äh, nein. Ähm...
+;;00;;00;;;;;;
+251.0;01:17:02:13;00:17:02:13;01:17:07:09;00:17:07:09;;;;;BLACKBEARD;Fang, du bist am längsten hier. Vergiftet? (INS CONT)
+;;00;;00;;;;;;
+251.0;01:17:02:13;00:17:02:13;01:17:07:09;00:17:07:09;;;;;FANG;(ÜBERL) (LAUTE)
+;;00;;00;;;;;;
+251.0;01:17:02:13;00:17:02:13;01:17:07:09;00:17:07:09;;;;;FRENCHIE;(überl) Nein, alles bestens.
+;;00;;00;;;;;;
+252.0;01:17:07:09;00:17:07:09;01:17:13:07;00:17:13:07;;;;;BLACKBEARD;"Ich weiß, wen wir fragen sollten. Unseren Blackbeard. (Zög) Na, Kumpel? Findest du, die Stimmung auf dem Schiff ist vergiftet?"" (ANATMER)"""
+;;00;;00;;;;;;
+253.0;01:17:13:07;00:17:13:07;01:17:17:08;00:17:17:08;;;;;BLACKBEARD;"Oh, ich weiß nicht, Blackbeard. (OFF) Vielleicht manchmal 'n kleines bisschen toxisch. """
+;;00;;00;;;;;;
+254.0;01:17:17:08;00:17:17:08;01:17:21:13;00:17:21:13;;;;;BLACKBEARD;"(OFF) Es ist vielleicht 'n bisschen unangenehm. Du gibst der Crew manchmal ein unangenehmes Gefühl. (INS ON) Sie glauben, du bist verrückt. (Zög) """
+;;00;;00;;;;;;
+255.0;01:17:21:13;00:17:21:13;01:17:26:05;00:17:26:05;;;;;BLACKBEARD;"(Anatmer) Ich bin nicht verrückt. Ich fühl' mich nicht verrückt. Ich fühl' mich verdammt noch mal gut."" (INS CONT)"""
+;;00;;00;;;;;;
+256.0;01:17:24:07;00:17:24:07;01:17:27:19;00:17:27:19;Ü;;;;IZZY;(ÜBERL) Jetzt ist gut.
+;;00;;00;;;;;;
+257.0;01:17:27:19;00:17:27:19;01:17:32:18;00:17:32:18;A;;;;;
+;;00;;00;;;;;;
+258.0;01:17:32:18;00:17:32:18;01:17:38:03;00:17:38:03;;;;;IZZY;(ANATMER) Die Atmosphäre auf diesem Schiff ist .. beschissen. (2.F.: ...Scheiße.) .. (EVTL LAUTE) 
+;;00;;00;;;;;;
+259.0;01:17:38:03;00:17:38:03;01:17:41:19;00:17:41:19;;;;;IZZY;(Anatmer) Und alle wissen auch, wieso.
+;;00;;00;;;;;;
+260.0;01:17:41:19;00:17:41:19;01:17:46:03;00:17:46:03;;;;;BLACKBEARD;Ich nicht. .. Erzähl mal.
+;;00;;00;;;;;;
+261.0;01:17:46:03;00:17:46:03;01:17:48:08;00:17:48:08;;;;;IZZY;(ANATMER) Deine Gefühle für den scheiß Stede Bonnet. (INS OFF)
+;;00;;00;;;;;;
+262.0;01:17:48:08;00:17:48:08;01:17:52:15;00:17:52:15;;;;;IZZY; (LAUT)
+;;00;;00;;;;;;
+262.0;01:17:48:08;00:17:48:08;01:17:52:15;00:17:52:15;;;;;FRENCHIE;(REAKTION)
+;;00;;00;;;;;;
+262.0;01:17:48:08;00:17:48:08;01:17:52:15;00:17:52:15;;;;;FANG;(REAKTION)
+;;00;;00;;;;;;
+262.0;01:17:48:08;00:17:48:08;01:17:52:15;00:17:52:15;;;;;2 MÄNNER;(REAKTION)
+;;00;;00;;;;;;
+262.0;01:17:48:08;00:17:48:08;01:17:52:15;00:17:52:15;;;;;JIM;(REAKTION)
+;;00;;00;;;;;;
+262.0;01:17:48:08;00:17:48:08;01:17:52:15;00:17:52:15;;;;;IZZY;(SCHREIE)
+;;00;;00;;;;;;
+263.0;01:17:52:03;00:17:52:03;01:17:58:19;00:17:58:19;Ü;;;;BLACKBEARD;(OFF) Frenchie?
+;;00;;00;;;;;;
+263.0;01:17:52:03;00:17:52:03;01:17:58:19;00:17:58:19;Ü;;;;FRENCHIE;Ja?
+;;00;;00;;;;;;
+263.0;01:17:52:03;00:17:52:03;01:17:58:19;00:17:58:19;Ü;;;;BLACKBEARD;Gratuliere, du bist jetzt 1. Offizier.
+;;00;;00;;;;;;
+263.0;01:17:52:03;00:17:52:03;01:17:58:19;00:17:58:19;Ü;;;;FRENCHIE;Oh, äh, nein, äh... Dafür bin ich nicht qualifiziert.
+;;00;;00;;;;;;
+264.0;01:17:53:11;00:17:53:11;01:18:10:23;00:18:10:23;Ü;;;;IZZY;(ÜBERL) (LAUTE)
+;;00;;00;;;;;;
+265.0;01:17:58:20;00:17:58:20;01:18:05:21;00:18:05:21;Ü;;;;BLACKBEARD;Oh, doch, Kumpel. (Zög) Und jetzt mach erst mal den Mist weg. Und ihr anderen, .. (CONT) ihr werft den Scheiß über Bord. (Zög) (ON) Und zieht euch an.
+;;00;;00;;;;;;
+266.0;01:18:05:21;00:18:05:21;01:18:08:12;00:18:08:12;;;;;FRENCHIE;Äh, Captain... Ich, ich, äh...
+;;00;;00;;;;;;
+266.0;01:18:05:21;00:18:05:21;01:18:08:12;00:18:08:12;;;;;BLACKBEARD;(ÜBERL) Wir müssen einen Rekord brechen.
+;;00;;00;;;;;;
+267.0;01:18:08:12;00:18:08:12;01:18:10:19;00:18:10:19;A;;;;;
+;;00;;00;;;;;;
+268.0;01:18:10:19;00:18:10:19;01:18:15:14;00:18:15:14;;;;;SPANISH JACKIE;(ATMER) (LAUTE)
+;;00;;00;;;;;;
+268.0;01:18:10:19;00:18:10:19;01:18:15:14;00:18:15:14;;;;;SCHWEDE;(ÜBERL) (ATMER) (LAUTE)
+;;00;;00;;;;;;
+268.0;01:18:10:19;00:18:10:19;01:18:15:14;00:18:15:14;;;;;SPANISH JACKIE;(OFF) (ÜBERL) Oh mein Gott.
+;;00;;00;;;;;;
+269.0;01:18:15:14;00:18:15:14;01:18:21:09;00:18:21:09;;;;;SCHWEDE;Du hast aber einen (ATMER) verspannten Rücken. (ATMER) Also, (ATMER) superkrass. (2.F.: Also, (ATMER) die Verspannung ist grässlich.) 
+;;00;;00;;;;;;
+270.0;01:18:17:19;00:18:17:19;01:18:25:16;00:18:25:16;Ü;01:18:22:15;;;SPANISH JACKIE;(ÜBERL) (ATMER) (LAUTE) (x) Das ist so gut. Nicht aufhören.
+;;00;;00;;;;;;
+271.0;01:18:21:10;00:18:21:10;01:18:25:17;00:18:25:17;Ü;;;;SCHWEDE;(ATMER) (LAUTE)
+;;00;;00;;;;;;
+272.0;01:18:25:17;00:18:25:17;01:18:29:19;00:18:29:19;;;;;SCHWEDE;(ÜBERL) (ATMER) Okay.
+;;00;;00;;;;;;
+272.0;01:18:25:17;00:18:25:17;01:18:29:19;00:18:29:19;;;;;SPANISH JACKIE;(ÜBERL) Weiter.
+;;00;;00;;;;;;
+272.0;01:18:25:17;00:18:25:17;01:18:29:19;00:18:29:19;;;;;SCHWEDE;Ich würd' vorschlagen, ich fang mit den Kniesehnen an.
+;;00;;00;;;;;;
+273.0;01:18:29:06;00:18:29:06;01:18:33:16;00:18:33:16;Ü;;;;SPANISH JACKIE;Ja. Besorg's den Kniesehnen.
+;;00;;00;;;;;;
+273.0;01:18:29:06;00:18:29:06;01:18:33:16;00:18:33:16;Ü;;;;SCHWEDE;Okay.
+;;00;;00;;;;;;
+273.0;01:18:29:06;00:18:29:06;01:18:33:16;00:18:33:16;Ü;;;;SPANISH JACKIE;Besorg's den Kniesehnen. 
+;;00;;00;;;;;;
+274.0;01:18:33:16;00:18:33:16;01:18:38:10;00:18:38:10;;;;;SPANISH JACKIE;(Laut) (ATMER) Warum kannst du das eigentlich so gut? (ATMER) (LAUTE)
+;;00;;00;;;;;;
+275.0;01:18:38:07;00:18:38:07;01:18:48:19;00:18:48:19;Ü;;;;SCHWEDE;(ÜBERL) (ATMER) (LAUTE)
+;;00;;00;;;;;;
+275.0;01:18:38:07;00:18:38:07;01:18:48:19;00:18:48:19;Ü;;;;SPANISH JACKIE;(ins OFF) (ATMER) (LAUTE)
+;;00;;00;;;;;;
+276.0;01:18:45:07;00:18:45:07;01:18:51:07;00:18:51:07;Ü;;;;STEDE;(CONT) Komm schon. .. Wir treffen uns mit Olu an den Docks.
+;;00;;00;;;;;;
+276.0;01:18:45:07;00:18:45:07;01:18:51:07;00:18:51:07;Ü;;;;BLACK PETE;Unfassbar, dass das so gut läuft.
+;;00;;00;;;;;;
+276.0;01:18:45:07;00:18:45:07;01:18:51:07;00:18:51:07;Ü;;;;ROACH;(ÜBERL) Halt die Klappe!
+;;00;;00;;;;;;
+276.0;01:18:45:07;00:18:45:07;01:18:51:07;00:18:51:07;Ü;;;;STEDE;(ÜBERL) Schsch...
+;;00;;00;;;;;;
+277.0;01:18:50:21;00:18:50:21;01:18:55:09;00:18:55:09;Ü;;;;RICKY;(INS CONT) Stede, (Zög) warum dauert das denn so lange?
+;;00;;00;;;;;;
+277.0;01:18:50:21;00:18:50:21;01:18:55:09;00:18:55:09;Ü;;;;STEDE;Rick... Wir haben gesagt, Sie sollen Schmiere stehen.
+;;00;;00;;;;;;
+278.0;01:18:54:15;00:18:54:15;01:18:59:02;00:18:59:02;Ü;;;;RICKY;Schmiere stehen? .. Aber hier geht die Action ab.
+;;00;;00;;;;;;
+279.0;01:18:59:02;00:18:59:02;01:19:00:10;00:19:00:10;;;;;STEDE;Was haben Sie vor?
+;;00;;00;;;;;;
+280.0;01:18:59:23;00:18:59:23;01:19:07:00;00:19:07:00;Ü;;;;RICKY;"Oh, ich will nur meine Visitenkarte hinterlassen. Ja, das ist der sogenannte Lime Ricky"". .. """
+;;00;;00;;;;;;
+281.0;01:19:07:00;00:19:07:00;01:19:11:16;00:19:11:16;;;;;RICKY;(OFF) Eine Art kunstvoller Aperitif, (ON) aber absolut unverzichtbar.
+;;00;;00;;;;;;
+282.0;01:19:11:16;00:19:11:16;01:19:13:15;00:19:13:15;;;;;STEDE;Sie sind wahnsinnig. (Zög) Wir müssen verschwinden.
+;;00;;00;;;;;;
+283.0;01:19:13:15;00:19:13:15;01:19:16:12;00:19:16:12;;;;;RICKY;Und da funktioniert das nicht mit der ganzen Gentleman-Pirat-Sache. 
+;;00;;00;;;;;;
+284.0;01:19:16:12;00:19:16:12;01:19:21:09;00:19:21:09;;;;;RICKY;(ANATMER) Dergleichen Details (Winz Zög) sind wichtig, um eine Marke zu etablieren. (INS OFF) (LÄNGER ALS ORIG) ..
+;;00;;00;;;;;;
+285.0;01:19:21:09;00:19:21:09;01:19:26:23;00:19:26:23;;;;;RICKY;"(INS ON) Die Leute müssen sehen, dass sie von den Besten ausgeraubt wurden. (ANATMER) Sie wurden gerickt""."""
+;;00;;00;;;;;;
+286.0;01:19:26:23;00:19:26:23;01:19:34:17;00:19:34:17;;;;;SCHWEDE;(CONT) Die Wade ist wohl der geheimnisvollste aller Muskeln. Weißt du, die Spalte...
+;;00;;00;;;;;;
+286.0;01:19:26:23;00:19:26:23;01:19:34:17;00:19:34:17;;;;;SPANISH JACKIE;(ÜBERL) Scht, Baby. Schnauze! .. Jemand ist an der Bar.
+;;00;;00;;;;;;
+287.0;01:19:34:17;00:19:34:17;01:19:37:16;00:19:37:16;;;;;SCHWEDE;Was?
+;;00;;00;;;;;;
+287.0;01:19:34:17;00:19:34:17;01:19:37:16;00:19:37:16;;;;;SPANISH JACKIE;Steh auf, steh auf! (Steh auf!)
+;;00;;00;;;;;;
+287.0;01:19:34:17;00:19:34:17;01:19:37:16;00:19:37:16;;;;;SCHWEDE;(VERD) (ÜBERL) Jetzt?
+;;00;;00;;;;;;
+287.0;01:19:34:17;00:19:34:17;01:19:37:16;00:19:37:16;;;;;SPANISH JACKIE;(CONT) Ja!
+;;00;;00;;;;;;
+287.0;01:19:34:17;00:19:34:17;01:19:37:16;00:19:37:16;;;;;SCHWEDE;(CONT) Ich hol das Messer.
+;;00;;00;;;;;;
+288.0;01:19:37:16;00:19:37:16;01:19:41:00;00:19:41:00;;;;;RICKY;(LACHER) Ah! (ATMER) (LAUTE)
+;;00;;00;;;;;;
+288.0;01:19:37:16;00:19:37:16;01:19:41:00;00:19:41:00;;;;;SPANISH JACKIE;(ÜBERL) Wer bist du? .. 
+;;00;;00;;;;;;
+289.0;01:19:41:00;00:19:41:00;01:19:44:03;00:19:44:03;;;;;SPANISH JACKIE;(CONT) Du? .. Du bestiehlst mich? (Winz Zög) (ON) Schwede, Messer.
+;;00;;00;;;;;;
+290.0;01:19:43:15;00:19:43:15;01:19:46:11;00:19:46:11;Ü;;;;RICKY;(ÜBERL) (INS ON) Halt, halt! (Zög) Wissen Sie, wer ich bin? Ich bin ein Prinz. (2.F.: Zwergfürst.)
+;;00;;00;;;;;;
+291.0;01:19:46:11;00:19:46:11;01:19:53:07;00:19:53:07;;;;;SPANISH JACKIE;(LACHER) Ich glaub, ich krieg jetzt 'ne schicke Nase für mein Glas.
+;;00;;00;;;;;;
+291.0;01:19:46:11;00:19:46:11;01:19:53:07;00:19:53:07;;;;;RICKY;(ÜBERL) (ATMER) (LAUTE) (SCHREI)
+;;00;;00;;;;;;
+292.0;01:19:53:07;00:19:53:07;01:19:58:17;00:19:58:17;;;;;STEDE;Okay. (ATMER) Wo ist jetzt unser Fluchtkahn?
+;;00;;00;;;;;;
+292.0;01:19:53:07;00:19:53:07;01:19:58:17;00:19:58:17;;;;;OLUWANDE;Buttons holt ihn grade.
+;;00;;00;;;;;;
+292.0;01:19:53:07;00:19:53:07;01:19:58:17;00:19:58:17;;;;;STEDE;Okay. .. Äh, warum ist dein Gesicht blau?
+;;00;;00;;;;;;
+293.0;01:19:58:17;00:19:58:17;01:20:02:23;00:20:02:23;;;;;ROACH;Das (Zög) ist das, wofür wir unser Leben riskieren. .. Blauer Dreck.
+;;00;;00;;;;;;
+294.0;01:20:02:07;00:20:02:07;01:20:08:20;00:20:08:20;Ü;;;;STEDE;(REAKTION) .. Nein, das ist Indigo. .. (OFF) Feinstes Färbemittel. Es ist ein Vermögen wert.
+;;00;;00;;;;;;
+295.0;01:20:08:20;00:20:08:20;01:20:13:03;00:20:13:03;;;;;SPANISH JACKIE;(OFF) Sehr richtig. (Zög) (INS ON) Und jetzt gib mir meinen blauen Scheiß zurück, Steve.
+;;00;;00;;;;;;
+296.0;01:20:10:09;00:20:10:09;01:20:17:00;00:20:17:00;Ü;;;;2 SPANISH JACKIES HUSBANDS;(Unverständl. Durcheinander IT ) (REAKTION) Ja, los. / Gib's zurück. / Na, mach schon. / Oh ja, sonst gibt's Ärger. (usw.) (evtl) (Spitzen)
+;;00;;00;;;;;;
+297.0;01:20:12:23;00:20:12:23;01:20:18:11;00:20:18:11;Ü;;;;SCHWEDE;(OFF/ON) (ÜBERL) (REAKTION) Ich kann nicht fassen, dass ihr Spanish Jackie bestehlen wolltet. (Zög)
+;;00;;00;;;;;;
+298.0;01:20:18:11;00:20:18:11;01:20:21:15;00:20:21:15;;;;;SCHWEDE; (OFF) (Anatmer) Wow. (Zög) Sehr böse.
+;;00;;00;;;;;;
+299.0;01:20:21:15;00:20:21:15;01:20:25:20;00:20:25:20;;;;;STEDE;Jackie, es ist nicht so, wie es aussieht. .. Je nachdem, wonach es für Sie aussieht.
+;;00;;00;;;;;;
+300.0;01:20:25:20;00:20:25:20;01:20:28:04;00:20:28:04;;;;;SPANISH JACKIE;Es sieht mir nach mehr Nasen für mein Glas aus.
+;;00;;00;;;;;;
+301.0;01:20:28:04;00:20:28:04;01:20:31:03;00:20:31:03;;;;;ROACH;Nein, nein, nein, nein, nein, nein, nein, nein, nein!
+;;00;;00;;;;;;
+301.0;01:20:28:04;00:20:28:04;01:20:31:03;00:20:31:03;;;;;STEDE;(EVTL REAKTION)
+;;00;;00;;;;;;
+301.0;01:20:28:04;00:20:28:04;01:20:31:03;00:20:31:03;;;;;SUSAN;(OFF) Halt!
+;;00;;00;;;;;;
+302.0;01:20:29:11;00:20:29:11;01:20:39:22;00:20:39:22;Ü;;;;2 SPANISH JACKIES HUSBANDS;(Unverständl. Durcheinander IT) (REAKTIONEN) Was ist 'n jetzt? / Wer ist das? / Die traut sich ja was, das gibt's doch nicht. (usw.) (evtl) (Spitzen)
+;;00;;00;;;;;;
+303.0;01:20:36:05;00:20:36:05;01:20:38:13;00:20:38:13;Ü;;;;OLUWANDE;Susan?
+;;00;;00;;;;;;
+303.0;01:20:36:05;00:20:36:05;01:20:38:13;00:20:38:13;Ü;;;;STEDE;Was?
+;;00;;00;;;;;;
+304.0;01:20:38:13;00:20:38:13;01:20:43:09;00:20:43:09;;;;;SUSAN;Ich möchte es Ihnen abkaufen.
+;;00;;00;;;;;;
+304.0;01:20:38:13;00:20:38:13;01:20:43:09;00:20:43:09;;;;;SPANISH JACKIE;Bist du nicht die Suppenbitch?
+;;00;;00;;;;;;
+305.0;01:20:43:09;00:20:43:09;01:20:45:23;00:20:45:23;;;;;SUSAN;(Anatmer) Ich bin die Geldbitch.
+;;00;;00;;;;;;
+306.0;01:20:45:23;00:20:45:23;01:20:48:03;00:20:48:03;A;;;;;
+;;00;;00;;;;;;
+307.0;01:20:48:03;00:20:48:03;01:20:49:13;00:20:49:13;;;;;SCHWEDE;(Laut)
+;;00;;00;;;;;;
+308.0;01:20:49:13;00:20:49:13;01:20:55:20;00:20:55:20;;;;;SUSAN;Reicht das?
+;;00;;00;;;;;;
+308.0;01:20:49:13;00:20:49:13;01:20:55:20;00:20:55:20;;;;;SPANISH JACKIE;(REAKTION) Nein, Suppenbitch. (Zög) Es reicht tatsächlich nicht.
+;;00;;00;;;;;;
+308.0;01:20:49:13;00:20:49:13;01:20:55:20;00:20:55:20;;;;;SUSAN;Wie wär's mit dem Doppelten? .. 
+;;00;;00;;;;;;
+309.0;01:20:55:20;00:20:55:20;01:20:58:11;00:20:58:11;A;;;;;
+;;00;;00;;;;;;
+310.0;01:20:58:11;00:20:58:11;01:21:02:23;00:21:02:23;;;;;SUSAN;(INS ON) Und die da nehme ich auch.
+;;00;;00;;;;;;
+310.0;01:20:58:11;00:20:58:11;01:21:02:23;00:21:02:23;;;;;BLACK PETE;(REAKTION)
+;;00;;00;;;;;;
+310.0;01:20:58:11;00:20:58:11;01:21:02:23;00:21:02:23;;;;;WEE JOHN FEENEY;(REAKTION)
+;;00;;00;;;;;;
+310.0;01:20:58:11;00:20:58:11;01:21:02:23;00:21:02:23;;;;;OLUWANDE;(REAKTION)
+;;00;;00;;;;;;
+310.0;01:20:58:11;00:20:58:11;01:21:02:23;00:21:02:23;;;;;STEDE;(REAKTION)
+;;00;;00;;;;;;
+311.0;01:21:02:23;00:21:02:23;01:21:09:10;00:21:09:10;;;;;SPANISH JACKIE;Na, gut. .. (CONT) Verkauft. (2.F.: Deal.) .. Diese Arschlöcher sollen sich verpissen!
+;;00;;00;;;;;;
+312.0;01:21:08:08;00:21:08:08;01:21:10:01;00:21:10:01;Ü;;;;WEE JOHN FEENEY;Hey!
+;;00;;00;;;;;;
+312.0;01:21:08:08;00:21:08:08;01:21:10:01;00:21:10:01;Ü;;;;BLACK PETE;(REAKTION)
+;;00;;00;;;;;;
+312.0;01:21:08:08;00:21:08:08;01:21:10:01;00:21:10:01;Ü;;;;STEDE;(EVTL ATMER)
+;;00;;00;;;;;;
+313.0;01:21:10:01;00:21:10:01;01:21:16:02;00:21:16:02;;;;;SCHWEDE;(INS CONT) Ja, lasst uns verschwinden.
+;;00;;00;;;;;;
+313.0;01:21:10:01;00:21:10:01;01:21:16:02;00:21:16:02;;;;;SPANISH JACKIE;Nein, nein, nein. .. Komm wieder her.
+;;00;;00;;;;;;
+313.0;01:21:10:01;00:21:10:01;01:21:16:02;00:21:16:02;;;;;SCHWEDE;Okay.
+;;00;;00;;;;;;
+314.0;01:21:16:02;00:21:16:02;01:21:22:22;00:21:22:22;;;;;SPANISH JACKIE;Hast du .. mich auf's Kreuz gelegt?
+;;00;;00;;;;;;
+314.0;01:21:16:02;00:21:16:02;01:21:22:22;00:21:22:22;;;;;SCHWEDE;Iiich stehe in 'ner Lebensschuld.
+;;00;;00;;;;;;
+314.0;01:21:16:02;00:21:16:02;01:21:22:22;00:21:22:22;;;;;SPANISH JACKIE;(ÜBERL) (LAUT) .. 
+;;00;;00;;;;;;
+315.0;01:21:22:22;00:21:22:22;01:21:26:17;00:21:26:17;;;;;SPANISH JACKIE;Ist schon okay, sexy Holländer. .. Auf's Kreuz legen ist (genau) mein Ding.
+;;00;;00;;;;;;
+316.0;01:21:26:17;00:21:26:17;01:21:31:24;00:21:31:24;;;;;SCHWEDE;Du bist nicht böse?
+;;00;;00;;;;;;
+316.0;01:21:26:17;00:21:26:17;01:21:31:24;00:21:31:24;;;;;SPANISH JACKIE;(LIPPENLAUT) Nein, ich find's geil. (LACHEN)
+;;00;;00;;;;;;
+316.0;01:21:26:17;00:21:26:17;01:21:31:24;00:21:31:24;;;;;SCHWEDE;(OFF) Okay. (ATMER)
+;;00;;00;;;;;;
+317.0;01:21:31:22;00:21:31:22;01:21:36:13;00:21:36:13;Ü;;;;SPANISH JACKIE;(CONT) Das klären wir im Haus.
+;;00;;00;;;;;;
+317.0;01:21:31:22;00:21:31:22;01:21:36:13;00:21:36:13;Ü;;;;SCHWEDE;Okay. (LACHEN) Oh!
+;;00;;00;;;;;;
+317.0;01:21:31:22;00:21:31:22;01:21:36:13;00:21:36:13;Ü;;;;SPANISH JACKIE;(CONT) Gehen wir, Ehemänner.
+;;00;;00;;;;;;
+318.0;01:21:32:22;00:21:32:22;01:21:42:17;00:21:42:17;Ü;;;;2 SPANISH JACKIES HUSBANDS;(Unverständl. Durcheinander IT) (LACHEN) Ist ja noch mal gut gegangen. / Alles klar. / Wieder alles schön. / Friede, Freude, Eierkuchen. (evtl) (Spitzen)
+;;00;;00;;;;;;
+319.0;01:21:37:06;00:21:37:06;01:21:40:03;00:21:40:03;Ü;;;;OLUWANDE;Ich fasse es nicht, dass du so viel für blauen Dreck bezahlt hast, Susan.
+;;00;;00;;;;;;
+320.0;01:21:40:03;00:21:40:03;01:21:44:19;00:21:44:19;;;;;SUSAN;Bitte. .. So viel Indigo ist locker das Dreifache wert. .. 
+;;00;;00;;;;;;
+321.0;01:21:44:19;00:21:44:19;01:21:49:11;00:21:49:11;;;;;SUSAN;Mir ist in der Zeit hier etwas klar geworden. .. Die Menschen wissen so wenig.
+;;00;;00;;;;;;
+322.0;01:21:49:11;00:21:49:11;01:21:51:18;00:21:51:18;;;;;STEDE;Wer sind Sie? Ich meine, das wird...
+;;00;;00;;;;;;
+323.0;01:21:50:09;00:21:50:09;01:21:54:11;00:21:54:11;Ü;;;;TANTE;(ÜBERL) Auf geht's. Bewegung. Ihr arbeitet jetzt für sie. Los. Gehen wir. (INS OFF)
+;;00;;00;;;;;;
+324.0;01:21:53:19;00:21:53:19;01:21:59:07;00:21:59:07;Ü;;;;STEDE;(SEUFZER)
+;;00;;00;;;;;;
+324.0;01:21:53:19;00:21:53:19;01:21:59:07;00:21:59:07;Ü;;;;ROACH;(REAKTION) Okay.
+;;00;;00;;;;;;
+324.0;01:21:53:19;00:21:53:19;01:21:59:07;00:21:59:07;Ü;;;;BLACK PETE;(ATMER) (LAUTE)
+;;00;;00;;;;;;
+324.0;01:21:53:19;00:21:53:19;01:21:59:07;00:21:59:07;Ü;;;;ROACH;(ATMER) (LAUTE)
+;;00;;00;;;;;;
+324.0;01:21:53:19;00:21:53:19;01:21:59:07;00:21:59:07;Ü;;;;WEE JOHN FEENEY;(EVTL ATMER)
+;;00;;00;;;;;;
+325.0;01:21:59:07;00:21:59:07;01:22:01:07;00:22:01:07;;;;;TANTE;Beeilung, Mann!
+;;00;;00;;;;;;
+326.0;01:22:01:07;00:22:01:07;01:22:15:06;00:22:15:06;;;;;FANG;(WEINEN)
+;;00;;00;;;;;;
+327.0;01:22:11:21;00:22:11:21;01:22:15:06;00:22:15:06;Ü;;;;JIM;(ÜBERL) (SEUFZER) Hör auf zu weinen.
+;;00;;00;;;;;;
+328.0;01:22:15:06;00:22:15:06;01:22:19:01;00:22:19:01;;;;;FANG;(WEINEN) Ich kann nicht aufhören zu weinen. (CONT) Er hat Izzy erschossen.
+;;00;;00;;;;;;
+329.0;01:22:19:01;00:22:19:01;01:22:21:24;00:22:21:24;;;;;JIM;(ANATMER) Willst du die Geschichte vom Holzjungen hören?
+;;00;;00;;;;;;
+330.0;01:22:21:05;00:22:21:05;01:22:26:01;00:22:26:01;Ü;;;;FANG;(WEINEN) Mhm. (ATMER)
+;;00;;00;;;;;;
+331.0;01:22:23:17;00:22:23:17;01:22:28:02;00:22:28:02;Ü;;;;JIM;(ÜBERL) (ANATMER) Also, es war einmal ein Junge und... Warte. (NASENAUSATMER) 
+;;00;;00;;;;;;
+332.0;01:22:28:02;00:22:28:02;01:22:29:23;00:22:29:23;;;;;JIM;War er am Anfang 'ne Marionette? Ja, war er.
+;;00;;00;;;;;;
+333.0;01:22:27:09;00:22:27:09;01:22:32:16;00:22:32:16;Ü;;;;FANG;(überl) (Atmer)
+;;00;;00;;;;;;
+334.0;01:22:30:00;00:22:30:00;01:22:36:15;00:22:36:15;Ü;;;;JIM;(ANATMER) Und er wollte unbedingt (Winz Zög) echt sein wie 'n Mensch. Und dann haben sie sich auf einer Affenpfote das... (2.F.: Und dann hat er aber von seinem Meister verlangt, dass...) (Atmer)
+;;00;;00;;;;;;
+335.0;01:22:32:17;00:22:32:17;01:22:37:17;00:22:37:17;Ü;;;;FANG;(ÜBERL) (ATMER) Vergiss nicht (Winz Zög) die richtige Stimme.
+;;00;;00;;;;;;
+336.0;01:22:37:17;00:22:37:17;01:22:43:07;00:22:43:07;;;;;FANG; (WEINEN)
+;;00;;00;;;;;;
+336.0;01:22:37:17;00:22:37:17;01:22:43:07;00:22:43:07;;;;;JIM;(ÜBERL) (ATMER) (RÄUSPERN) 
+;;00;;00;;;;;;
+337.0;01:22:43:07;00:22:43:07;01:22:46:16;00:22:46:16;;;;;JIM;Mannomann, ich wünschte mir, ich wär ein echter Mensch.
+;;00;;00;;;;;;
+338.0;01:22:46:16;00:22:46:16;01:22:52:16;00:22:52:16;;;;;FANG;(LACHEN)
+;;00;;00;;;;;;
+338.0;01:22:46:16;00:22:46:16;01:22:52:16;00:22:52:16;;;;;JIM;(ÜBERL) (LACHEN)
+;;00;;00;;;;;;
+338.0;01:22:46:16;00:22:46:16;01:22:52:16;00:22:52:16;;;;;FANG;(ÜBERL) (SCHNIEFER) Ist gut, mach weiter.
+;;00;;00;;;;;;
+339.0;01:22:52:16;00:22:52:16;01:22:57:23;00:22:57:23;;;;;JIM;(REAKTION) Oh, wow!
+;;00;;00;;;;;;
+339.0;01:22:52:16;00:22:52:16;01:22:57:23;00:22:57:23;;;;;FANG;(überl) (LACHEN)
+;;00;;00;;;;;;
+339.0;01:22:52:16;00:22:52:16;01:22:57:23;00:22:57:23;;;;;JIM;(ÜBERL) Eine, eine Affenpfote. (Zög) Sie leuchtet. (INS OFF) (2.F.: Oh, bitte, Meister... Kannst du das machen?)
+;;00;;00;;;;;;
+340.0;01:22:57:17;00:22:57:17;01:23:02:00;00:23:02:00;Ü;;;;FANG;(OFF) (ÜBERL) (LACHEN) Das ist gut.
+;;00;;00;;;;;;
+340.0;01:22:57:17;00:22:57:17;01:23:02:00;00:23:02:00;Ü;;;;ARCHIE;(ÜBERL) (KL LACHER)
+;;00;;00;;;;;;
+341.0;01:23:02:00;00:23:02:00;01:23:05:13;00:23:05:13;A;;;;;
+;;00;;00;;;;;;
+342.0;01:23:05:13;00:23:05:13;01:23:12:22;00:23:12:22;;;;;FRENCHIE;(INS ON) Also, äh, wie sieht der Plan aus, Captain? Ich dachte, als 1. Offizier sollte ich (Zög) irgendwas machen.
+;;00;;00;;;;;;
+343.0;01:23:12:22;00:23:12:22;01:23:15:01;00:23:15:01;A;;;;;
+;;00;;00;;;;;;
+344.0;01:23:15:01;00:23:15:01;01:23:19:16;00:23:19:16;;;;;BLACKBEARD;Es gibt einen Vogel, der nie auf der Erde landet. .. 
+;;00;;00;;;;;;
+345.0;01:23:19:16;00:23:19:16;01:23:24:20;00:23:24:20;;;;;BLACKBEARD;Geboren in der Luft (Zög) wird er nie landen.
+;;00;;00;;;;;;
+346.0;01:23:24:20;00:23:24:20;01:23:28:02;00:23:28:02;;;;;BLACKBEARD; Er verbringt sein ganzes Leben in luftiger Höhe.
+;;00;;00;;;;;;
+347.0;01:23:28:02;00:23:28:02;01:23:32:02;00:23:32:02;A;;;;;
+;;00;;00;;;;;;
+348.0;01:23:32:02;00:23:32:02;01:23:37:09;00:23:37:09;;;;;FRENCHIE;Klingt nach etwas, das vielleicht (Zög) überhaupt nicht existieren kann, Captain.
+;;00;;00;;;;;;
+349.0;01:23:37:09;00:23:37:09;01:23:45:04;00:23:45:04;;01:23:42:15;;;BLACKBEARD;Niemals wieder an Land gehen. (ATMER) (x) (LAUT) 
+;;00;;00;;;;;;
+350.0;01:23:45:04;00:23:45:04;01:23:54:09;00:23:54:09;;;;;BLACKBEARD;Wir segeln, (ATMER) kapern, (ATMER) stiften Unruhe für immer .. und ewig. (ATMER) Und es endet nie.
+;;00;;00;;;;;;
+351.0;01:23:54:09;00:23:54:09;01:23:59:05;00:23:59:05;A;;;;;
+;;00;;00;;;;;;
+352.0;01:23:59:05;00:23:59:05;01:24:01:14;00:24:01:14;;;;;FRENCHIE;Klingt nach 'nem Plan.
+;;00;;00;;;;;;
+353.0;01:24:01:14;00:24:01:14;01:24:04:11;00:24:04:11;;;;;BLACKBEARD;(Nasenatmer) Wegtreten!
+;;00;;00;;;;;;
+354.0;01:24:04:11;00:24:04:11;01:24:25:22;00:24:25:22;A;;;;;
+;;00;;00;;;;;;
+355.0;01:24:25:22;00:24:25:22;01:24:28:07;00:24:28:07;;;;;BLACKBEARD;Fick dich, Stede Bonnet!
+;;00;;00;;;;;;
+356.0;01:24:28:07;00:24:28:07;01:24:39:08;00:24:39:08;A;;;;;
+;;00;;00;;;;;;
+357.0;01:24:39:08;00:24:39:08;01:24:43:03;00:24:43:03;;;;;STEDE;Gute Nacht, (Winz Zög) Ed Teach.
+;;00;;00;;;;;;
+358.0;01:24:43:03;00:24:43:03;01:24:49:11;00:24:49:11;;;;;BUTTONS;Wir sind zurück, Geliebte. (Zög) Mein tiefer Ozean. .. Nie wieder trennt uns jemand voneinander.
+;;00;;00;;;;;;
+359.0;01:24:49:11;00:24:49:11;01:24:54:04;00:24:54:04;;;;;ROACH;Also, dann sind wir jetzt im Suppengeschäft, oder...
+;;00;;00;;;;;;
+360.0;01:24:53:05;00:24:53:05;01:24:58:05;00:24:58:05;Ü;;;;WEE JOHN FEENEY;Oh ja, wär mir sehr recht. Ja, ich liebe Suppe.
+;;00;;00;;;;;;
+360.0;01:24:53:05;00:24:53:05;01:24:58:05;00:24:58:05;Ü;;;;BLACK PETE;Gleichfalls.
+;;00;;00;;;;;;
+361.0;01:24:58:05;00:24:58:05;01:25:02:06;00:25:02:06;;;;;OLUWANDE;Eigentlich (Zög) bist du keine Suppenverkäuferin, oder?
+;;00;;00;;;;;;
+362.0;01:25:02:06;00:25:02:06;01:25:06:07;00:25:06:07;;;;;SUSAN;Eigentlich nicht.
+;;00;;00;;;;;;
+362.0;01:25:02:06;00:25:02:06;01:25:06:07;00:25:06:07;;;;;OLUWANDE;(OFF) Wer bist du dann?
+;;00;;00;;;;;;
+363.0;01:25:06:07;00:25:06:07;01:25:14:07;00:25:14:07;;;;;TANTE;Blickt sie nicht an. (Zög) (INS OFF) Ihr befindet euch in Anwesenheit von Zheng Yi Sao, Piratenkönigin.
+;;00;;00;;;;;;
+364.0;01:25:14:07;00:25:14:07;01:26:26:07;00:26:26:07;A;;;;;
+;;00;;00;;;;;;
+365.0;01:26:26:07;00:26:26:07;01:26:30:11;00:26:30:11;;;;;JIM;Und dann hat die Affenpfote angefangen zu leuchten. (2.F.: Und dann spürte Pinocchio, wie die Energie in ihm aufstieg...)
+;;00;;00;;;;;;
+366.0;01:26:30:11;00:26:30:11;01:26:40:21;00:26:40:21;;;;;FANG;(LACHEN)
+;;00;;00;;;;;;
+367.0;01:26:30:16;00:26:30:16;01:26:37:07;00:26:37:07;Ü;;;;JIM;"(ÜBERL) Ich bete dich an, dunkler Herr. (ANATMER) So mach aus mir Fleisch und Blut. """
+;;00;;00;;;;;;
+368.0;01:26:37:07;00:26:37:07;01:26:40:22;00:26:40:22;;;;;JIM;"(Anatmer) Ich will nichts lieber, als echtes Fleisch sein.""
+368;01:26:37:07;01:26:40:22;;;;;JIM;Und die Affenpfote sagte: (2.F.: Und auf einmal ertönte:) """
+;;00;;00;;;;;;
+369.0;01:26:40:22;00:26:40:22;01:26:46:24;00:26:46:24;;;;;JIM;"Ich werde dich zu dem fleischigsten Jungen machen, der du sein willst."" """
+;;00;;00;;;;;;
+369.0;01:26:40:22;00:26:40:22;01:26:46:24;00:26:46:24;;;;;FANG;(ÜBERL) (LACHEN)
+;;00;;00;;;;;;
+370.0;01:26:46:24;00:26:46:24;01:26:53:24;00:26:53:24;;;;;JIM;"Oh, wow! (ANATMER) Ich werde grade echt zu Fleisch. Das fühlt sich schön an. So weich."" (INS OFF)"""
+;;00;;00;;;;;;
+371.0;01:26:46:24;00:26:46:24;01:26:56:24;00:26:56:24;;;;;FANG;(LACHEN)
+;;00;;00;;;;;;
+372.0;01:26:54:00;00:26:54:00;01:26:57:06;00:26:57:06;Ü;;;;JIM;(Lacher)
+;;00;;00;;;;;;
+373.0;01:26:57:06;00:26:57:06;01:27:26:16;00:27:26:16;A;;;;SZENE;(Ende)

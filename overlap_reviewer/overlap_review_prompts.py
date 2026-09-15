@@ -29,7 +29,8 @@ Gleiches `MATCHED-TEXT` hat **immer dieselben** REF-Timecodes. Nutze REF-TCs fü
 4) **MATCHED-TEXT + REF-TC:** Anker im Drehbuch (Text + Original-Zeit). Bei Konflikt: Drehbuch + Zeit + Sinn.
 
 ## Regeln
-- **Gesamtes Skript** berücksichtigen: gematchte **und** nicht gematchte Originalzeilen.
+- **ORIGINAL-Liste** = echtes Drehbuch in **Script-Reihenfolge** (Datei-Reihenfolge). Das ist der kanonische Kontext — nicht die Match-Reihenfolge der Transkription.
+- **Gesamtes Skript** im Fenster berücksichtigen: gematchte **und** nicht gematchte Originalzeilen.
 - **1:n ist normal und OK:** Mehrere Transkript-Zeilen dürfen **dasselbe** Original / denselben `MATCHED-TEXT` haben (zerschnittene ASR). Das allein ist **kein** Fehler.
 - Keine kosmetische Synonym-Politur; Fokus Überlappung / Rolle / Sinn.
 - Klammern wie `(Atmer)` ignorieren; `(Text)`/`TEXT` = Figur spricht, Inhalt unklar.
@@ -74,7 +75,8 @@ def build_user_prompt(
 
     return f"""Vergleiche **gesamte** Transkription und **gesamtes** Drehbuch (inkl. NOT_MATCHED).
 Flagge und korrigiere vor allem **stark abweichende** Stellen (Überlappung / falsche Rolle / Leak / Unsinn).
-**Timecodes mitdenken:** TRANSCRIPT-TC und MATCHED-TEXT-TC (REF-IN/OUT); gleiches MATCHED-TEXT = gleiche REF-TCs; ORIGINAL-Liste ist nach REF/Script-Zeit sortiert.
+**Timecodes mitdenken:** TRANSCRIPT-TC und MATCHED-TEXT-TC (REF-IN/OUT); gleiches MATCHED-TEXT = gleiche REF-TCs.
+**ORIGINAL** steht in **korrekter Script-Reihenfolge** (Drehbuch-Datei) — das ist der Kontext für Reihenfolge / Nachbarzeilen / Leaks.
 
 Antworte mit **genau** diesem JSON-Schema (`issue_type` nur OK|TEXT_LEAK|SPEAKER_WRONG|NONSENSE|OTHER; `confidence` nur high|medium|low):
 {_JSON_SCHEMA_EXAMPLE}
@@ -87,6 +89,6 @@ Pflicht:
 ## TRANSKRIPTION — Post-Match ({n_trans} Segmente; je Zeile: TRANSCRIPT-TC + SPEAKER + DIALOGUE + MATCHED-TEXT mit Original-TC)
 {transcription_block}
 
-## ORIGINAL — DREHBUCH komplett, chronologisch nach Original-Timecode ({n_orig} Segmente)
+## ORIGINAL — DREHBUCH in Script-Reihenfolge ({n_orig} Segmente; kanonischer Kontext)
 {original_block}
 {unmatched_section}"""
