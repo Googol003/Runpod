@@ -96,6 +96,43 @@ def main() -> None:
         df = df[[c for c in KEEP if c in df.columns]].iloc[:100].copy()
 
     injected = inject(df)
+    # Gleicher MATCHED-TEXT → gleiche REF-Timecodes (auch in der Excel-Datei)
+    if "REF-IN" in injected.columns and "REF-OUT" in injected.columns:
+        canon: dict[tuple[str, str], tuple[str, str]] = {}
+
+        def _c(v) -> str:
+            if v is None or (isinstance(v, float) and pd.isna(v)):
+                return ""
+            s = str(v).strip()
+            return "" if s.lower() in ("nan", "none") else s
+
+        def _nw(s: str) -> str:
+            return " ".join(s.split())
+
+        for _, row in injected.iterrows():
+            mat = _nw(_c(row.get("MATCHED-TEXT")))
+            if not mat:
+                continue
+            key = (_c(row.get("SOURCE")).upper(), mat)
+            tin = _c(row.get("REF-IN")) or _c(row.get("TIMECODE-IN"))
+            tout = _c(row.get("REF-OUT")) or _c(row.get("TIMECODE-OUT"))
+            if key not in canon:
+                canon[key] = (tin, tout)
+            else:
+                a, b = canon[key]
+                canon[key] = (
+                    tin if (tin and (not a or tin < a)) else a,
+                    tout if (tout and (not b or tout > b)) else b,
+                )
+        for i, row in injected.iterrows():
+            mat = _nw(_c(row.get("MATCHED-TEXT")))
+            if not mat:
+                continue
+            key = (_c(row.get("SOURCE")).upper(), mat)
+            if key in canon:
+                injected.at[i, "REF-IN"] = canon[key][0]
+                injected.at[i, "REF-OUT"] = canon[key][1]
+
     out = base / "test.1175.injected.xlsx"
     with pd.ExcelWriter(out, engine="openpyxl") as w:
         injected.to_excel(w, sheet_name="Transkription", index=False)

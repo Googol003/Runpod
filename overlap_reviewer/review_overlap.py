@@ -46,6 +46,48 @@ def _cell(v: Any) -> str:
     return s
 
 
+def _normalize_matched_ref_timecodes(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Gleiches MATCHED-TEXT (+ SOURCE) → dieselben REF-IN/REF-OUT.
+    Kanonisch: frühester REF-IN und spätester REF-OUT der Gruppe
+    (fällt auf Transkript-TC zurück, wenn REF fehlt).
+    """
+    out = df.copy()
+    if "REF-IN" not in out.columns:
+        out["REF-IN"] = ""
+    if "REF-OUT" not in out.columns:
+        out["REF-OUT"] = ""
+
+    canon: Dict[Tuple[str, str], Tuple[str, str]] = {}
+    for _, row in out.iterrows():
+        mat = normalize_ws(_cell(row.get("MATCHED-TEXT")))
+        if not mat:
+            continue
+        src = _cell(row.get("SOURCE")).upper()
+        key = (src, mat)
+        tin = _cell(row.get("REF-IN")) or _cell(row.get("TIMECODE-IN"))
+        tout = _cell(row.get("REF-OUT")) or _cell(row.get("TIMECODE-OUT"))
+        if not tin and not tout:
+            continue
+        if key not in canon:
+            canon[key] = (tin, tout)
+        else:
+            cur_in, cur_out = canon[key]
+            new_in = tin if (tin and (not cur_in or tin < cur_in)) else cur_in
+            new_out = tout if (tout and (not cur_out or tout > cur_out)) else cur_out
+            canon[key] = (new_in, new_out)
+
+    for i, row in out.iterrows():
+        mat = normalize_ws(_cell(row.get("MATCHED-TEXT")))
+        if not mat:
+            continue
+        key = (_cell(row.get("SOURCE")).upper(), mat)
+        if key in canon:
+            out.at[i, "REF-IN"] = canon[key][0]
+            out.at[i, "REF-OUT"] = canon[key][1]
+    return out
+
+
 def load_sm2_excel(path: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     SM2-Ergebnis-Excel:
@@ -74,6 +116,9 @@ def load_sm2_excel(path: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
         transcription["REF-IN"] = ""
     if "REF-OUT" not in transcription.columns:
         transcription["REF-OUT"] = ""
+
+    # Gleicher MATCHED-TEXT (+ SOURCE) → gleiche REF-Timecodes (kanonisch: frühester IN, spätester OUT)
+    transcription = _normalize_matched_ref_timecodes(transcription)
 
     # Original aus Matches — Timecodes bevorzugt REF-IN/OUT (Drehbuch-Reihenfolge)
     orig_rows: List[Dict[str, str]] = []
