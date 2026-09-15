@@ -27,10 +27,100 @@ from overlap_review_prompts import SYSTEM_PROMPT, build_user_prompt  # noqa: E40
 from izzy_stede_overlap_case import build_case  # noqa: E402
 
 ISSUE_TYPES = frozenset({"OK", "TEXT_LEAK", "SPEAKER_WRONG", "NONSENSE", "OTHER"})
+_NOT_MATCHED_RE = re.compile(
+    r"Original:\s*(\d{2}:\d{2}:\d{2}:\d{2})\s*[–\-]\s*(\d{2}:\d{2}:\d{2}:\d{2})\s*\|\s*([^:]+):\s*(.+?)(?:\s*\|\s*Platzierung|$)",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def normalize_ws(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip())
+
+
+def _cell(v: Any) -> str:
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return ""
+    s = str(v).strip()
+    if s.lower() in ("nan", "none"):
+        return ""
+    return s
+
+
+def load_sm2_excel(path: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    SM2-Ergebnis-Excel (Spalten: TIMECODE-IN/OUT, DIALOGUE, SOURCE, MATCHED-TEXT, NOT_MATCHED).
+    Baut Original-Liste aus eindeutigen MATCHED-TEXT+SOURCE plus geparsten NOT_MATCHED-Zeilen.
+    """
+    df = pd.read_excel(path)
+    # erste Sheet falls multi
+    if not isinstance(df, pd.DataFrame):
+        df = pd.read_excel(path, sheet_name=0)
+
+    need = ["TIMECODE-IN", "TIMECODE-OUT", "DIALOGUE", "SOURCE", "MATCHED-TEXT", "NOT_MATCHED"]
+    for c in need:
+        if c not in df.columns:
+            raise ValueError(f"Spalte fehlt in {path}: {c}")
+
+    transcription = df[need].copy()
+
+    # Original aus Matches (1:n erlaubt → dedupe)
+    orig_rows: List[Dict[str, str]] = []
+    seen: set[Tuple[str, str]] = set()
+    for _, row in transcription.iterrows():
+        src = _cell(row.get("SOURCE"))
+        mat = _cell(row.get("MATCHED-TEXT"))
+        if not src or not mat:
+            continue
+        key = (src.upper(), normalize_ws(mat))
+        if key in seen:
+            continue
+        seen.add(key)
+        orig_rows.append(
+            {
+                "timecode_in": _cell(row.get("TIMECODE-IN")),
+                "timecode_out": _cell(row.get("TIMECODE-OUT")),
+                "source": src,
+                "dialogue": mat,
+            }
+        )
+
+    unmatched_rows: List[Dict[str, str]] = []
+    for _, row in transcription.iterrows():
+        nm = _cell(row.get("NOT_MATCHED"))
+        if not nm:
+            continue
+        m = _NOT_MATCHED_RE.search(nm.replace("\n", " "))
+        if m:
+            tin, tout, speaker, dialogue = m.group(1), m.group(2), m.group(3).strip(), m.group(4).strip()
+            dialogue = dialogue.split("|")[0].strip()
+            key = (speaker.upper(), normalize_ws(dialogue))
+            entry = {
+                "timecode_in": tin,
+                "timecode_out": tout,
+                "source": speaker,
+                "dialogue": dialogue,
+            }
+            unmatched_rows.append(entry)
+            if key not in seen:
+                seen.add(key)
+                orig_rows.append(entry)
+        else:
+            unmatched_rows.append(
+                {
+                    "timecode_in": _cell(row.get("TIMECODE-IN")),
+                    "timecode_out": _cell(row.get("TIMECODE-OUT")),
+                    "source": "?",
+                    "dialogue": nm[:200],
+                }
+            )
+
+    original = pd.DataFrame(orig_rows) if orig_rows else pd.DataFrame(
+        columns=["timecode_in", "timecode_out", "source", "dialogue"]
+    )
+    not_matched = pd.DataFrame(unmatched_rows) if unmatched_rows else pd.DataFrame(
+        columns=["timecode_in", "timecode_out", "source", "dialogue"]
+    )
+    return transcription, original, not_matched
 
 
 def _tc_norm(tc: str) -> str:
@@ -220,27 +310,57 @@ def main() -> int:
         description="LLM: Transkript vs. Drehbuch — Überlappung/Sprecher/Sinn (inkl. NOT_MATCHED)."
     )
     p.add_argument(
+        "--input",
+        "-i",
+        default="",
+        help="SM2-Excel mit Spalten TIMECODE-IN/OUT, DIALOGUE, SOURCE, MATCHED-TEXT, NOT_MATCHED. "
+        "Leer = eingebauter Izzy/Stede-Case.",
+    )
+    p.add_argument(
         "--output",
         "-o",
-        default=str(_REVIEW_DIR / "output" / "izzy_stede_overlap_review.xlsx"),
-        help="Ausgabe-Excel (Reviews)",
+        default="",
+        help="Ausgabe-Excel (Reviews). Default abhängig von --input.",
+    )
+    p.add_argument(
+        "--max-rows",
+        type=int,
+        default=0,
+        help="Nur erste N Transkript-Zeilen (0 = alle). Empfohlen bei großen Excels.",
     )
     p.add_argument(
         "--export-case",
         default="",
-        help="Optional: Testcase als Excel exportieren (Sheets: transcription, original, not_matched).",
+        help="Optional: geladene Daten als Excel exportieren (Sheets: transcription, original, not_matched).",
     )
     p.add_argument("--temperature", type=float, default=0.05)
-    p.add_argument("--num-ctx", type=int, default=16384)
+    p.add_argument("--num-ctx", type=int, default=32768)
     p.add_argument("--num-predict", type=int, default=8192)
     p.add_argument("--dry-run", action="store_true", help="Nur Prompt bauen, kein LLM.")
     p.add_argument("--save-prompt", type=str, default="", help="User-Prompt in Datei speichern.")
     args = p.parse_args()
 
-    case = build_case()
-    transcription = case.transcription.copy()
-    original = case.original.copy()
-    not_matched = case.not_matched.copy()
+    if args.input:
+        transcription, original, not_matched = load_sm2_excel(Path(args.input))
+        default_out = _REVIEW_DIR / "output" / "test1175_overlap_review.xlsx"
+    else:
+        case = build_case()
+        transcription = case.transcription.copy()
+        original = case.original.copy()
+        not_matched = case.not_matched.copy()
+        default_out = _REVIEW_DIR / "output" / "izzy_stede_overlap_review.xlsx"
+
+    if args.max_rows and args.max_rows > 0:
+        transcription = transcription.iloc[: args.max_rows].copy()
+        # Original/NOT_MATCHED nur aus dem Slice neu ableiten (sonst riesiger Prompt)
+        tmp = _REVIEW_DIR / "output" / "_slice_tmp.xlsx"
+        tmp.parent.mkdir(parents=True, exist_ok=True)
+        transcription.to_excel(tmp, index=False)
+        transcription, original, not_matched = load_sm2_excel(tmp)
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
 
     if args.export_case:
         export_path = Path(args.export_case)
@@ -281,7 +401,8 @@ def main() -> int:
 
     t0 = time.time()
     raw = ""
-    dump = _REVIEW_DIR / "output" / "izzy_stede_overlap_review_raw.txt"
+    out_path = Path(args.output) if args.output else default_out
+    dump = out_path.with_name(out_path.stem + "_raw.txt")
     try:
         raw = _call_llm(
             client,
@@ -302,7 +423,6 @@ def main() -> int:
         return 1
 
     df_out = _reviews_to_dataframe(trans_rows, orig_rows, by_trans)
-    out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     df_out.to_excel(out_path, index=False)
 

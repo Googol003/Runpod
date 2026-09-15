@@ -113,10 +113,16 @@ pip install -r requirements.txt
 export LLM_PROVIDER=ollama
 export LLM_MODEL=gemma4:26b
 
-# Testcase als Excel ansehen (3 Sheets)
-python review_overlap.py --dry-run --export-case output/izzy_stede_overlap_case.xlsx
+# Fehler in echte SM2-Excel einbauen (Test 1175)
+python inject_test1175_errors.py
 
-python review_overlap.py -o output/izzy_stede_overlap_review.xlsx
+# Prompt check (erste 40 Zeilen empfohlen)
+python review_overlap.py --input output/test.1175.injected.xlsx --max-rows 40 --dry-run
+
+# Review mit LLM → Excel mit Flagged + Corrected-*
+python review_overlap.py --input output/test.1175.injected.xlsx --max-rows 40 \
+  -o output/test1175_overlap_review.xlsx
 ```
 
-Testdaten: `izzy_stede_overlap_case.py` (Izzy/Stede/Blackbeard: Leaks, falsche Rollen, Unmatched). Gleiche Env-Variablen wie oben.
+Input-Excel braucht die Spalten: `TIMECODE-IN`, `TIMECODE-OUT`, `DIALOGUE`, `SOURCE`, `MATCHED-TEXT`, `NOT_MATCHED`.  
+**1:n** (mehrere Transkript-Zeilen → ein Original) ist **erlaubt** und kein Fehler. Timecode-Überlappung = Indiz; Fokus = stark abweichende Stellen.

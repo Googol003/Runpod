@@ -24,6 +24,7 @@ Wenn plausibel: `flagged=false`, `issue_type=OK`, Korrekturfelder leer.
 
 ## Regeln
 - **Gesamtes Skript** berücksichtigen: gematchte **und** nicht gematchte Originalzeilen.
+- **1:n ist normal und OK:** Mehrere Transkript-Zeilen dürfen **dasselbe** Original / denselben `MATCHED-TEXT` haben (zerschnittene ASR). Das allein ist **kein** Fehler.
 - Keine kosmetische Synonym-Politur; Fokus Überlappung / Rolle / Sinn.
 - Klammern wie `(Atmer)` ignorieren; `(Text)`/`TEXT` = Figur spricht, Inhalt unklar.
 - Formulierungen dürfen abweichen (Paraphrase/ASR) — Flag nur bei Leak, falscher Rolle oder unplausiblem Inhalt.
