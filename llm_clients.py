@@ -126,6 +126,41 @@ def build_client_from_env() -> Any:
     raise LLMError(f"Unbekannter LLM_PROVIDER: {provider}")
 
 
+def _sanitize_json_control_chars(s: str) -> str:
+    """Escapet echte Newlines/Tabs/Steuerzeichen innerhalb von JSON-Strings."""
+    out: List[str] = []
+    in_string = False
+    escape = False
+    for ch in s:
+        if escape:
+            out.append(ch)
+            escape = False
+            continue
+        if ch == "\\" and in_string:
+            out.append(ch)
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            out.append(ch)
+            continue
+        if in_string:
+            code = ord(ch)
+            if ch == "\n":
+                out.append("\\n")
+            elif ch == "\r":
+                out.append("\\r")
+            elif ch == "\t":
+                out.append("\\t")
+            elif code < 0x20:
+                out.append(f"\\u{code:04x}")
+            else:
+                out.append(ch)
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
 def parse_json_response(text: str) -> Dict[str, Any]:
     """
     Robust gegen LLMs, die ```json ... ``` oder Text außenrum liefern.
@@ -152,7 +187,12 @@ def parse_json_response(text: str) -> Dict[str, Any]:
         if start != -1 and end != -1 and end > start:
             t = t[start : end + 1]
     # Manche Modelle liefern doppelte Anführungszeichen wie ""items""
-    if '""' in t and '"items"' not in t:
+    if '""' in t and '"items"' not in t and '"reviews"' not in t:
         t = t.replace('""', '"')
-    return json.loads(t)
+    try:
+        return json.loads(t)
+    except json.JSONDecodeError:
+        # Häufig: unescapte Newlines/Tabs in reason/issue_note
+        t2 = _sanitize_json_control_chars(t)
+        return json.loads(t2)
 
