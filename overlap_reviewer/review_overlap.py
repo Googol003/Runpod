@@ -269,18 +269,25 @@ def load_sm2_excel(
         nm = _cell(row.get("NOT_MATCHED"))
         if not nm:
             continue
-        m = _NOT_MATCHED_RE.search(nm.replace("\n", " "))
-        if m:
-            tin, tout, speaker, dialogue = m.group(1), m.group(2), m.group(3).strip(), m.group(4).strip()
-            dialogue = dialogue.split("|")[0].strip()
-            unmatched_rows.append(
-                {
-                    "timecode_in": tin,
-                    "timecode_out": tout,
-                    "source": speaker,
-                    "dialogue": dialogue,
-                }
-            )
+        flat = nm.replace("\n", " ")
+        matches = list(_NOT_MATCHED_RE.finditer(flat))
+        if matches:
+            for m in matches:
+                tin, tout, speaker, dialogue = (
+                    m.group(1),
+                    m.group(2),
+                    m.group(3).strip(),
+                    m.group(4).strip(),
+                )
+                dialogue = dialogue.split("|")[0].strip()
+                unmatched_rows.append(
+                    {
+                        "timecode_in": tin,
+                        "timecode_out": tout,
+                        "source": speaker,
+                        "dialogue": dialogue,
+                    }
+                )
         else:
             unmatched_rows.append(
                 {
