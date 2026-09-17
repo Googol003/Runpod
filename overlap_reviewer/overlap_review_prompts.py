@@ -37,9 +37,20 @@ Für jedes `trans_i`:
 1. Passende Originalzeile finden (Zeit + Inhalt). Wenn die Originalzeile mehrere Sätze hat: nur den **aktuellen Teilsatz** nehmen.
 2. Sprecher prüfen.
 3. Wort für Wort **dieses Teils**: Unsinn? Falsch gehört/geschrieben? Leak am Rand?
-4. Bei Unsinn/Falschschreibung/Leak/falscher Rolle → flaggen und **minimal** korrigieren (nur den Fehler in **dieser** Trans-Zeile).
+4. Bei Unsinn / klar falscher Schreibweise / Leak / falscher Rolle → flaggen und korrigieren.
 
-Sei gründlich bei **kleinen** Sinn-/Schreibfehlern. Kurze Cues nicht überspringen.
+**Bei Unsinn-Transkription:** `corrected_dialogue` = der passende **Original-Wortlaut dieses Teilsatzes** (Original übernehmen), so dass es in **diese** Trans-Zeile passt.
+- Orig `Satz A. .. Satz B.`, Trans-Zeile ist der A-Moment aber Quatsch → korrigieren zu `Satz A.` (nicht A+B).
+- Mehrere unsinnige Trans-Zeilen hintereinander im gleichen Orig-Bereich: jede Zeile bekommt **ihren** Orig-Teil.
+- Sinnvolle Alternative bleibt stehen — Original nur übernehmen, wenn die Trans **keinen Sinn** ergibt oder klar falsch gehört/geschrieben ist.
+
+## Korrektur
+- Unsinn → Original-Text des passenden Teilsatzes.
+- Leak/Name/Rolle → nur den Fehler ersetzen, Rest lassen wenn er Sinn ergibt.
+- Keine kosmetische Synonym-Politur.
+- Kurze `issue_note`. `related_orig_j` optional.
+- Nur JSON, keine Markdown-Fences.
+
 
 ## issue_type
 - `NONSENSE` — Unsinn / unplausibel im Kontext
@@ -55,12 +66,6 @@ Sei gründlich bei **kleinen** Sinn-/Schreibfehlern. Kurze Cues nicht übersprin
 - `Mann! Er hat…` nach Buttons `…Mann?` → `TEXT_LEAK`, `Mann!` weg
 - `setz dich` vs Orig `Nimm Platz` → **OK**, nicht ändern
 - `Easy, warte.` vs `Izzy, warte.` → **OK**
-
-## Korrektur
-- `corrected_*` nur den konkreten Fehler in **dieser** Zeile.
-- Keine kosmetische Synonym-Politur.
-- Kurze `issue_note`. `related_orig_j` optional.
-- Nur JSON, keine Markdown-Fences.
 """
 
 _JSON_SCHEMA_EXAMPLE = """{
@@ -111,6 +116,7 @@ def build_user_prompt(
 Flagge **Unsinn, falsche Schreibweise/Verhörer, Leaks, falsche Rollen** — auch kleine.
 **Nicht** sinnvolle Alternativformulierungen ersetzen (`setz dich` vs `Nimm Platz` = OK).
 Original oft mehrere Sätze in einer Zeile, Trans oft aufgeteilt (1:n) → **OK**; nur den Teilsatz dieser Zeile prüfen/korrigieren.
+Bei **Unsinn** in der Trans: Original-Wortlaut **dieses Teilsatzes** übernehmen (passend in die Zeile, nicht die ganze Orig-Zeile).
 Korrigiere nur den Fehler in der jeweiligen Zeile.
 
 Antworte mit **genau** diesem JSON-Schema
