@@ -10,6 +10,18 @@ Zwei Skripte:
 
 Kein Match-Text. Zuordnung über Zeit + Inhalt + Nachbarn.
 
+## 1:n ist normal (wichtig)
+Im **Original** stehen oft **mehrere Sätze in einer Zeile** (häufig mit `..` verbunden).
+In der **Transkription** sind dieselben Sätze oft **auf mehrere aufeinanderfolgende Zeilen** desselben Sprechers aufgeteilt — gleiche Zeitlage.
+
+Das ist **kein Fehler**. Jede Trans-Zeile nur gegen **den Teil** der Originalzeile prüfen, der zu **dieser** Zeile gehört (diesen Satz / diesen Cue), nicht gegen die ganze Originalzeile.
+
+- Orig eine Zeile: `Satz A. .. Satz B.` — Trans: Zeile1 `Satz A.` + Zeile2 `Satz B.` → beide **OK**
+- Trans-Zeile enthält **nur Satz A**, Originalzeile hat A+B → **nicht** B in diese Trans-Zeile nachtragen, **nicht** als fehlend flaggen
+- Umgekehrt: Trans klebt A+B in einer Zeile, Original hat A und B getrennt → nur flaggen, wenn dabei Unsinn/Leak/falsche Rolle entsteht, nicht weil die Schnittgrenzen anders sind
+
+Nachbar-Trans-Zeilen (KONTEXT) mitdenken, damit du siehst, dass der Rest schon in der **nächsten** Trans-Zeile steht.
+
 ## Wonach du suchst (Kern)
 Nur Dinge, die im Vergleich zum Original **keinen Sinn** ergeben, **falsch geschrieben/gehört** sind, oder **strukturell falsch** sind:
 - Wörter/Sätze die **unsinnig** oder **sehr seltsam** wirken (`dich du` statt `nicht du`, `Sofa` statt `Ed`, …)
@@ -22,10 +34,10 @@ Nur Dinge, die im Vergleich zum Original **keinen Sinn** ergeben, **falsch gesch
 
 ## Arbeitsweise
 Für jedes `trans_i`:
-1. Passende Originalzeile(n) finden (Zeit + Inhalt).
+1. Passende Originalzeile finden (Zeit + Inhalt). Wenn die Originalzeile mehrere Sätze hat: nur den **aktuellen Teilsatz** nehmen.
 2. Sprecher prüfen.
-3. Wort für Wort: Unsinn? Falsch gehört/geschrieben? Leak am Rand?
-4. Bei Unsinn/Falschschreibung/Leak/falscher Rolle → flaggen und **minimal** korrigieren (nur den Fehler).
+3. Wort für Wort **dieses Teils**: Unsinn? Falsch gehört/geschrieben? Leak am Rand?
+4. Bei Unsinn/Falschschreibung/Leak/falscher Rolle → flaggen und **minimal** korrigieren (nur den Fehler in **dieser** Trans-Zeile).
 
 Sei gründlich bei **kleinen** Sinn-/Schreibfehlern. Kurze Cues nicht überspringen.
 
@@ -98,6 +110,7 @@ def build_user_prompt(
 
 Flagge **Unsinn, falsche Schreibweise/Verhörer, Leaks, falsche Rollen** — auch kleine.
 **Nicht** sinnvolle Alternativformulierungen ersetzen (`setz dich` vs `Nimm Platz` = OK).
+Original oft mehrere Sätze in einer Zeile, Trans oft aufgeteilt (1:n) → **OK**; nur den Teilsatz dieser Zeile prüfen/korrigieren.
 Korrigiere nur den Fehler in der jeweiligen Zeile.
 
 Antworte mit **genau** diesem JSON-Schema
