@@ -26,7 +26,7 @@ from llm_clients import LLMError, OllamaClient, build_client_from_env, parse_jso
 from overlap_review_prompts import SYSTEM_PROMPT, build_user_prompt  # noqa: E402
 from izzy_stede_overlap_case import build_case  # noqa: E402
 
-ISSUE_TYPES = frozenset({"OK", "TEXT_LEAK", "SPEAKER_WRONG", "NONSENSE", "NAME_ERROR", "OTHER"})
+ISSUE_TYPES = frozenset({"OK", "TEXT_LEAK", "SPEAKER_WRONG", "NONSENSE", "NAME_ERROR", "PHONETIC", "OTHER"})
 _NOT_MATCHED_RE = re.compile(
     r"Original:\s*(\d{2}:\d{2}:\d{2}:\d{2})\s*[–\-]\s*(\d{2}:\d{2}:\d{2}:\d{2})\s*\|\s*([^:]+):\s*(.+?)(?:\s*\|\s*Platzierung|$)",
     re.IGNORECASE | re.DOTALL,
