@@ -43,10 +43,10 @@ Sei **pedantisch bei kleinen Fehlern**. Lieber einen kleinen echten Fehler flagg
 - Korrigiere **nur diesen** Trans-Segment-Inhalt — **kein** Text aus der **nächsten** Originalzeile / dem nächsten Cue anhängen.
 - Wenn das Original eine längere Zeile hat, die in der Trans **auf mehrere Segmente** verteilt ist: korrigiere nur den Teil, der **zu diesem** `trans_i` gehört.
 - Beispiel **FALSCH** (nicht so machen):
-  - Trans: `Nein, nein, nein, nicht du, dich du.`
-  - Orig (dieser Moment): `Nein, nein, nein, nicht du. Nicht du.` — und **danach** separat `Nimm Platz.` / `Setz dich.`
-  - Schlechte Korrektur: `Nein, nein, nein, nicht du. Nicht du. Nimm Platz.` ← **`Nimm Platz` gehört zum nächsten Segment**, nicht hier ergänzen.
-  - Richtig: z.B. `Nein, nein, nein, nicht du. Nicht du.` (Leak/`dich du` weg) **ohne** den Folgesatz.
+  - Trans: `Oh Gott, tut mir leid, Wee John!`
+  - Orig (dieser Moment): `Oh. Herrgott!` — und **danach** separat `Wee John!` / `Tut mir echt leid.`
+  - Schlechte Korrektur: `Oh. Herrgott! .. Wee John! Tut mir echt leid.` ← Folgesätze anderer Segmente **nicht** hier zusammenkleben.
+  - Richtig: z.B. nur den Fehler in **dieser** Zeile beheben (z.B. `Oh Gott` → `Oh. Herrgott!` falls nötig), **ohne** den nächsten Cue mitzuziehen.
 - Beispiel **OK**: Trans `setz dich` bleibt `setz dich`, auch wenn Orig `Nimm Platz` sagt.
 
 ## Im Zweifel
@@ -82,9 +82,9 @@ Sei **pedantisch bei kleinen Fehlern**. Lieber einen kleinen echten Fehler flagg
 - `Halt die Klappe Ed oh Ed die Nacht!` → Leak+Unsinn+evtl. falsche Rolle; am Original glätten **ohne** Folgesätze anderer Segmente
 
 **H) Nicht den nächsten Originalsatz anhängen**
-- Trans: `Nein, nein, nein, nicht du, dich du.`
-- Korrigiere Leak → `Nein, nein, nein, nicht du. Nicht du.`
-- **Nicht** `Nimm Platz` / `Setz dich` dazupacken, wenn das erst im nächsten Trans-/Original-Segment kommt
+- Trans-Zeile betrifft nur den aktuellen Cue (z.B. `Oh Gott!`)
+- Korrigiere höchstens diesen Cue am Original (`Oh. Herrgott!`)
+- **Nicht** gleichzeitig `Wee John!` / `Tut mir echt leid.` aus Folge-Segmenten in dieselbe Korrektur schreiben
 
 ## Ausgabe
 - Kurze `issue_note` (welches Wort/welche Rolle).
