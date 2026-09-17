@@ -1110,7 +1110,7 @@ TakeNr;In;Startzeit;Out;Endzeit;Typ;Marker1;Marker2;Bemerkung;Source;Text
 ;;00;;00;;;;;;
 367.0;01:26:30:16;00:26:30:16;01:26:37:07;00:26:37:07;Ü;;;;JIM;"(ÜBERL) Ich bete dich an, dunkler Herr. (ANATMER) So mach aus mir Fleisch und Blut. """
 ;;00;;00;;;;;;
-368.0;01:26:37:07;00:26:37:07;01:26:40:22;00:26:40:22;;;;;JIM;"(Anatmer) Ich will nichts lieber, als echtes Fleisch sein.""
+368.0;01:26:37:07;00:26:37:07;01:26:40:22;00:26:40:22;;;;;JIM;"(Anatmer) Ich will nichts lieber, als echtes Fleisch sein.""
 368;01:26:37:07;01:26:40:22;;;;;JIM;Und die Affenpfote sagte: (2.F.: Und auf einmal ertönte:) """
 ;;00;;00;;;;;;
 369.0;01:26:40:22;00:26:40:22;01:26:46:24;00:26:46:24;;;;;JIM;"Ich werde dich zu dem fleischigsten Jungen machen, der du sein willst."" """
@@ -1124,3 +1124,16 @@ TakeNr;In;Startzeit;Out;Endzeit;Typ;Marker1;Marker2;Bemerkung;Source;Text
 372.0;01:26:54:00;00:26:54:00;01:26:57:06;00:26:57:06;Ü;;;;JIM;(Lacher)
 ;;00;;00;;;;;;
 373.0;01:26:57:06;00:26:57:06;01:27:26:16;00:27:26:16;A;;;;SZENE;(Ende)
+;;00;;00;;;;;;
+900.0;01:04:46:02;00:04:46:02;01:04:48:12;00:04:48:12;;;;;STEDE;Darf ich vorstellen: Byung-ho Kim und Seung-min Park.
+;;00;;00;;;;;;
+901.0;01:04:48:14;00:04:48:14;01:04:49:22;00:04:49:22;;;;;STEDE;Und das ist Gyeong-hui Choi.
+;;00;;00;;;;;;
+902.0;01:04:50:00;00:04:50:00;01:04:51:20;00:04:51:20;;;;;BYUNG-HO;Freut mich, Captain Bonnet.
+;;00;;00;;;;;;
+903.0;01:04:52:00;00:04:52:00;01:04:54:10;00:04:54:10;;;;;SEUNG-MIN;Ji-yeon wartet draußen bei Zheng Yi Sao.
+;;00;;00;;;;;;
+904.0;01:04:54:12;00:04:54:12;01:04:56:00;00:04:56:00;;;;;GYEONG-HUI;Woo-jin kommt gleich, Captain.
+;;00;;00;;;;;;
+905.0;01:04:56:02;00:04:56:02;01:04:57:18;00:04:57:18;;;;;STEDE;Woo-jin Jeong, nicht wahr?
+

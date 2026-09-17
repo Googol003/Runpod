@@ -227,6 +227,93 @@ def inject(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[int, str]]:
         "fälschlich SOURCE=ROACH + MATCHED-TEXT „Halt die Klappe!“."
     )
 
+    extra_rows = [
+        {
+            "TIMECODE-IN": "00:04:46:02",
+            "TIMECODE-OUT": "00:04:48:10",
+            "DIALOGUE": "Darf ich vorstellen: Bjungho Kim und Sungmin Bark.",
+            "SOURCE": "STEDE",
+            "MATCHED-TEXT": "Darf ich vorstellen: Byung-ho Kim und Seung-min Park.",
+            "REF-IN": "00:04:46:02",
+            "REF-OUT": "00:04:48:12",
+            "NOT_MATCHED": "",
+            "INJECTED-ERROR": (
+                "NAME_ERROR/PHONETIC: Byung-ho Kim → Bjungho Kim; "
+                "Seung-min Park → Sungmin Bark. Original-Schreibweise nutzen."
+            ),
+        },
+        {
+            "TIMECODE-IN": "00:04:48:14",
+            "TIMECODE-OUT": "00:04:49:20",
+            "DIALOGUE": "Und das ist Kinghi Tschoi.",
+            "SOURCE": "STEDE",
+            "MATCHED-TEXT": "Und das ist Gyeong-hui Choi.",
+            "REF-IN": "00:04:48:14",
+            "REF-OUT": "00:04:49:22",
+            "NOT_MATCHED": "",
+            "INJECTED-ERROR": (
+                "NAME_ERROR/PHONETIC: Gyeong-hui Choi → Kinghi Tschoi."
+            ),
+        },
+        {
+            "TIMECODE-IN": "00:04:50:00",
+            "TIMECODE-OUT": "00:04:51:18",
+            "DIALOGUE": "Pingho hier, Captain Bonnet.",
+            "SOURCE": "BYUNG-HO",
+            "MATCHED-TEXT": "Freut mich, Captain Bonnet.",
+            "REF-IN": "00:04:50:00",
+            "REF-OUT": "00:04:51:20",
+            "NOT_MATCHED": "",
+            "INJECTED-ERROR": (
+                "NAME_ERROR + NONSENSE: Byung-ho komplett falsch als Pingho; "
+                "Satzanfang nicht Original. Orig: Freut mich, Captain Bonnet."
+            ),
+        },
+        {
+            "TIMECODE-IN": "00:04:52:00",
+            "TIMECODE-OUT": "00:04:54:08",
+            "DIALOGUE": "Gion wartet draußen bei Cheng Isao.",
+            "SOURCE": "SEUNG-MIN",
+            "MATCHED-TEXT": "Ji-yeon wartet draußen bei Zheng Yi Sao.",
+            "REF-IN": "00:04:52:00",
+            "REF-OUT": "00:04:54:10",
+            "NOT_MATCHED": "",
+            "INJECTED-ERROR": (
+                "NAME_ERROR: Ji-yeon → Gion; Zheng Yi Sao → Cheng Isao."
+            ),
+        },
+        {
+            "TIMECODE-IN": "00:04:54:12",
+            "TIMECODE-OUT": "00:04:55:22",
+            "DIALOGUE": "Uschin kommt gleich, Captain.",
+            "SOURCE": "GYEONG-HUI",
+            "MATCHED-TEXT": "Woo-jin kommt gleich, Captain.",
+            "REF-IN": "00:04:54:12",
+            "REF-OUT": "00:04:56:00",
+            "NOT_MATCHED": "",
+            "INJECTED-ERROR": "NAME_ERROR/PHONETIC: Woo-jin → Uschin.",
+        },
+        {
+            "TIMECODE-IN": "00:04:56:02",
+            "TIMECODE-OUT": "00:04:57:16",
+            "DIALOGUE": "Joey Jin, nicht wahr?",
+            "SOURCE": "STEDE",
+            "MATCHED-TEXT": "Woo-jin Jeong, nicht wahr?",
+            "REF-IN": "00:04:56:02",
+            "REF-OUT": "00:04:57:18",
+            "NOT_MATCHED": "",
+            "INJECTED-ERROR": (
+                "NAME_ERROR komplett falsch: Woo-jin Jeong → Joey Jin "
+                "(ASR hat den Namen erfunden)."
+            ),
+        },
+    ]
+    extra = pd.DataFrame(extra_rows)
+    start_i = len(out)
+    out = pd.concat([out, extra], ignore_index=True)
+    for j, row in enumerate(extra_rows):
+        notes[start_i + j] = row["INJECTED-ERROR"]
+
     out["INJECTED-ERROR"] = ""
     for i, note in notes.items():
         out.at[i, "INJECTED-ERROR"] = note
@@ -274,6 +361,10 @@ def main() -> None:
             f"  [{i}] SRC={r['SOURCE']!r} D={str(r['DIALOGUE'])[:50]!r} "
             f"M={str(r['MATCHED-TEXT'])[:40]!r}"
         )
+    print("--- EXOTIC NAMES (end) ---")
+    for i in range(100, len(injected)):
+        r = injected.iloc[i]
+        print(f"  [{i}] {r['SOURCE']!r} D={r['DIALOGUE']!r}")
     print("--- ALL INJECTED-ERROR ---")
     for i in sorted(notes):
         print(f"  [{i}] {notes[i]}")
