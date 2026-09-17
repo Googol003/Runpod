@@ -21,7 +21,7 @@ def _env(name: str, default: Optional[str] = None) -> Optional[str]:
 class OllamaClient:
     base_url: str = "http://127.0.0.1:11434"
     model: str = "gemma4:26b"
-    timeout_s: int = 180
+    timeout_s: int = 600
     num_gpu: int = -1
     keep_alive: str = "10m"
 
@@ -114,7 +114,7 @@ def build_client_from_env() -> Any:
     if provider == "ollama":
         base_url = _env("OLLAMA_BASE_URL", "http://127.0.0.1:11434") or "http://127.0.0.1:11434"
         num_gpu = int(_env("OLLAMA_NUM_GPU", "-1") or "-1")
-        timeout_s = int(_env("LLM_TIMEOUT_S", "180") or "180")
+        timeout_s = int(_env("LLM_TIMEOUT_S", "600") or "600")
         return OllamaClient(base_url=base_url, model=model, num_gpu=num_gpu, timeout_s=timeout_s)
 
     if provider in ("lmstudio", "openai", "openai_compat", "openai-compatible"):

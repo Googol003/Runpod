@@ -455,11 +455,16 @@ def _call_llm(
     return client.chat(SYSTEM_PROMPT, user_prompt, temperature=temperature, **kwargs)
 
 
-def _parse_reviews(data: Dict[str, Any], n_trans: int, n_orig: int) -> Dict[int, Dict[str, Any]]:
+def _parse_reviews(
+    data: Dict[str, Any],
+    expected_ids: List[int],
+    n_orig: int,
+) -> Dict[int, Dict[str, Any]]:
     raw = data.get("reviews")
     if not isinstance(raw, list):
         raise ValueError("JSON ohne 'reviews'-Liste")
 
+    expected = set(expected_ids)
     by_trans: Dict[int, Dict[str, Any]] = {}
     for item in raw:
         if not isinstance(item, dict):
@@ -467,6 +472,8 @@ def _parse_reviews(data: Dict[str, Any], n_trans: int, n_orig: int) -> Dict[int,
         try:
             ti = int(item.get("trans_i"))
         except (TypeError, ValueError):
+            continue
+        if ti not in expected:
             continue
 
         issue = str(item.get("issue_type", "OK")).strip().upper()
@@ -496,12 +503,22 @@ def _parse_reviews(data: Dict[str, Any], n_trans: int, n_orig: int) -> Dict[int,
             "related_orig_j": oj,
         }
 
-    if len(by_trans) != n_trans:
-        missing = [i for i in range(1, n_trans + 1) if i not in by_trans]
+    if len(by_trans) != len(expected):
+        missing = [i for i in expected_ids if i not in by_trans]
         raise ValueError(
-            f"reviews: erwartet {n_trans} trans_i, bekam {len(by_trans)}; fehlend={missing[:10]}"
+            f"reviews: erwartet {len(expected)} trans_i, bekam {len(by_trans)}; "
+            f"fehlend={missing[:10]}"
         )
     return by_trans
+
+
+def _chunk_rows(
+    rows: List[Tuple[int, str, str, str, str, str, str, str]],
+    batch_size: int,
+) -> List[List[Tuple[int, str, str, str, str, str, str, str]]]:
+    if batch_size <= 0 or batch_size >= len(rows):
+        return [rows]
+    return [rows[i : i + batch_size] for i in range(0, len(rows), batch_size)]
 
 
 def _reviews_to_dataframe(
@@ -586,6 +603,13 @@ def main() -> int:
         type=int,
         default=0,
         help="Nur erste N Transkript-Zeilen (0 = alle). Empfohlen bei großen Excels.",
+    )
+    p.add_argument(
+        "--batch-size",
+        type=int,
+        default=25,
+        help="Transkript-Zeilen pro LLM-Call (Default 25). 0 = alles in einem Call "
+        "(riskant: JSON wird oft abgeschnitten).",
     )
     p.add_argument(
         "--export-case",
@@ -692,42 +716,61 @@ def main() -> int:
             not_matched.to_excel(writer, sheet_name="not_matched", index=False)
         log(f"[EXPORT] done")
 
-    log("[BUILD] Listen + Prompt")
+    log("[BUILD] Listen + Prompt-Kontext (Original/NOT_MATCHED)")
     t0 = time.time()
     trans_rows, orig_rows, unmatched_rows = _build_lists(transcription, original, not_matched)
     n_trans, n_orig, n_unmatched = len(trans_rows), len(orig_rows), len(unmatched_rows)
     unmatched_keys = {
         (sp.upper(), normalize_ws(dlg)) for _, _, _, sp, dlg in unmatched_rows if sp and dlg
     }
-    user_prompt = build_user_prompt(
-        n_trans=n_trans,
-        n_orig=n_orig,
-        n_unmatched=n_unmatched,
-        transcription_block=_format_trans_block(trans_rows),
-        original_block=_format_orig_block(orig_rows, unmatched_keys=unmatched_keys),
-        not_matched_block=_format_orig_block(unmatched_rows),
-    )
+    orig_block = _format_orig_block(orig_rows, unmatched_keys=unmatched_keys)
+    nm_block = _format_orig_block(unmatched_rows)
+    batches = _chunk_rows(trans_rows, args.batch_size)
     log(
         f"[BUILD] done in {time.time() - t0:.2f}s | "
         f"trans={n_trans} orig={n_orig} not_matched={n_unmatched} "
-        f"prompt_chars={len(user_prompt)}"
+        f"batches={len(batches)} batch_size={args.batch_size or 'all'}"
     )
 
     if args.save_prompt:
-        Path(args.save_prompt).write_text(user_prompt, encoding="utf-8")
-        log(f"[OK] Prompt gespeichert: {args.save_prompt}")
+        # ersten Batch als Beispiel speichern
+        sample_ids = [r[0] for r in batches[0]]
+        sample_prompt = build_user_prompt(
+            n_trans=n_trans,
+            n_orig=n_orig,
+            n_unmatched=n_unmatched,
+            transcription_block=_format_trans_block(batches[0]),
+            original_block=orig_block,
+            not_matched_block=nm_block,
+            required_trans_ids=sample_ids,
+        )
+        Path(args.save_prompt).write_text(sample_prompt, encoding="utf-8")
+        log(f"[OK] Prompt (Batch 1) gespeichert: {args.save_prompt}")
 
     if args.dry_run:
+        sample_ids = [r[0] for r in batches[0]]
+        sample_prompt = build_user_prompt(
+            n_trans=n_trans,
+            n_orig=n_orig,
+            n_unmatched=n_unmatched,
+            transcription_block=_format_trans_block(batches[0]),
+            original_block=orig_block,
+            not_matched_block=nm_block,
+            required_trans_ids=sample_ids,
+        )
         log(
             f"[DRY-RUN] trans={n_trans} orig={n_orig} not_matched={n_unmatched} "
-            f"chars={len(user_prompt)}"
+            f"batches={len(batches)} batch1_chars={len(sample_prompt)}"
         )
-        print(user_prompt[:2500] + ("\n…" if len(user_prompt) > 2500 else ""), flush=True)
+        print(sample_prompt[:2500] + ("\n…" if len(sample_prompt) > 2500 else ""), flush=True)
         log(f"[DONE] dry-run total={time.time() - t_all:.1f}s")
         return 0
 
     log("[CLIENT] build_client_from_env")
     client = build_client_from_env()
+    # Lange Batch-Läufe: Timeout mindestens 10 Min, falls Env kleiner
+    if isinstance(client, OllamaClient) and getattr(client, "timeout_s", 180) < 600:
+        client.timeout_s = 600
     model = getattr(client, "model", "?")
     provider = type(client).__name__
     base_url = getattr(client, "base_url", "?")
@@ -745,34 +788,65 @@ def main() -> int:
 
     out_path = Path(args.output) if args.output else default_out
     dump = out_path.with_name(out_path.stem + "_raw.txt")
-    log(f"[LLM] request starting (1 call for {n_trans} rows) → waiting…")
-    t0 = time.time()
-    raw = ""
-    try:
-        raw = _call_llm(
-            client,
-            user_prompt,
-            num_ctx=args.num_ctx,
-            num_predict=args.num_predict,
-            temperature=args.temperature,
+    by_trans: Dict[int, Dict[str, Any]] = {}
+    raw_parts: List[str] = []
+
+    for bi, batch in enumerate(batches, start=1):
+        ids = [r[0] for r in batch]
+        user_prompt = build_user_prompt(
+            n_trans=n_trans,
+            n_orig=n_orig,
+            n_unmatched=n_unmatched,
+            transcription_block=_format_trans_block(batch),
+            original_block=orig_block,
+            not_matched_block=nm_block,
+            required_trans_ids=ids,
         )
-        dt_llm = time.time() - t0
-        log(f"[LLM] response received in {dt_llm:.1f}s | raw_chars={len(raw)}")
-        log("[PARSE] JSON + reviews")
-        t0p = time.time()
-        data = parse_json_response(raw)
-        by_trans = _parse_reviews(data, n_trans, n_orig)
-        n_flagged_parse = sum(1 for v in by_trans.values() if v.get("flagged"))
         log(
-            f"[PARSE] done in {time.time() - t0p:.2f}s | "
-            f"items={len(by_trans)} flagged={n_flagged_parse}"
+            f"[LLM] batch {bi}/{len(batches)} starting "
+            f"(trans_i {ids[0]}-{ids[-1]}, {len(ids)} rows, prompt_chars={len(user_prompt)}) "
+            f"→ waiting…"
         )
-    except (LLMError, json.JSONDecodeError, ValueError) as e:
-        if raw:
+        t0 = time.time()
+        raw = ""
+        try:
+            raw = _call_llm(
+                client,
+                user_prompt,
+                num_ctx=args.num_ctx,
+                num_predict=args.num_predict,
+                temperature=args.temperature,
+            )
+            dt_llm = time.time() - t0
+            log(f"[LLM] batch {bi}/{len(batches)} done in {dt_llm:.1f}s | raw_chars={len(raw)}")
+            raw_parts.append(f"===== BATCH {bi} trans_i={ids[0]}-{ids[-1]} =====\n{raw}\n")
+            log(f"[PARSE] batch {bi}/{len(batches)}")
+            t0p = time.time()
+            data = parse_json_response(raw)
+            part = _parse_reviews(data, ids, n_orig)
+            by_trans.update(part)
+            n_flagged_parse = sum(1 for v in part.values() if v.get("flagged"))
+            log(
+                f"[PARSE] batch {bi} done in {time.time() - t0p:.2f}s | "
+                f"items={len(part)} flagged={n_flagged_parse}"
+            )
+        except (LLMError, json.JSONDecodeError, ValueError) as e:
             dump.parent.mkdir(parents=True, exist_ok=True)
-            dump.write_text(raw, encoding="utf-8")
+            dump.write_text("\n".join(raw_parts) + (f"\n===== FAIL BATCH {bi} =====\n{raw}\n" if raw else ""), encoding="utf-8")
             log(f"[ERROR] raw dumped: {dump}")
-        log(f"[ERROR] {e}")
+            hint = ""
+            err_s = str(e)
+            if "Unterminated" in err_s or "Expecting" in err_s:
+                hint = (
+                    " | Hinweis: Antwort vermutlich abgeschnitten — "
+                    "kleineres --batch-size oder höheres --num-predict"
+                )
+            log(f"[ERROR] batch {bi}/{len(batches)}: {e}{hint}")
+            return 1
+
+    if len(by_trans) != n_trans:
+        missing = [i for i in range(1, n_trans + 1) if i not in by_trans]
+        log(f"[ERROR] nach allen Batches fehlend: {missing[:20]}")
         return 1
 
     log("[WRITE] building Excel")

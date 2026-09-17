@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import List, Optional
+
 SYSTEM_PROMPT = """Du bist ein **Struktur- und Überlappungs-Reviewer** für **Film-/TV-Drehbücher** vs. **Transkription**.
 
 **Kontext:** Du siehst das **Original-Drehbuch** (Timecodes + Sprecher + Dialog) **und** die **Transkription** (eigene Timecodes + Dialog), plus die bereits vorhandene **Zuordnung** (`SOURCE` / `MATCHED-TEXT` / REF-TCs) und **NOT_MATCHED**. Du vergleichst beide Skripte im Kontext — besonders bei **Sprecherüberlappung**.
@@ -64,6 +68,7 @@ def build_user_prompt(
     transcription_block: str,
     original_block: str,
     not_matched_block: str,
+    required_trans_ids: Optional[List[int]] = None,
 ) -> str:
     unmatched_section = ""
     if n_unmatched > 0 and not_matched_block.strip():
@@ -72,6 +77,27 @@ def build_user_prompt(
 (Oft Überlappungsreste — prüfen, ob Wörter in einer Trans-Zeile mitgelaufen sind.)
 {not_matched_block}
 """
+
+    if required_trans_ids:
+        ids = ", ".join(str(i) for i in required_trans_ids)
+        n_req = len(required_trans_ids)
+        review_pflicht = (
+            f"- `reviews` enthält **genau {n_req}** Einträge — nur diese `trans_i`: {ids} "
+            f"(jeweils **einmal**, keine anderen)."
+        )
+        trans_header = (
+            f"## TRANSKRIPTION — zu reviewen ({n_req} Segmente dieses Batches; "
+            f"globale `trans_i`-Nummern)"
+        )
+    else:
+        review_pflicht = (
+            f"- `reviews` enthält **genau {n_trans}** Einträge, "
+            f"`trans_i` von 1 bis {n_trans} jeweils **einmal**."
+        )
+        trans_header = (
+            f"## TRANSKRIPTION — Post-Match ({n_trans} Segmente; "
+            f"TRANSCRIPT-TC + SPEAKER + DIALOGUE + MATCHED-TEXT + ORIGINAL-TC)"
+        )
 
     return f"""Vergleiche Transkription und Original-Drehbuch **im Kontext** (inkl. Match-Zuordnung + NOT_MATCHED).
 
@@ -83,13 +109,14 @@ Antworte mit **genau** diesem JSON-Schema (`issue_type` nur OK|TEXT_LEAK|SPEAKER
 {_JSON_SCHEMA_EXAMPLE}
 
 Pflicht:
-- `reviews` enthält **genau {n_trans}** Einträge, `trans_i` von 1 bis {n_trans} jeweils **einmal**.
+{review_pflicht}
 - Bei `flagged=false`: `issue_type=OK`, Korrekturfelder leer.
-- Bei `flagged=true`: kurze konkrete `issue_note`.
+- Bei `flagged=true`: kurze konkrete `issue_note` (kurz halten — kein Roman).
 
-## TRANSKRIPTION — Post-Match ({n_trans} Segmente; TRANSCRIPT-TC + SPEAKER + DIALOGUE + MATCHED-TEXT + ORIGINAL-TC)
+{trans_header}
 {transcription_block}
 
 ## ORIGINAL — DREHBUCH in Script-Reihenfolge ({n_orig} Segmente; Maßstab bei Zweifel)
 {original_block}
 {unmatched_section}"""
+

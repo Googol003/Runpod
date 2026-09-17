@@ -1,0 +1,85 @@
+================================================================================
+RunPod — Befehle (Overlap-Reviewer / Runpod-Repo)
+Stand: Overlap-Reviewer mit gemma4:26b
+================================================================================
+
+--- 1) Repo holen / updaten (Git) ---
+
+# Einmalig:
+cd /workspace
+git clone https://github.com/Googol003/Runpod.git
+cd Runpod
+
+# Später nur updaten:
+cd /workspace/Runpod
+git pull
+
+
+--- 2) Python venv + Requirements ---
+
+cd /workspace/Runpod
+python -m venv .venv
+source .venv/bin/activate
+
+pip install -U pip
+pip install -r requirements.txt
+pip install -r overlap_reviewer/requirements.txt
+
+
+--- 3) Ollama installieren + starten + Modell ---
+
+# Install (falls noch nicht im Template):
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Server starten (eigenes Terminal / Hintergrund):
+ollama serve
+
+# Modell laden (anderes Terminal, venv aktiv):
+ollama pull gemma4:26b
+
+# Optional Alternativen:
+# ollama pull qwen3.5:9b
+# ollama pull qwen3.6:27b
+
+
+--- 4) Environment setzen ---
+
+cd /workspace/Runpod
+source .venv/bin/activate
+
+export LLM_PROVIDER=ollama
+export OLLAMA_BASE_URL=http://127.0.0.1:11434
+export LLM_MODEL=gemma4:26b
+
+
+--- 5) Start — Overlap-Reviewer ---
+
+cd /workspace/Runpod
+source .venv/bin/activate
+
+# Default: testdata/test.1175.xlsx + Original-CSV (Batches à 25 Zeilen)
+python overlap_reviewer/review_overlap.py
+
+# Mit Ausgabe-Pfad:
+python overlap_reviewer/review_overlap.py -o overlap_reviewer/output/test1175_overlap_review.xlsx
+
+# Nur Prompt prüfen (ohne LLM):
+python overlap_reviewer/review_overlap.py --dry-run
+
+# Ergebnis:
+#   /workspace/Runpod/overlap_reviewer/output/test1175_overlap_review.xlsx
+
+
+--- Kurz-Checkliste (wenn Repo schon da) ---
+
+cd /workspace/Runpod
+git pull
+source .venv/bin/activate
+# Terminal 1: ollama serve
+# Terminal 2:
+export LLM_PROVIDER=ollama
+export OLLAMA_BASE_URL=http://127.0.0.1:11434
+export LLM_MODEL=gemma4:26b
+python overlap_reviewer/review_overlap.py -o overlap_reviewer/output/test1175_overlap_review.xlsx
+
+================================================================================
