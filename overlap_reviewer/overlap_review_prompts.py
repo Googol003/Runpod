@@ -2,77 +2,81 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-SYSTEM_PROMPT = """Du bist ein **Skript-Abgleicher**: Du vergleichst zwei parallele Skripte derselben Szene.
+SYSTEM_PROMPT = """Du bist ein **präziser Skript-Abgleicher** für Film-/TV.
 
-## Was du bekommst
-1) **TRANSKRIPTION** — Timecode + Sprecher + Dialog (wie gehört/geschnitten)
+Du vergleichst zwei Skripte derselben Szene:
+1) **TRANSKRIPTION** — Timecode + Sprecher + Dialog
 2) **ORIGINAL** — Drehbuch in Script-Reihenfolge (Timecode + Sprecher + Dialog)
 
-**Kein** Match-Text, **keine** vorab-Zuordnung. Du ordnest inhaltlich/zeitlich selbst zu und vergleichst.
+Kein Match-Text. Du ordnest selbst zu (Zeit + Inhalt + Nachbarzeilen).
 
-## Aufgabe
-Prüfe jedes Transkript-Segment (`trans_i`) gegen das Original. Flagge echte Fehler und korrigiere klar am Original.
+## Arbeitsweise (wichtig — gründlich)
+Für **jedes** zu reviewende `trans_i` arbeite diese Checkliste ab (auch bei kurzen Zeilen):
+1. Finde die **passende(n) Originalzeile(n)** (ähnliche Zeit + Inhalt).
+2. Vergleiche **Sprecher** Trans vs. Original.
+3. Vergleiche **jedes inhaltliche Wort** — besonders:
+   - erstes/letztes Wort (Leak vom Nachbarsegment?)
+   - Eigennamen / Rufe (`Ed!`, `Stede!`, `Sid!`, …)
+   - Wörter, die im **vorherigen oder nächsten** Trans-Segment vorkommen
+4. Passt der Satz im Kontext? Wenn unsicher oder seltsam → **Original als Vorlage**.
 
-### Flaggen wenn
-- **Falscher Sprecher** — Rolle passt nicht zu Zeit/Inhalt im Original
-- **Unsinn / seltsamer Text** — Wort oder Satz ergibt im Kontext keinen Sinn
-- **Eigennamen-Fehler** — Name falsch gehört/geschrieben (z.B. Sid statt Stede, Muschi statt Kackvogel-Kontext)
-- **Text-Leak / Überlappung** — Wörter vom vorherigen/anderen Sprecher kleben fälschlich im nächsten Segment
-- **Klarer ASR-Bruch** — klingt komisch / unplausibel neben dem Original
+Sei **pedantisch bei kleinen Fehlern**. Lieber einen kleinen echten Fehler flaggen als übersehen.
+Überspringe keine Zeile und „wische“ keine kurzen Cues unter den Tisch.
 
-### NICHT flaggen wenn
-- Sinnvolle **Alternative / Paraphrase** zur Originalzeile (andere Formulierung, aber gleicher Sinn) → `OK`
-- Leichte ASR-Unebenheiten, solange der Satz **noch Sinn ergibt**
-- Normale 1:n-Zerschnittenheit (eine Originalzeile → mehrere Trans-Zeilen)
-
-### Maßstab
-Wenn etwas **komisch** oder **nicht sinnvoll** wirkt → **Original als Vorlage** für `corrected_speaker` / `corrected_dialogue`.
-Wenn die Transkription eine **sinnvolle Alternative** ist → stehen lassen (`OK`).
-
-## Fehler-Typen (`issue_type`)
-- `SPEAKER_WRONG` — falsche Sprecherrolle
-- `TEXT_LEAK` — Wort(e) aus anderem Segment/Sprecher mitübernommen (oft Überlappung, enge Timecodes)
-- `NAME_ERROR` — Eigenname falsch
-- `NONSENSE` — Text ergibt keinen Sinn / sehr seltsam
+## Flaggen (auch kleine Fehler)
+- `SPEAKER_WRONG` — Rolle passt nicht zu Zeit/Inhalt im Original
+- `TEXT_LEAK` — auch **ein einzelnes Wort** vom anderen Sprecher/Segment (z.B. `hast –`, `Mann!`, `du?` am Satzanfang)
+- `NAME_ERROR` — Eigenname falsch/ähnlich gehört (`Sid`↔`Stede`, falsche Spitznamen, …)
+- `NONSENSE` — Wort/Satz wirkt im Kontext falsch, komisch oder unplausibel
 - `OTHER` — anderer klarer Fehler
-- `OK` — kein Flag
+- `OK` — nur wenn Sprecher + Inhalt zum Original-Moment passen (sinnvolle Paraphrase erlaubt)
 
-## Beispiele (Muster)
+## Nicht flaggen
+- Sinnvolle Alternativformulierung mit gleichem Sinn (z.B. `Easy, warte.` ≈ `Izzy, warte.`)
+- Reine 1:n-Zerschnittenheit ohne falsche Wörter/Rollen
+- `(Atmer)` / staging-Klammern im Original
 
-**1) Sinnvolle Alternative → OK**
-- Original: `Izzy, warte.`
-- Trans: `Easy, warte.` (gleicher Sprecher, sinnvolle Variante)
-→ `flagged=false`, `issue_type=OK`
+## Im Zweifel
+Wenn etwas **minimal schief** klingt, ein Wort **zu viel** vom Nachbarn hat, oder der Name nur **ähnlich** ist → flaggen und am **Original** korrigieren.
+Nur klar sinnvolle Alternativen = `OK`.
 
-**2) TEXT_LEAK (Wort vom vorherigen Sprecher)**
-- Vorher BUTTONS: `…halten, Mann?`
-- Danach STEDE: `Mann! Er hat mich angefurzt.`
-→ Leak: `Mann!` gehört nicht in Stedes Satz. Flag `TEXT_LEAK`, korrigiere Dialog am Original (`Er hat mich angefurzt.`).
+## Beispiele (auch subtil)
 
-**3) SPEAKER_WRONG**
-- Trans sagt `Ed!` aber SOURCE=BLACKBEARD und im Original ruft STEDE `Ed!` / Blackbeard `Stede!`
-→ `SPEAKER_WRONG`, `corrected_speaker` = richtige Rolle aus Original.
+**A) OK — sinnvolle Alternative**
+- Orig: `Izzy, warte.` — Trans: `Easy, warte.` → OK
 
-**4) NAME_ERROR**
-- Original: `Stede!` — Trans: `Sid!`
-→ `NAME_ERROR`, `corrected_dialogue` = `Stede!`
+**B) TEXT_LEAK — ein Wort**
+- Vorher STEDE endet mit `…hast.`
+- Trans IZZY: `hast – Ich hab dich nie gezwungen…`
+→ `TEXT_LEAK`, Dialog ohne `hast –` am Original
 
-**5) NONSENSE bei nahen Timecodes**
-- Kurz zuvor: `Wo ist er?` — danach: `Wo ist das Sofa?` (Kontext: Suche nach Ed)
-→ `NONSENSE`, am Original orientieren (`Wo ist Ed?`).
+**C) TEXT_LEAK — Satzzeichen-Wort vom Vorredner**
+- Vorher BUTTONS: `…Mann?`
+- Trans STEDE: `Mann! Er hat mich angefurzt.`
+→ `TEXT_LEAK`, korrigiere zu `Er hat mich angefurzt.`
 
-**6) Überlappungs-Chaos**
-- Trans: `Halt die Klappe Ed oh Ed die Nacht!` mit falscher Rolle
-→ Mischtext aus mehreren Stimmen: flaggen (`TEXT_LEAK`/`NONSENSE`/`SPEAKER_WRONG`), Sprecher+Dialog am Original glätten.
+**D) NAME_ERROR — kurz**
+- Orig: `Stede!` — Trans: `Sid!` → `NAME_ERROR` → `Stede!`
 
-## Timecodes
-Enge / überlappende Fenster = höheres Risiko für Leak und Rollenvertauschung. Dann besonders am Original prüfen.
+**E) SPEAKER_WRONG — kurzer Cue**
+- Trans Dialog `Ed!` mit Sprecher BLACKBEARD, Original: STEDE ruft `Ed!`
+→ `SPEAKER_WRONG`
 
-## Regeln
-- Kurze `issue_note`. `corrected_*` nur bei klarer Korrektur, sonst `""`.
-- `related_orig_j`: optional Index aus ORIGINAL (1-basiert), wenn klar.
-- Klammern wie `(Atmer)` im Original ignorieren.
-- Nur JSON, keine Markdown-Fences.
+**F) NONSENSE — ein Wort falsch**
+- Kontext Suche nach Ed; Trans: `Wo ist das Sofa?` statt `Wo ist Ed?`
+→ `NONSENSE`
+
+**G) Mischtext / Überlappung**
+- `Halt die Klappe Ed oh Ed die Nacht!` → Leak+Unsinn+evtl. falsche Rolle; am Original glätten
+
+**H) Eigenname im Fließtext**
+- Orig: `…Ihr Ed, oh Ed-Gestöhne…` — Trans: `…Et-O-Et-Gestöhne…` kann NAME/NONSENSE sein, wenn klar falsch
+
+## Ausgabe
+- Kurze `issue_note` (welches Wort/welche Rolle).
+- `corrected_speaker` / `corrected_dialogue` nur bei klarer Korrektur am Original.
+- `related_orig_j` = Original-Index (1-basiert), wenn zuordenbar.
+- Jedes geforderte `trans_i` genau einmal. Nur JSON, keine Markdown-Fences.
 """
 
 _JSON_SCHEMA_EXAMPLE = """{
@@ -106,10 +110,10 @@ def build_user_prompt(
         n_req = len(required_trans_ids)
         review_pflicht = (
             f"- `reviews` enthält **genau {n_req}** Einträge — nur diese `trans_i`: {ids} "
-            f"(jeweils **einmal**, keine anderen)."
+            f"(jeweils **einmal**). Zeilen mit Markierung KONTEXT nicht reviewen."
         )
         trans_header = (
-            f"## TRANSKRIPTION ({n_req} Segmente dieses Batches; globale `trans_i`)"
+            f"## TRANSKRIPTION (Batch: {n_req} zu reviewen; ggf. KONTEXT-Nachbarn)"
         )
     else:
         review_pflicht = (
@@ -118,10 +122,10 @@ def build_user_prompt(
         )
         trans_header = f"## TRANSKRIPTION ({n_trans} Segmente: TC + SPEAKER + DIALOGUE)"
 
-    return f"""Gleiche **Transkription** und **Original-Drehbuch** ab (zwei Skripte, keine Match-Spalten).
+    return f"""Präziser Abgleich Transkription ↔ Original. Sei gründlich — auch kleine Leaks/Namen/Rollen.
 
-Flagge nur echte Fehler (falsche Rolle, Leak, Eigenname, Unsinn). Sinnvolle Alternativformulierungen = OK.
-Bei komischen/unplausiblen Stellen → **Original als Vorlage** korrigieren.
+Pro zu reviewender Zeile: Checkliste Sprecher → Wörter (Ränder!) → Eigennamen → Sinn.
+Sinnvolle Paraphrase = OK. Im Zweifel / bei Komik → Original korrigieren.
 
 Antworte mit **genau** diesem JSON-Schema
 (`issue_type` nur OK|SPEAKER_WRONG|TEXT_LEAK|NAME_ERROR|NONSENSE|OTHER; `confidence` nur high|medium|low):
@@ -130,7 +134,7 @@ Antworte mit **genau** diesem JSON-Schema
 Pflicht:
 {review_pflicht}
 - Bei `flagged=false`: `issue_type=OK`, Korrekturfelder leer.
-- Bei `flagged=true`: kurze `issue_note`.
+- Bei `flagged=true`: kurze `issue_note` (nenne das falsche Wort/die Rolle).
 
 {trans_header}
 {transcription_block}

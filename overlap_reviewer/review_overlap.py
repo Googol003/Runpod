@@ -352,16 +352,40 @@ def _tc_norm(tc: str) -> str:
     return s
 
 
-def _format_trans_block(rows: List[Tuple[int, str, str, str, str, str, str, str]]) -> str:
-    """Nur Transkription: idx, tc_in, tc_out, speaker, dialogue (Match/REF werden ignoriert)."""
+def _format_trans_block(
+    rows: List[Tuple[int, str, str, str, str, str, str, str]],
+    *,
+    review_ids: Optional[set] = None,
+) -> str:
+    """Transkription: TC + Sprecher + Dialog. Optional KONTEXT-Zeilen markieren."""
     lines: List[str] = []
     for idx, tc_in, tc_out, speaker, dialogue, _matched, _ref_in, _ref_out in rows:
         sp = speaker if speaker else "(kein Sprecher)"
+        prefix = ""
+        if review_ids is not None and idx not in review_ids:
+            prefix = "[KONTEXT, nicht reviewen] "
         lines.append(
-            f"{idx}. [{_tc_norm(tc_in)} – {_tc_norm(tc_out)}] "
+            f"{prefix}{idx}. [{_tc_norm(tc_in)} – {_tc_norm(tc_out)}] "
             f"SPEAKER={sp!r} | {dialogue}"
         )
     return "\n".join(lines)
+
+
+def _batch_with_context(
+    all_rows: List[Tuple[int, str, str, str, str, str, str, str]],
+    batch: List[Tuple[int, str, str, str, str, str, str, str]],
+    *,
+    context: int = 2,
+) -> Tuple[List[Tuple[int, str, str, str, str, str, str, str]], set]:
+    """Batch plus ±context Nachbarzeilen für Leak-Erkennung; review_ids = echte Batch-IDs."""
+    by_id = {r[0]: r for r in all_rows}
+    ids = [r[0] for r in batch]
+    review_ids = set(ids)
+    lo, hi = min(ids), max(ids)
+    start = max(1, lo - context)
+    end = min(max(by_id), hi + context)
+    window = [by_id[i] for i in range(start, end + 1) if i in by_id]
+    return window, review_ids
 
 
 def _format_orig_block(
@@ -594,16 +618,15 @@ def main() -> int:
     p.add_argument(
         "--batch-size",
         type=int,
-        default=25,
-        help="Transkript-Zeilen pro LLM-Call (Default 25). 0 = alles in einem Call "
-        "(riskant: JSON wird oft abgeschnitten).",
+        default=12,
+        help="Transkript-Zeilen pro LLM-Call (Default 12, gründlicher). 0 = alles in einem Call.",
     )
     p.add_argument(
         "--export-case",
         default="",
         help="Optional: geladene Daten als Excel exportieren (Sheets: transcription, original, not_matched).",
     )
-    p.add_argument("--temperature", type=float, default=0.05)
+    p.add_argument("--temperature", type=float, default=0.0)
     p.add_argument("--num-ctx", type=int, default=32768)
     p.add_argument("--num-predict", type=int, default=8192)
     p.add_argument("--dry-run", action="store_true", help="Nur Prompt bauen, kein LLM.")
@@ -717,11 +740,12 @@ def main() -> int:
     )
 
     if args.save_prompt:
-        sample_ids = [r[0] for r in batches[0]]
+        window, review_ids = _batch_with_context(trans_rows, batches[0])
+        sample_ids = sorted(review_ids)
         sample_prompt = build_user_prompt(
             n_trans=n_trans,
             n_orig=n_orig,
-            transcription_block=_format_trans_block(batches[0]),
+            transcription_block=_format_trans_block(window, review_ids=review_ids),
             original_block=orig_block,
             required_trans_ids=sample_ids,
         )
@@ -729,11 +753,12 @@ def main() -> int:
         log(f"[OK] Prompt (Batch 1) gespeichert: {args.save_prompt}")
 
     if args.dry_run:
-        sample_ids = [r[0] for r in batches[0]]
+        window, review_ids = _batch_with_context(trans_rows, batches[0])
+        sample_ids = sorted(review_ids)
         sample_prompt = build_user_prompt(
             n_trans=n_trans,
             n_orig=n_orig,
-            transcription_block=_format_trans_block(batches[0]),
+            transcription_block=_format_trans_block(window, review_ids=review_ids),
             original_block=orig_block,
             required_trans_ids=sample_ids,
         )
@@ -772,16 +797,18 @@ def main() -> int:
 
     for bi, batch in enumerate(batches, start=1):
         ids = [r[0] for r in batch]
+        window, review_ids = _batch_with_context(trans_rows, batch)
         user_prompt = build_user_prompt(
             n_trans=n_trans,
             n_orig=n_orig,
-            transcription_block=_format_trans_block(batch),
+            transcription_block=_format_trans_block(window, review_ids=review_ids),
             original_block=orig_block,
             required_trans_ids=ids,
         )
         log(
             f"[LLM] batch {bi}/{len(batches)} starting "
-            f"(trans_i {ids[0]}-{ids[-1]}, {len(ids)} rows, prompt_chars={len(user_prompt)}) "
+            f"(trans_i {ids[0]}-{ids[-1]}, {len(ids)} rows, "
+            f"context_lines={len(window)}, prompt_chars={len(user_prompt)}) "
             f"→ waiting…"
         )
         t0 = time.time()
