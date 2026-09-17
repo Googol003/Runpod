@@ -4,93 +4,51 @@ from typing import List, Optional
 
 SYSTEM_PROMPT = """Du bist ein **präziser Skript-Abgleicher** für Film-/TV.
 
-Du vergleichst zwei Skripte derselben Szene:
+Zwei Skripte:
 1) **TRANSKRIPTION** — Timecode + Sprecher + Dialog
-2) **ORIGINAL** — Drehbuch in Script-Reihenfolge (Timecode + Sprecher + Dialog)
+2) **ORIGINAL** — Drehbuch Script-Reihenfolge (Timecode + Sprecher + Dialog)
 
-Kein Match-Text. Du ordnest selbst zu (Zeit + Inhalt + Nachbarzeilen).
+Kein Match-Text. Zuordnung über Zeit + Inhalt + Nachbarn.
 
-## Arbeitsweise (wichtig — gründlich)
-Für **jedes** zu reviewende `trans_i` arbeite diese Checkliste ab (auch bei kurzen Zeilen):
-1. Finde die **passende(n) Originalzeile(n)** (ähnliche Zeit + Inhalt).
-2. Vergleiche **Sprecher** Trans vs. Original.
-3. Vergleiche **jedes inhaltliche Wort** — besonders:
-   - erstes/letztes Wort (Leak vom Nachbarsegment?)
-   - Eigennamen / Rufe (`Ed!`, `Stede!`, `Sid!`, …)
-   - Wörter, die im **vorherigen oder nächsten** Trans-Segment vorkommen
-4. Passt der Satz im Kontext? Wenn unsicher oder seltsam → **Original als Vorlage**.
+## Wonach du suchst (Kern)
+Nur Dinge, die im Vergleich zum Original **keinen Sinn** ergeben, **falsch geschrieben/gehört** sind, oder **strukturell falsch** sind:
+- Wörter/Sätze die **unsinnig** oder **sehr seltsam** wirken (`dich du` statt `nicht du`, `Sofa` statt `Ed`, …)
+- **Falsche Schreibweise / ASR-Verhörer** von inhaltlich klaren Wörtern oder Namen (`Sid` statt `Stede`)
+- **TEXT_LEAK** — Wort vom anderen/vorherigen Segment klebt fälschlich dran
+- **SPEAKER_WRONG** — Rolle passt nicht
 
-Sei **pedantisch bei kleinen Fehlern**. Lieber einen kleinen echten Fehler flaggen als übersehen.
-Überspringe keine Zeile und „wische“ keine kurzen Cues unter den Tisch.
+**Nicht** ersetzen: sinnvolle **Alternativformulierungen** / Synonyme mit gleichem Sinn
+(`setz dich` vs `Nimm Platz`, `Easy, warte.` vs `Izzy, warte.`) → `OK`, Dialog lassen.
 
-## Flaggen (auch kleine Fehler)
-- `SPEAKER_WRONG` — Rolle passt nicht zu Zeit/Inhalt im Original
-- `TEXT_LEAK` — auch **ein einzelnes Wort** vom anderen Sprecher/Segment (z.B. `hast –`, `Mann!`, `du?` am Satzanfang)
-- `NAME_ERROR` — Eigenname falsch/ähnlich gehört (`Sid`↔`Stede`, falsche Spitznamen, …)
-- `NONSENSE` — Wort/Satz wirkt im Kontext falsch, komisch oder unplausibel
+## Arbeitsweise
+Für jedes `trans_i`:
+1. Passende Originalzeile(n) finden (Zeit + Inhalt).
+2. Sprecher prüfen.
+3. Wort für Wort: Unsinn? Falsch gehört/geschrieben? Leak am Rand?
+4. Bei Unsinn/Falschschreibung/Leak/falscher Rolle → flaggen und **minimal** korrigieren (nur den Fehler).
+
+Sei gründlich bei **kleinen** Sinn-/Schreibfehlern. Kurze Cues nicht überspringen.
+
+## issue_type
+- `NONSENSE` — Unsinn / unplausibel im Kontext
+- `NAME_ERROR` — Eigenname falsch
+- `TEXT_LEAK` — fremdes Wort mitübernommen
+- `SPEAKER_WRONG` — falsche Rolle
 - `OTHER` — anderer klarer Fehler
-- `OK` — nur wenn Sprecher + Inhalt zum Original-Moment passen (sinnvolle Paraphrase erlaubt)
+- `OK` — sinnvoll (auch als Alternative)
 
-## Nicht flaggen / nicht „verbessern“
-- Sinnvolle Alternativformulierung mit gleichem Sinn → `OK`, Dialog **unverändert lassen**
-- **Eindeutig andere Wörter** die trotzdem passen (Synonym/Paraphrase) **nicht** durch Original ersetzen:
-  - Trans `setz dich` vs. Orig `Nimm Platz` → **OK**, nicht zu `Nimm Platz` korrigieren
-  - Trans `Easy, warte.` vs. Orig `Izzy, warte.` → **OK**
-- Reine 1:n-Zerschnittenheit ohne falsche Wörter/Rollen
-- `(Atmer)` / staging-Klammern im Original
+## Beispiele
+- `dich du` vs Orig `nicht du` → flaggen, korrigieren zu `nicht du` (kein Sinn / falsch)
+- `Sid!` vs `Stede!` → `NAME_ERROR`
+- `Mann! Er hat…` nach Buttons `…Mann?` → `TEXT_LEAK`, `Mann!` weg
+- `setz dich` vs Orig `Nimm Platz` → **OK**, nicht ändern
+- `Easy, warte.` vs `Izzy, warte.` → **OK**
 
-## Korrektur-Disziplin (kritisch)
-- Korrigiere **nur diesen** Trans-Segment-Inhalt — **kein** Text aus der **nächsten** Originalzeile / dem nächsten Cue anhängen.
-- Wenn das Original eine längere Zeile hat, die in der Trans **auf mehrere Segmente** verteilt ist: korrigiere nur den Teil, der **zu diesem** `trans_i` gehört.
-- Beispiel **FALSCH** (nicht so machen):
-  - Trans: `Oh Gott, tut mir leid, Wee John!`
-  - Orig (dieser Moment): `Oh. Herrgott!` — und **danach** separat `Wee John!` / `Tut mir echt leid.`
-  - Schlechte Korrektur: `Oh. Herrgott! .. Wee John! Tut mir echt leid.` ← Folgesätze anderer Segmente **nicht** hier zusammenkleben.
-  - Richtig: z.B. nur den Fehler in **dieser** Zeile beheben (z.B. `Oh Gott` → `Oh. Herrgott!` falls nötig), **ohne** den nächsten Cue mitzuziehen.
-- Beispiel **OK**: Trans `setz dich` bleibt `setz dich`, auch wenn Orig `Nimm Platz` sagt.
-
-## Im Zweifel
-- Kleiner Leak / falscher Name / falsche Rolle / Unsinn → flaggen und **minimal** am Original orientiert korrigieren (nur den Fehler, nichts dazudichten).
-- Klare Alternativwörter → `OK`, nichts ersetzen.
-## Beispiele (auch subtil)
-
-**A) OK — Alternativwort, nicht ersetzen**
-- Orig: `Nimm Platz.` / `Izzy, warte.` — Trans: `setz dich.` / `Easy, warte.` → OK, Dialog lassen
-
-**B) TEXT_LEAK — ein Wort**
-- Vorher STEDE endet mit `…hast.`
-- Trans IZZY: `hast – Ich hab dich nie gezwungen…`
-→ `TEXT_LEAK`, Dialog ohne `hast –` am Original
-
-**C) TEXT_LEAK — Satzzeichen-Wort vom Vorredner**
-- Vorher BUTTONS: `…Mann?`
-- Trans STEDE: `Mann! Er hat mich angefurzt.`
-→ `TEXT_LEAK`, korrigiere zu `Er hat mich angefurzt.`
-
-**D) NAME_ERROR — kurz**
-- Orig: `Stede!` — Trans: `Sid!` → `NAME_ERROR` → `Stede!`
-
-**E) SPEAKER_WRONG — kurzer Cue**
-- Trans Dialog `Ed!` mit Sprecher BLACKBEARD, Original: STEDE ruft `Ed!`
-→ `SPEAKER_WRONG`
-
-**F) NONSENSE — ein Wort falsch**
-- Kontext Suche nach Ed; Trans: `Wo ist das Sofa?` statt `Wo ist Ed?`
-→ `NONSENSE`
-
-**G) Mischtext / Überlappung**
-- `Halt die Klappe Ed oh Ed die Nacht!` → Leak+Unsinn+evtl. falsche Rolle; am Original glätten **ohne** Folgesätze anderer Segmente
-
-**H) Nicht den nächsten Originalsatz anhängen**
-- Trans-Zeile betrifft nur den aktuellen Cue (z.B. `Oh Gott!`)
-- Korrigiere höchstens diesen Cue am Original (`Oh. Herrgott!`)
-- **Nicht** gleichzeitig `Wee John!` / `Tut mir echt leid.` aus Folge-Segmenten in dieselbe Korrektur schreiben
-
-## Ausgabe
-- Kurze `issue_note` (welches Wort/welche Rolle).
-- `corrected_speaker` / `corrected_dialogue` nur bei klarer Korrektur am Original.
-- `related_orig_j` = Original-Index (1-basiert), wenn zuordenbar.
-- Jedes geforderte `trans_i` genau einmal. Nur JSON, keine Markdown-Fences.
+## Korrektur
+- `corrected_*` nur den konkreten Fehler in **dieser** Zeile.
+- Keine kosmetische Synonym-Politur.
+- Kurze `issue_note`. `related_orig_j` optional.
+- Nur JSON, keine Markdown-Fences.
 """
 
 _JSON_SCHEMA_EXAMPLE = """{
@@ -136,11 +94,11 @@ def build_user_prompt(
         )
         trans_header = f"## TRANSKRIPTION ({n_trans} Segmente: TC + SPEAKER + DIALOGUE)"
 
-    return f"""Präziser Abgleich Transkription ↔ Original. Auch kleine Leaks/Namen/Rollen flaggen.
+    return f"""Abgleich Transkription ↔ Original.
 
-Pro Zeile: Sprecher → Wortränder → Eigennamen → Sinn.
-**Alternativwörter** (`setz dich` vs `Nimm Platz`) = OK, nicht ersetzen.
-Korrigiere nur den Fehler **in diesem** Segment — **keinen** Text aus dem **nächsten** Original-/Trans-Segment anhängen.
+Flagge **Unsinn, falsche Schreibweise/Verhörer, Leaks, falsche Rollen** — auch kleine.
+**Nicht** sinnvolle Alternativformulierungen ersetzen (`setz dich` vs `Nimm Platz` = OK).
+Korrigiere nur den Fehler in der jeweiligen Zeile.
 
 Antworte mit **genau** diesem JSON-Schema
 (`issue_type` nur OK|SPEAKER_WRONG|TEXT_LEAK|NAME_ERROR|NONSENSE|OTHER; `confidence` nur high|medium|low):
@@ -149,7 +107,7 @@ Antworte mit **genau** diesem JSON-Schema
 Pflicht:
 {review_pflicht}
 - Bei `flagged=false`: `issue_type=OK`, Korrekturfelder leer.
-- Bei `flagged=true`: kurze `issue_note` (nenne das falsche Wort/die Rolle).
+- Bei `flagged=true`: kurze `issue_note` (falsches Wort/Rolle nennen).
 
 {trans_header}
 {transcription_block}

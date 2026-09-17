@@ -532,11 +532,142 @@ def _chunk_rows(
     return [rows[i : i + batch_size] for i in range(0, len(rows), batch_size)]
 
 
+def _phrase_norm(s: str) -> str:
+    s = normalize_ws(s).lower()
+    s = re.sub(r"[\"'„“”…\-–—]+", " ", s)
+    s = re.sub(r"[.!?:,;]+", " ", s)
+    return normalize_ws(s)
+
+
+def _split_cue_parts(text: str) -> List[str]:
+    """Zerlegt Dialog in brauchbare Phrasen (für Bleed-Erkennung)."""
+    t = normalize_ws(text or "")
+    if not t:
+        return []
+    parts = [t]
+    for chunk in re.split(r"\s*\.\.\s*|(?<=[.!?])\s+", t):
+        chunk = chunk.strip(" .")
+        if len(chunk) >= 5:
+            parts.append(chunk)
+    # unique, longest first
+    seen = set()
+    out: List[str] = []
+    for p in sorted(parts, key=len, reverse=True):
+        key = _phrase_norm(p)
+        if key and key not in seen:
+            seen.add(key)
+            out.append(p)
+    return out
+
+
+def _strip_next_segment_bleed(
+    dialogue: str,
+    corrected: str,
+    *,
+    next_trans_texts: List[str],
+    later_orig_texts: List[str],
+) -> str:
+    """
+    Entfernt aus corrected_dialogue Text, der klar zum *nächsten* Trans-/Original-Segment
+    gehört und in der aktuellen Trans-Zeile noch nicht vorkam.
+    (Code-Guard — nicht Prompt-Hardcoding.)
+    """
+    out = normalize_ws(corrected or "")
+    if not out:
+        return out
+
+    dlg_n = _phrase_norm(dialogue)
+    candidates: List[str] = []
+    for src in list(next_trans_texts) + list(later_orig_texts):
+        candidates.extend(_split_cue_parts(src))
+
+    for cand in candidates:
+        cn = _phrase_norm(cand)
+        if len(cn) < 5:
+            continue
+        # schon in der aktuellen Transkription → kein „Anhängen“
+        if cn in dlg_n:
+            continue
+        on = _phrase_norm(out)
+        if cn not in on:
+            continue
+        # bevorzugt am Ende abschneiden
+        trail = re.compile(
+            r"[\s.!?…,;:\-–—]*" + re.escape(cand) + r"[\s.!?…,;:\-–—]*$",
+            re.IGNORECASE,
+        )
+        new_out = trail.sub("", out).strip()
+        if new_out != out and _phrase_norm(new_out):
+            out = normalize_ws(new_out)
+            continue
+        # sonst einmalige Entfernung irgendwo
+        mid = re.compile(re.escape(cand), re.IGNORECASE)
+        new_out = normalize_ws(mid.sub("", out, count=1)).strip(" .")
+        if new_out and _phrase_norm(new_out) != on:
+            out = new_out
+
+    return out
+
+
+def _apply_correction_guards(
+    by_trans: Dict[int, Dict[str, Any]],
+    trans_rows: List[Tuple[int, str, str, str, str, str, str, str]],
+    orig_rows: List[Tuple[int, str, str, str, str]],
+) -> Dict[int, Dict[str, Any]]:
+    """Nachbearbeitung: Folgesatz-Bleed aus Korrekturen entfernen."""
+    by_id = {r[0]: r for r in trans_rows}
+    orig_by_idx = {r[0]: r for r in orig_rows}
+    out = {k: dict(v) for k, v in by_trans.items()}
+
+    for ti, rec in out.items():
+        corr = (rec.get("corrected_dialogue") or "").strip()
+        if not corr or not rec.get("flagged"):
+            continue
+        row = by_id.get(ti)
+        if not row:
+            continue
+        _, tc_in, tc_out, _sp, dialogue, *_rest = row
+
+        next_trans: List[str] = []
+        for nj in (ti + 1, ti + 2):
+            if nj in by_id:
+                next_trans.append(by_id[nj][4])
+
+        later_orig: List[str] = []
+        oj = rec.get("related_orig_j")
+        if isinstance(oj, int) and oj in orig_by_idx:
+            for k in range(oj + 1, oj + 4):
+                if k in orig_by_idx:
+                    later_orig.append(orig_by_idx[k][4])
+        else:
+            # Fallback: Originalzeilen die nach diesem Trans-OUT starten
+            for idx, o_in, _o_out, _os, od in orig_rows:
+                if o_in and tc_out and o_in >= tc_out:
+                    later_orig.append(od)
+                    if len(later_orig) >= 4:
+                        break
+
+        cleaned = _strip_next_segment_bleed(
+            dialogue,
+            corr,
+            next_trans_texts=next_trans,
+            later_orig_texts=later_orig,
+        )
+        if cleaned != corr:
+            rec["corrected_dialogue"] = cleaned
+            note = (rec.get("issue_note") or "").strip()
+            tag = "[auto: Folgesatz entfernt]"
+            if tag not in note:
+                rec["issue_note"] = f"{note} {tag}".strip() if note else tag
+    return out
+
+
 def _reviews_to_dataframe(
     trans_rows: List[Tuple[int, str, str, str, str, str, str, str]],
     orig_rows: List[Tuple[int, str, str, str, str]],
     by_trans: Dict[int, Dict[str, Any]],
 ) -> pd.DataFrame:
+    by_trans = _apply_correction_guards(by_trans, trans_rows, orig_rows)
     orig_by_idx = {r[0]: r for r in orig_rows}
     out_rows: List[Dict[str, Any]] = []
 
