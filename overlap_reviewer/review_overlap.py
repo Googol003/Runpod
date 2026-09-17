@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-LLM: Transkript vs. Drehbuch — Überlappungs-/Sprecher-/Sinn-Review.
+LLM: Transkription vs. Original-Drehbuch — direkter Skript-Abgleich.
 
-Input: Post-Match-Transkription (SOURCE + MATCHED-TEXT) + komplettes Original + NOT_MATCHED.
-Default-Test: izzy_stede_overlap_case (starke Leaks / falsche Rollen / Unmatched).
+Input an das Modell: nur Trans (TC + Sprecher + Dialog) + Original-CSV.
+Kein MATCHED-TEXT / REF im Prompt. Flaggt u.a. SPEAKER_WRONG, TEXT_LEAK, NAME_ERROR, NONSENSE.
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from llm_clients import LLMError, OllamaClient, build_client_from_env, parse_jso
 from overlap_review_prompts import SYSTEM_PROMPT, build_user_prompt  # noqa: E402
 from izzy_stede_overlap_case import build_case  # noqa: E402
 
-ISSUE_TYPES = frozenset({"OK", "TEXT_LEAK", "SPEAKER_WRONG", "NONSENSE", "OTHER"})
+ISSUE_TYPES = frozenset({"OK", "TEXT_LEAK", "SPEAKER_WRONG", "NONSENSE", "NAME_ERROR", "OTHER"})
 _NOT_MATCHED_RE = re.compile(
     r"Original:\s*(\d{2}:\d{2}:\d{2}:\d{2})\s*[–\-]\s*(\d{2}:\d{2}:\d{2}:\d{2})\s*\|\s*([^:]+):\s*(.+?)(?:\s*\|\s*Platzierung|$)",
     re.IGNORECASE | re.DOTALL,
@@ -353,23 +353,13 @@ def _tc_norm(tc: str) -> str:
 
 
 def _format_trans_block(rows: List[Tuple[int, str, str, str, str, str, str, str]]) -> str:
-    """idx, tc_in, tc_out, speaker, dialogue, matched_text, ref_in, ref_out"""
+    """Nur Transkription: idx, tc_in, tc_out, speaker, dialogue (Match/REF werden ignoriert)."""
     lines: List[str] = []
-    for idx, tc_in, tc_out, speaker, dialogue, matched, ref_in, ref_out in rows:
-        sp = speaker if speaker else "(kein Sprecher / unmatched)"
-        if matched:
-            if ref_in or ref_out:
-                mt = (
-                    f"[{_tc_norm(ref_in)} – {_tc_norm(ref_out)}] {matched}"
-                )
-            else:
-                mt = matched
-        else:
-            mt = "(kein MATCHED-TEXT)"
+    for idx, tc_in, tc_out, speaker, dialogue, _matched, _ref_in, _ref_out in rows:
+        sp = speaker if speaker else "(kein Sprecher)"
         lines.append(
-            f"{idx}. TRANSCRIPT-TC [{_tc_norm(tc_in)} – {_tc_norm(tc_out)}] "
-            f"SPEAKER={sp!r} | DIALOGUE={dialogue!r} | "
-            f"MATCHED-TEXT + ORIGINAL-TC={mt!r}"
+            f"{idx}. [{_tc_norm(tc_in)} – {_tc_norm(tc_out)}] "
+            f"SPEAKER={sp!r} | {dialogue}"
         )
     return "\n".join(lines)
 
@@ -380,13 +370,10 @@ def _format_orig_block(
     unmatched_keys: Optional[set] = None,
 ) -> str:
     lines: List[str] = []
-    unmatched_keys = unmatched_keys or set()
     for idx, tc_in, tc_out, speaker, dialogue in rows:
-        key = (speaker.upper(), normalize_ws(dialogue))
-        tag = " [NOT_MATCHED]" if key in unmatched_keys else ""
         lines.append(
             f"{idx}. [{_tc_norm(tc_in)} – {_tc_norm(tc_out)}] "
-            f"SPEAKER={speaker!r} | {dialogue}{tag}"
+            f"SPEAKER={speaker!r} | {dialogue}"
         )
     return "\n".join(lines)
 
@@ -566,7 +553,7 @@ def _reviews_to_dataframe(
 
 def main() -> int:
     p = argparse.ArgumentParser(
-        description="LLM: Transkript vs. Drehbuch — Überlappung/Sprecher/Sinn (inkl. NOT_MATCHED)."
+        description="LLM: Transkription vs. Original — direkter Skript-Abgleich (ohne MATCHED-TEXT)."
     )
     p.add_argument(
         "--input",
@@ -716,32 +703,26 @@ def main() -> int:
             not_matched.to_excel(writer, sheet_name="not_matched", index=False)
         log(f"[EXPORT] done")
 
-    log("[BUILD] Listen + Prompt-Kontext (Original/NOT_MATCHED)")
+    log("[BUILD] Listen + Prompt-Kontext (Trans + Original)")
     t0 = time.time()
     trans_rows, orig_rows, unmatched_rows = _build_lists(transcription, original, not_matched)
     n_trans, n_orig, n_unmatched = len(trans_rows), len(orig_rows), len(unmatched_rows)
-    unmatched_keys = {
-        (sp.upper(), normalize_ws(dlg)) for _, _, _, sp, dlg in unmatched_rows if sp and dlg
-    }
-    orig_block = _format_orig_block(orig_rows, unmatched_keys=unmatched_keys)
-    nm_block = _format_orig_block(unmatched_rows)
+    orig_block = _format_orig_block(orig_rows)
     batches = _chunk_rows(trans_rows, args.batch_size)
     log(
         f"[BUILD] done in {time.time() - t0:.2f}s | "
-        f"trans={n_trans} orig={n_orig} not_matched={n_unmatched} "
-        f"batches={len(batches)} batch_size={args.batch_size or 'all'}"
+        f"trans={n_trans} orig={n_orig} "
+        f"batches={len(batches)} batch_size={args.batch_size or 'all'} "
+        f"(Prompt: nur Trans+Original, kein MATCHED-TEXT)"
     )
 
     if args.save_prompt:
-        # ersten Batch als Beispiel speichern
         sample_ids = [r[0] for r in batches[0]]
         sample_prompt = build_user_prompt(
             n_trans=n_trans,
             n_orig=n_orig,
-            n_unmatched=n_unmatched,
             transcription_block=_format_trans_block(batches[0]),
             original_block=orig_block,
-            not_matched_block=nm_block,
             required_trans_ids=sample_ids,
         )
         Path(args.save_prompt).write_text(sample_prompt, encoding="utf-8")
@@ -752,14 +733,12 @@ def main() -> int:
         sample_prompt = build_user_prompt(
             n_trans=n_trans,
             n_orig=n_orig,
-            n_unmatched=n_unmatched,
             transcription_block=_format_trans_block(batches[0]),
             original_block=orig_block,
-            not_matched_block=nm_block,
             required_trans_ids=sample_ids,
         )
         log(
-            f"[DRY-RUN] trans={n_trans} orig={n_orig} not_matched={n_unmatched} "
+            f"[DRY-RUN] trans={n_trans} orig={n_orig} "
             f"batches={len(batches)} batch1_chars={len(sample_prompt)}"
         )
         print(sample_prompt[:2500] + ("\n…" if len(sample_prompt) > 2500 else ""), flush=True)
@@ -796,10 +775,8 @@ def main() -> int:
         user_prompt = build_user_prompt(
             n_trans=n_trans,
             n_orig=n_orig,
-            n_unmatched=n_unmatched,
             transcription_block=_format_trans_block(batch),
             original_block=orig_block,
-            not_matched_block=nm_block,
             required_trans_ids=ids,
         )
         log(

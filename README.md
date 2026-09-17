@@ -102,22 +102,13 @@ Testdaten: `segment_matcher/chaos_parreira_wm_case.py` (Parreira-WM-Chaos-Case).
 
 ---
 
-## Overlap-Reviewer (Transkript vs. Drehbuch: Sprecher/Leak/Sinn)
+## Overlap-Reviewer (Transkription vs. Original — Skript-Abgleich)
 
-Vergleicht **gesamte Transkription** (Timecodes + Dialog + `SOURCE`/`MATCHED-TEXT`) mit dem **kompletten Drehbuch** inkl. **`NOT_MATCHED`**. Flaggt Überlappungs-Fehler (`TEXT_LEAK`, `SPEAKER_WRONG`, `NONSENSE`) und schreibt Korrekturen. Timecode-Überlappung mehrerer Sprecher ist ein **Indiz**, Fokus liegt auf **stark abweichenden** Stellen.
+Vergleicht **Transkription** (Timecode + Sprecher + Dialog) direkt mit dem **Original-Drehbuch** (CSV, Script-Reihenfolge). **Kein MATCHED-TEXT** im Prompt. Flaggt u. a. `SPEAKER_WRONG`, `TEXT_LEAK`, `NAME_ERROR`, `NONSENSE`. Sinnvolle Alternativformulierungen = OK; bei komischen Stellen Original als Vorlage.
 
 ```bash
 cd overlap_reviewer
-# Default: testdata/test.1175.xlsx (100 Zeilen, SAUBER, ohne Injects) + Original-CSV
+# Default: testdata/test.1175.xlsx + Original-CSV (Batches à 25)
 python review_overlap.py -o output/test1175_overlap_review.xlsx
-
-# Optional: andere Excel
-python review_overlap.py --input /pfad/andere.xlsx -o output/review.xlsx
-
-# Optional: eingebauter Mini-Case
-python review_overlap.py --case izzy -o output/izzy_review.xlsx
 ```
 
-Input-Excel braucht: `TIMECODE-IN`, `TIMECODE-OUT`, `DIALOGUE`, `SOURCE`, `MATCHED-TEXT`, optional `REF-IN`/`REF-OUT`, `NOT_MATCHED`.  
-**Original-Drehbuch** kommt standardmäßig aus `testdata/CsvOurFlagMeansDeath201.csv` (**Script-Reihenfolge**); Zeitfenster der Transkription ±15s. Mit `--original-full` das ganze CSV, mit `--original ""` Fallback aus Matches.  
-**1:n** (mehrere Transkript-Zeilen → ein Original) ist **erlaubt**. Timecodes (Trans + REF) werden mitgedacht.
