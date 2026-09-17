@@ -51,7 +51,15 @@ class OllamaClient:
         if options:
             # allow caller to override/extend ollama options (e.g. num_ctx, num_predict)
             payload["options"].update(options)
-        r = session.post(f"{self.base_url}/api/chat", json=payload, timeout=self.timeout_s)
+        try:
+            r = session.post(f"{self.base_url}/api/chat", json=payload, timeout=self.timeout_s)
+        except requests.exceptions.ConnectionError as e:
+            raise LLMError(
+                f"Ollama nicht erreichbar unter {self.base_url} — "
+                f"in einem anderen Terminal `ollama serve` starten. ({e})"
+            ) from e
+        except requests.exceptions.Timeout as e:
+            raise LLMError(f"Ollama Timeout nach {self.timeout_s}s: {e}") from e
         if r.status_code != 200:
             raise LLMError(f"Ollama HTTP {r.status_code}: {r.text[:400]}")
         data = r.json()
