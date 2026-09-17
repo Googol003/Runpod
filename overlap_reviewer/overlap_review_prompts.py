@@ -31,19 +31,31 @@ Sei **pedantisch bei kleinen Fehlern**. Lieber einen kleinen echten Fehler flagg
 - `OTHER` — anderer klarer Fehler
 - `OK` — nur wenn Sprecher + Inhalt zum Original-Moment passen (sinnvolle Paraphrase erlaubt)
 
-## Nicht flaggen
-- Sinnvolle Alternativformulierung mit gleichem Sinn (z.B. `Easy, warte.` ≈ `Izzy, warte.`)
+## Nicht flaggen / nicht „verbessern“
+- Sinnvolle Alternativformulierung mit gleichem Sinn → `OK`, Dialog **unverändert lassen**
+- **Eindeutig andere Wörter** die trotzdem passen (Synonym/Paraphrase) **nicht** durch Original ersetzen:
+  - Trans `setz dich` vs. Orig `Nimm Platz` → **OK**, nicht zu `Nimm Platz` korrigieren
+  - Trans `Easy, warte.` vs. Orig `Izzy, warte.` → **OK**
 - Reine 1:n-Zerschnittenheit ohne falsche Wörter/Rollen
 - `(Atmer)` / staging-Klammern im Original
 
-## Im Zweifel
-Wenn etwas **minimal schief** klingt, ein Wort **zu viel** vom Nachbarn hat, oder der Name nur **ähnlich** ist → flaggen und am **Original** korrigieren.
-Nur klar sinnvolle Alternativen = `OK`.
+## Korrektur-Disziplin (kritisch)
+- Korrigiere **nur diesen** Trans-Segment-Inhalt — **kein** Text aus der **nächsten** Originalzeile / dem nächsten Cue anhängen.
+- Wenn das Original eine längere Zeile hat, die in der Trans **auf mehrere Segmente** verteilt ist: korrigiere nur den Teil, der **zu diesem** `trans_i` gehört.
+- Beispiel **FALSCH** (nicht so machen):
+  - Trans: `Nein, nein, nein, nicht du, dich du.`
+  - Orig (dieser Moment): `Nein, nein, nein, nicht du. Nicht du.` — und **danach** separat `Nimm Platz.` / `Setz dich.`
+  - Schlechte Korrektur: `Nein, nein, nein, nicht du. Nicht du. Nimm Platz.` ← **`Nimm Platz` gehört zum nächsten Segment**, nicht hier ergänzen.
+  - Richtig: z.B. `Nein, nein, nein, nicht du. Nicht du.` (Leak/`dich du` weg) **ohne** den Folgesatz.
+- Beispiel **OK**: Trans `setz dich` bleibt `setz dich`, auch wenn Orig `Nimm Platz` sagt.
 
+## Im Zweifel
+- Kleiner Leak / falscher Name / falsche Rolle / Unsinn → flaggen und **minimal** am Original orientiert korrigieren (nur den Fehler, nichts dazudichten).
+- Klare Alternativwörter → `OK`, nichts ersetzen.
 ## Beispiele (auch subtil)
 
-**A) OK — sinnvolle Alternative**
-- Orig: `Izzy, warte.` — Trans: `Easy, warte.` → OK
+**A) OK — Alternativwort, nicht ersetzen**
+- Orig: `Nimm Platz.` / `Izzy, warte.` — Trans: `setz dich.` / `Easy, warte.` → OK, Dialog lassen
 
 **B) TEXT_LEAK — ein Wort**
 - Vorher STEDE endet mit `…hast.`
@@ -67,10 +79,12 @@ Nur klar sinnvolle Alternativen = `OK`.
 → `NONSENSE`
 
 **G) Mischtext / Überlappung**
-- `Halt die Klappe Ed oh Ed die Nacht!` → Leak+Unsinn+evtl. falsche Rolle; am Original glätten
+- `Halt die Klappe Ed oh Ed die Nacht!` → Leak+Unsinn+evtl. falsche Rolle; am Original glätten **ohne** Folgesätze anderer Segmente
 
-**H) Eigenname im Fließtext**
-- Orig: `…Ihr Ed, oh Ed-Gestöhne…` — Trans: `…Et-O-Et-Gestöhne…` kann NAME/NONSENSE sein, wenn klar falsch
+**H) Nicht den nächsten Originalsatz anhängen**
+- Trans: `Nein, nein, nein, nicht du, dich du.`
+- Korrigiere Leak → `Nein, nein, nein, nicht du. Nicht du.`
+- **Nicht** `Nimm Platz` / `Setz dich` dazupacken, wenn das erst im nächsten Trans-/Original-Segment kommt
 
 ## Ausgabe
 - Kurze `issue_note` (welches Wort/welche Rolle).
@@ -122,10 +136,11 @@ def build_user_prompt(
         )
         trans_header = f"## TRANSKRIPTION ({n_trans} Segmente: TC + SPEAKER + DIALOGUE)"
 
-    return f"""Präziser Abgleich Transkription ↔ Original. Sei gründlich — auch kleine Leaks/Namen/Rollen.
+    return f"""Präziser Abgleich Transkription ↔ Original. Auch kleine Leaks/Namen/Rollen flaggen.
 
-Pro zu reviewender Zeile: Checkliste Sprecher → Wörter (Ränder!) → Eigennamen → Sinn.
-Sinnvolle Paraphrase = OK. Im Zweifel / bei Komik → Original korrigieren.
+Pro Zeile: Sprecher → Wortränder → Eigennamen → Sinn.
+**Alternativwörter** (`setz dich` vs `Nimm Platz`) = OK, nicht ersetzen.
+Korrigiere nur den Fehler **in diesem** Segment — **keinen** Text aus dem **nächsten** Original-/Trans-Segment anhängen.
 
 Antworte mit **genau** diesem JSON-Schema
 (`issue_type` nur OK|SPEAKER_WRONG|TEXT_LEAK|NAME_ERROR|NONSENSE|OTHER; `confidence` nur high|medium|low):
